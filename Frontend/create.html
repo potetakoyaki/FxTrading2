@@ -1,0 +1,54 @@
+<html>
+	<head>
+		<title>ユーザ新規登録</title>
+		<link rel="stylesheet" type="text/css" href="./css/style.css" />
+	</head>
+	<body>
+		<div>
+			<h1>ユーザ新規登録</h1>
+		</div>
+		<div class="form-body">
+			<form action="./index.html">
+				<div class="form-row">
+					<label for="loginId">ログインID</label><input type="text" id="loginId"/>
+					<div class="feedback-area invalid-feedback">半角英数字6～20文字で入力してください</div>
+				</div>
+				
+				<div class="form-row">
+					<label for="name">氏名</label><input type="text" id="name"/>
+				</div>
+				<div class="form-row">
+					<label for="password">パスワード</label><input type="password" id="password"/>
+				</div>
+				<div class="form-row">
+					<label for="confPassword">パスワード（確認用）</label><input type="password" id="confPassword"/>
+				</div>
+				<div class="form-row">
+					<label for="branchId">支店</label>
+					<select id="branchId">
+						<option value="1">本社</option>
+						<option value="2">A支社</option>
+						<option value="3">B支社</option>
+						<option value="4">C支社</option>
+					</select>
+				</div>
+				<div class="form-row">
+					<label for="depId">部署</label>
+					<select id="depId">
+						<option value="1">総務人事部</option>
+						<option value="2">情報管理部</option>
+						<option value="3">営業部</option>
+						<option value="4">技術部</option>
+					</select>
+				</div>
+				<div class="right-ctrl-area">
+					<input type="submit" value="登録" action="./index.html" />
+				</div>
+				
+			</form>
+		</div>
+		<div>
+			<a href="./index.html">戻る</a>
+		</div>
+	</body>
+</html>
