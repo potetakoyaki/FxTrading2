@@ -1,14 +1,23 @@
 package method_drill;
 
-public class Question14 {
-	
-	public static void main(String[] args) {
-		
-		printMessage("Hello");
+class Person {
+	private String name;
+	private int age;
+
+	Person(String name, int age) {
+		this.name = name;
+		this.age = age;
 	}
-  
-	static void printMessage(String message) {
-		
-		System.out.println(message);
+
+	String getName() {
+		return name;
+	}
+
+	int getAge() {
+		return age;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 }
