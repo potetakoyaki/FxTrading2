@@ -1,16 +1,5 @@
 package method_drill;
 
-class Person {
-	private int age;
-	
-	Person(int age) {
-    	    this.age = age; 
-    }
-        int getAge() {
-             return age;
-        }
-} 
-
 public class Question12 {
 	
 	public static void main(String[] args) {

@@ -9,8 +9,9 @@ public class Question06 {
 	static double getMinValue(double a, double b) {
 		if (a < b) {
 			return a;
-		} else
+		} else {
 			return b;
+		}
 	}
 
 }

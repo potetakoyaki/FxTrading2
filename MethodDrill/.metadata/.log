@@ -4406,3 +4406,129 @@ java.io.FileNotFoundException: /Users/daisuke/Desktop/workspace/MethodDrill/.met
 	at org.eclipse.core.internal.resources.SaveManager.save(SaveManager.java:1143)
 	at org.eclipse.core.internal.resources.DelayedSnapshotJob.run(DelayedSnapshotJob.java:55)
 	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)
+
+!ENTRY org.eclipse.ui 2 2 2021-08-19 10:59:20.012
+!MESSAGE Invalid property category path: org.springframework.ide.eclipse.beans.ui.properties.ProjectPropertyPage (bundle: org.springframework.ide.eclipse.xml.namespaces, propertyPage: org.springframework.ide.eclipse.beans.ui.namespaces.projectPropertyPage)
+
+!ENTRY org.eclipse.core.resources 4 568 2021-08-19 11:00:09.788
+!MESSAGE '/.org.eclipse.egit.core.cmp' のメタデータを書き込みできませんでした。
+!STACK 0
+java.io.FileNotFoundException: /Users/daisuke/Desktop/workspace/MethodDrill/.metadata/.plugins/org.eclipse.core.resources/.projects/.org.eclipse.egit.core.cmp/.markers.snap (No such file or directory)
+	at java.base/java.io.FileOutputStream.open0(Native Method)
+	at java.base/java.io.FileOutputStream.open(FileOutputStream.java:291)
+	at java.base/java.io.FileOutputStream.<init>(FileOutputStream.java:234)
+	at java.base/java.io.FileOutputStream.<init>(FileOutputStream.java:155)
+	at org.eclipse.core.internal.localstore.SafeChunkyOutputStream.<init>(SafeChunkyOutputStream.java:48)
+	at org.eclipse.core.internal.localstore.SafeChunkyOutputStream.<init>(SafeChunkyOutputStream.java:44)
+	at org.eclipse.core.internal.resources.SaveManager.visitAndSnap(SaveManager.java:1765)
+	at org.eclipse.core.internal.resources.SaveManager.visitAndSnap(SaveManager.java:1846)
+	at org.eclipse.core.internal.resources.SaveManager.save(SaveManager.java:1202)
+	at org.eclipse.core.internal.resources.SaveManager.save(SaveManager.java:1143)
+	at org.eclipse.core.internal.resources.DelayedSnapshotJob.run(DelayedSnapshotJob.java:55)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)
+
+!ENTRY org.springframework.tooling.ls.eclipse.commons 1 0 2021-08-19 11:00:18.981
+!MESSAGE ClasspathListenerHandler removeClasspathListener sts4.classpath.gtcASVWd
+
+!ENTRY org.springframework.tooling.ls.eclipse.commons 1 0 2021-08-19 11:00:18.982
+!MESSAGE unsubscribing from classpath changes: sts4.classpath.gtcASVWd
+
+!ENTRY org.springframework.tooling.ls.eclipse.commons 1 0 2021-08-19 11:00:18.982
+!MESSAGE subsribers = {}
+
+!ENTRY org.springframework.tooling.ls.eclipse.commons 1 0 2021-08-19 11:00:18.982
+!MESSAGE ClasspathListenerHandler removeClasspathListener sts4.classpath.gtcASVWd => OK
+
+!ENTRY org.springframework.tooling.ls.eclipse.commons 1 0 2021-08-19 11:00:21.402
+!MESSAGE Entering DelegatingStreamConnectionProvider()
+
+!ENTRY org.springframework.tooling.ls.eclipse.commons 1 0 2021-08-19 11:00:21.402
+!MESSAGE DelegatingStreamConnectionProvider classloader = org.eclipse.osgi.internal.loader.EquinoxClassLoader@6cde104c[org.springframework.tooling.boot.ls:1.26.0.202106150606(id=1007)]
+
+!ENTRY org.springframework.tooling.ls.eclipse.commons 1 0 2021-08-19 11:00:21.402
+!MESSAGE SpringBootLanguageServer exists!
+
+!ENTRY org.springframework.tooling.ls.eclipse.commons 1 0 2021-08-19 11:00:23.006
+!MESSAGE 起動から初期化までの Boot LS 起動時間: 1603ms
+
+!ENTRY org.springframework.tooling.ls.eclipse.commons 1 0 2021-08-19 11:00:23.086
+!MESSAGE ClasspathListenerHandler addClasspathListener sts4.classpath.zkwusvcqisBatched = true
+
+!ENTRY org.springframework.tooling.ls.eclipse.commons 1 0 2021-08-19 11:00:23.087
+!MESSAGE Setting up ClasspathListenerManager
+
+!ENTRY org.springframework.tooling.ls.eclipse.commons 1 0 2021-08-19 11:00:23.087
+!MESSAGE Scheduling initial event for all projects ...
+
+!ENTRY org.springframework.tooling.ls.eclipse.commons 1 0 2021-08-19 11:00:23.087
+!MESSAGE Scheduling initial event for all projects DONE
+
+!ENTRY org.springframework.tooling.ls.eclipse.commons 1 0 2021-08-19 11:00:23.088
+!MESSAGE ClasspathListenerHandler addClasspathListener sts4.classpath.zkwusvcq => OK
+
+!ENTRY org.springframework.tooling.ls.eclipse.commons 1 0 2021-08-19 11:00:23.088
+!MESSAGE exists = true open = true => deleted = false
+
+!ENTRY org.springframework.tooling.ls.eclipse.commons 1 0 2021-08-19 11:00:23.088
+!MESSAGE classpath=2 entries
+
+!ENTRY org.springframework.tooling.ls.eclipse.commons 1 0 2021-08-19 11:00:23.089
+!MESSAGE buffering callback sts4.classpath.zkwusvcq MethodDrill false 2
+
+!ENTRY org.springframework.tooling.ls.eclipse.commons 1 0 2021-08-19 11:00:23.089
+!MESSAGE executing callback sts4.classpath.zkwusvcq 1 batched events
+
+!ENTRY org.springframework.tooling.ls.eclipse.commons 1 0 2021-08-19 11:00:23.354
+!MESSAGE executing callback sts4.classpath.zkwusvcq SUCCESS [done]
+
+!ENTRY org.eclipse.core.resources 4 568 2021-08-19 11:05:15.425
+!MESSAGE '/.org.eclipse.egit.core.cmp' のメタデータを書き込みできませんでした。
+!STACK 0
+java.io.FileNotFoundException: /Users/daisuke/Desktop/workspace/MethodDrill/.metadata/.plugins/org.eclipse.core.resources/.projects/.org.eclipse.egit.core.cmp/.markers.snap (No such file or directory)
+	at java.base/java.io.FileOutputStream.open0(Native Method)
+	at java.base/java.io.FileOutputStream.open(FileOutputStream.java:291)
+	at java.base/java.io.FileOutputStream.<init>(FileOutputStream.java:234)
+	at java.base/java.io.FileOutputStream.<init>(FileOutputStream.java:155)
+	at org.eclipse.core.internal.localstore.SafeChunkyOutputStream.<init>(SafeChunkyOutputStream.java:48)
+	at org.eclipse.core.internal.localstore.SafeChunkyOutputStream.<init>(SafeChunkyOutputStream.java:44)
+	at org.eclipse.core.internal.resources.SaveManager.visitAndSnap(SaveManager.java:1765)
+	at org.eclipse.core.internal.resources.SaveManager.visitAndSnap(SaveManager.java:1846)
+	at org.eclipse.core.internal.resources.SaveManager.save(SaveManager.java:1202)
+	at org.eclipse.core.internal.resources.SaveManager.save(SaveManager.java:1143)
+	at org.eclipse.core.internal.resources.DelayedSnapshotJob.run(DelayedSnapshotJob.java:55)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)
+
+!ENTRY org.eclipse.core.resources 4 568 2021-08-19 11:19:39.159
+!MESSAGE '/.org.eclipse.egit.core.cmp' のメタデータを書き込みできませんでした。
+!STACK 0
+java.io.FileNotFoundException: /Users/daisuke/Desktop/workspace/MethodDrill/.metadata/.plugins/org.eclipse.core.resources/.projects/.org.eclipse.egit.core.cmp/.markers.snap (No such file or directory)
+	at java.base/java.io.FileOutputStream.open0(Native Method)
+	at java.base/java.io.FileOutputStream.open(FileOutputStream.java:291)
+	at java.base/java.io.FileOutputStream.<init>(FileOutputStream.java:234)
+	at java.base/java.io.FileOutputStream.<init>(FileOutputStream.java:155)
+	at org.eclipse.core.internal.localstore.SafeChunkyOutputStream.<init>(SafeChunkyOutputStream.java:48)
+	at org.eclipse.core.internal.localstore.SafeChunkyOutputStream.<init>(SafeChunkyOutputStream.java:44)
+	at org.eclipse.core.internal.resources.SaveManager.visitAndSnap(SaveManager.java:1765)
+	at org.eclipse.core.internal.resources.SaveManager.visitAndSnap(SaveManager.java:1846)
+	at org.eclipse.core.internal.resources.SaveManager.save(SaveManager.java:1202)
+	at org.eclipse.core.internal.resources.SaveManager.save(SaveManager.java:1143)
+	at org.eclipse.core.internal.resources.DelayedSnapshotJob.run(DelayedSnapshotJob.java:55)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)
+
+!ENTRY mergedoc.encoding 2 0 2021-08-19 11:20:46.225
+!MESSAGE リソース '/MethodDrill/src/method_drill/Question14.java' が存在しません。
+
+!ENTRY mergedoc.encoding 2 0 2021-08-19 11:20:46.226
+!MESSAGE リソース '/MethodDrill/src/method_drill/Question14.java' が存在しません。
+
+!ENTRY mergedoc.encoding 2 0 2021-08-19 11:20:51.543
+!MESSAGE リソース '/MethodDrill/src/method_drill/Question15.java' が存在しません。
+
+!ENTRY mergedoc.encoding 2 0 2021-08-19 11:20:51.543
+!MESSAGE リソース '/MethodDrill/src/method_drill/Question15.java' が存在しません。
+
+!ENTRY mergedoc.encoding 2 0 2021-08-19 11:20:56.809
+!MESSAGE リソース '/MethodDrill/src/method_drill/Question16.java' が存在しません。
+
+!ENTRY mergedoc.encoding 2 0 2021-08-19 11:20:56.809
+!MESSAGE リソース '/MethodDrill/src/method_drill/Question16.java' が存在しません。

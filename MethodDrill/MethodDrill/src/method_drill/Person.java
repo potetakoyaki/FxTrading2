@@ -17,6 +17,19 @@ class Person {
 		return age;
 	}
 
+	//Question14
+	public void setName(String name) {
+		this.name = name;
+	}
+	
+	//Question15
+	 public void setAge(int age) {
+		if (age >= 0) {
+			this.age = age;
+		}
+	 }
+	
+	//Question16
      boolean isSameAge(Person person) {
 		if (this.age == person.getAge()) {
 			return true;
@@ -24,5 +37,4 @@ class Person {
 			return false;
 		}
 	}
-
 }

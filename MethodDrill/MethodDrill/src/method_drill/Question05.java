@@ -9,7 +9,8 @@ public class Question05 {
 	static boolean isEvenNumber(int value) {
 		if (value % 2 == 0) {
 			return true;
-		}else
+		}else {
 			return false;
+		}
 	}
 }
