@@ -1,0 +1,16 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "fx-strategy-doctor",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["dist/index.js"],
+      "port": 3000,
+      "env": {
+        "NODE_ENV": "production",
+        "ADMIN_USERNAME": "admin",
+        "ADMIN_PASSWORD": "DrTrading2026!"
+      }
+    }
+  ]
+}
