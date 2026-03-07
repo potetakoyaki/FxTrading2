@@ -1,0 +1,8 @@
+name = "fx-strategy-doctor"
+compatibility_date = "2024-09-23"
+
+[vars]
+ADMIN_USERNAME = "admin"
+
+# ADMIN_PASSWORD は Cloudflare ダッシュボードの
+# Settings > Environment variables で設定してください（暗号化推奨）
