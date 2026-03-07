@@ -134,11 +134,50 @@ export function LotSizeCorrelationPanel({ data }: { data: LotSizeGroup[] }) {
 
   if (data.length === 0) return null;
 
-  // Find if large lots underperform
+  // Comprehensive lot size analysis
   const hasMultipleGroups = data.length >= 2;
   const smallLot = data[0];
   const largeLot = data[data.length - 1];
-  const lotBiasWarning = hasMultipleGroups && largeLot.winRate < smallLot.winRate - 10;
+
+  // Calculate overall metrics across all groups
+  const totalTrades = data.reduce((s, g) => s + g.trades, 0);
+  const totalNetProfit = data.reduce((s, g) => s + g.netProfit, 0);
+  const weightedWinRate = totalTrades > 0
+    ? data.reduce((s, g) => s + g.winRate * g.trades, 0) / totalTrades
+    : 0;
+  const avgPF = data.reduce((s, g) => s + Math.min(g.profitFactor, 10) * g.trades, 0) / (totalTrades || 1);
+
+  // Detect specific problems
+  const allGroupsLosing = data.every(g => g.netProfit < 0);
+  const allGroupsLowWR = data.filter(g => g.trades >= 3).every(g => g.winRate < 50);
+  const allGroupsLowPF = data.filter(g => g.trades >= 3).every(g => g.profitFactor < 1);
+  const largeLotWorse = hasMultipleGroups && largeLot.winRate < smallLot.winRate - 10;
+  const largeLotMuchWorsePF = hasMultipleGroups && largeLot.trades >= 3 && smallLot.trades >= 3
+    && largeLot.profitFactor < smallLot.profitFactor * 0.7;
+  const largeLotBiggerLoss = hasMultipleGroups && largeLot.netProfit < 0 && smallLot.netProfit < 0
+    && Math.abs(largeLot.netProfit / (largeLot.trades || 1)) > Math.abs(smallLot.netProfit / (smallLot.trades || 1)) * 1.5;
+
+  // Find worst and best performing groups
+  const worstGroup = data.filter(g => g.trades >= 3).reduce((a, b) => a.profitFactor < b.profitFactor ? a : b, data[0]);
+  const bestGroup = data.filter(g => g.trades >= 3).reduce((a, b) => a.profitFactor > b.profitFactor ? a : b, data[0]);
+
+  // Determine advice type
+  type AdviceType = "all_losing" | "large_lot_emotional" | "large_lot_pf_drop" | "inconsistent" | "specific_group_bad" | "stable_good" | "stable_mediocre";
+
+  let adviceType: AdviceType = "stable_good";
+  if (allGroupsLosing || allGroupsLowPF) {
+    adviceType = "all_losing";
+  } else if (largeLotWorse && largeLotBiggerLoss) {
+    adviceType = "large_lot_emotional";
+  } else if (largeLotMuchWorsePF) {
+    adviceType = "large_lot_pf_drop";
+  } else if (hasMultipleGroups && bestGroup.profitFactor > 1 && worstGroup.profitFactor < 0.8 && worstGroup.trades >= 3) {
+    adviceType = "inconsistent";
+  } else if (worstGroup.trades >= 3 && worstGroup.profitFactor < 1) {
+    adviceType = "specific_group_bad";
+  } else if (avgPF < 1.2 || weightedWinRate < 55) {
+    adviceType = "stable_mediocre";
+  }
 
   return (
     <motion.div
@@ -209,29 +248,86 @@ export function LotSizeCorrelationPanel({ data }: { data: LotSizeGroup[] }) {
         </table>
       </div>
 
-      {/* Advice */}
-      {lotBiasWarning && (
-        <div className="mt-3 flex gap-2 p-2.5 rounded-lg bg-[oklch(0.15_0.04_20)] border border-[oklch(0.65_0.2_20/0.2)]">
-          <AlertTriangle className="w-3.5 h-3.5 text-[oklch(0.65_0.2_20)] shrink-0 mt-0.5" />
-          <p className="text-xs text-[oklch(0.65_0.2_20)] leading-relaxed">
-            {ja
-              ? `大ロット時の勝率（${largeLot.winRate.toFixed(1)}%）が小ロット時（${smallLot.winRate.toFixed(1)}%）より${(smallLot.winRate - largeLot.winRate).toFixed(1)}%低くなっています。ロットを増やす際に感情的なトレードをしている可能性があります。ロット管理ルールを見直してください。`
-              : `Win rate at large lots (${largeLot.winRate.toFixed(1)}%) is ${(smallLot.winRate - largeLot.winRate).toFixed(1)}% lower than at small lots (${smallLot.winRate.toFixed(1)}%). This may indicate emotional trading at higher stakes. Review your lot sizing rules.`
-            }
-          </p>
-        </div>
-      )}
-      {!lotBiasWarning && hasMultipleGroups && (
-        <div className="mt-3 flex gap-2 p-2.5 rounded-lg bg-[oklch(0.15_0.04_145)] border border-[oklch(0.72_0.18_145/0.2)]">
-          <span className="text-[oklch(0.72_0.18_145)] text-xs shrink-0 mt-0.5">✓</span>
-          <p className="text-xs text-[oklch(0.72_0.18_145)] leading-relaxed">
-            {ja
-              ? "ロットサイズに関わらず安定したパフォーマンスを維持しています。感情的なトレードの影響は少ないと考えられます。"
-              : "Performance is consistent across lot sizes, suggesting minimal emotional impact on trading decisions."
-            }
-          </p>
-        </div>
-      )}
+      {/* Advice - data-driven analysis */}
+      <div className="mt-3 space-y-2">
+        {adviceType === "all_losing" && (
+          <div className="flex gap-2 p-2.5 rounded-lg bg-[oklch(0.15_0.04_20)] border border-[oklch(0.65_0.2_20/0.2)]">
+            <AlertTriangle className="w-3.5 h-3.5 text-[oklch(0.65_0.2_20)] shrink-0 mt-0.5" />
+            <p className="text-xs text-[oklch(0.65_0.2_20)] leading-relaxed">
+              {ja
+                ? `全てのロットサイズで損失が発生しています（合計損益: ${totalNetProfit.toFixed(2)}、平均PF: ${avgPF.toFixed(2)}）。ロットサイズの問題以前に、エントリー・エグジット戦略自体の見直しが必要です。まずは最小ロットに固定してルールの検証を行い、勝てるロジックを確立してからロットサイズを調整してください。`
+                : `All lot sizes are losing money (total P/L: ${totalNetProfit.toFixed(2)}, avg PF: ${avgPF.toFixed(2)}). Before adjusting lot sizes, review entry/exit strategy fundamentals. Fix position sizing at minimum lots, validate your rules, then scale up.`
+              }
+            </p>
+          </div>
+        )}
+        {adviceType === "large_lot_emotional" && (
+          <div className="flex gap-2 p-2.5 rounded-lg bg-[oklch(0.15_0.04_20)] border border-[oklch(0.65_0.2_20/0.2)]">
+            <AlertTriangle className="w-3.5 h-3.5 text-[oklch(0.65_0.2_20)] shrink-0 mt-0.5" />
+            <p className="text-xs text-[oklch(0.65_0.2_20)] leading-relaxed">
+              {ja
+                ? `大ロット（${largeLot.label}）の勝率${largeLot.winRate.toFixed(1)}%・1トレード平均損益${(largeLot.netProfit / largeLot.trades).toFixed(2)}に対し、小ロット（${smallLot.label}）は勝率${smallLot.winRate.toFixed(1)}%・1トレード平均損益${(smallLot.netProfit / smallLot.trades).toFixed(2)}です。ロットを増やした際にプレッシャーから判断が悪化している可能性が高いです。大ロット時の損切り・利確ルールを再確認し、感情に左右されない固定ルールを設けてください。`
+                : `Large lots (${largeLot.label}): ${largeLot.winRate.toFixed(1)}% win rate, avg P/L per trade ${(largeLot.netProfit / largeLot.trades).toFixed(2)}. Small lots (${smallLot.label}): ${smallLot.winRate.toFixed(1)}% win rate, avg P/L per trade ${(smallLot.netProfit / smallLot.trades).toFixed(2)}. Performance degrades significantly at larger positions, indicating emotional pressure. Use fixed rules for SL/TP regardless of position size.`
+              }
+            </p>
+          </div>
+        )}
+        {adviceType === "large_lot_pf_drop" && (
+          <div className="flex gap-2 p-2.5 rounded-lg bg-[oklch(0.15_0.04_20)] border border-[oklch(0.65_0.2_20/0.2)]">
+            <AlertTriangle className="w-3.5 h-3.5 text-[oklch(0.65_0.2_20)] shrink-0 mt-0.5" />
+            <p className="text-xs text-[oklch(0.65_0.2_20)] leading-relaxed">
+              {ja
+                ? `大ロット（${largeLot.label}）のPF${largeLot.profitFactor >= 999 ? "999+" : largeLot.profitFactor.toFixed(2)}が小ロット（${smallLot.label}）のPF${smallLot.profitFactor >= 999 ? "999+" : smallLot.profitFactor.toFixed(2)}から大幅に悪化しています。大ロット時は損切りが遅れるか、利確が早まる傾向があります。ロットサイズを段階的に上げ、各サイズで安定した成績を確認してからスケールアップしてください。`
+                : `Large lot (${largeLot.label}) PF ${largeLot.profitFactor >= 999 ? "999+" : largeLot.profitFactor.toFixed(2)} drops significantly from small lot (${smallLot.label}) PF ${smallLot.profitFactor >= 999 ? "999+" : smallLot.profitFactor.toFixed(2)}. Gradually scale up lot size and confirm stable performance at each level before increasing.`
+              }
+            </p>
+          </div>
+        )}
+        {adviceType === "inconsistent" && (
+          <div className="flex gap-2 p-2.5 rounded-lg bg-[oklch(0.15_0.04_50)] border border-[oklch(0.78_0.15_75/0.2)]">
+            <AlertTriangle className="w-3.5 h-3.5 text-[oklch(0.78_0.15_75)] shrink-0 mt-0.5" />
+            <p className="text-xs text-[oklch(0.78_0.15_75)] leading-relaxed">
+              {ja
+                ? `ロットサイズによってパフォーマンスに大きな差があります。${bestGroup.label}（PF: ${bestGroup.profitFactor >= 999 ? "999+" : bestGroup.profitFactor.toFixed(2)}、勝率: ${bestGroup.winRate.toFixed(1)}%）が最も良く、${worstGroup.label}（PF: ${worstGroup.profitFactor >= 999 ? "999+" : worstGroup.profitFactor.toFixed(2)}、勝率: ${worstGroup.winRate.toFixed(1)}%）が最も悪い結果です。成績の良い${bestGroup.label}に集中し、${worstGroup.label}でのエントリーを減らすか、同一ルールが適用されているか確認してください。`
+                : `Performance varies significantly by lot size. Best: ${bestGroup.label} (PF: ${bestGroup.profitFactor >= 999 ? "999+" : bestGroup.profitFactor.toFixed(2)}, WR: ${bestGroup.winRate.toFixed(1)}%). Worst: ${worstGroup.label} (PF: ${worstGroup.profitFactor >= 999 ? "999+" : worstGroup.profitFactor.toFixed(2)}, WR: ${worstGroup.winRate.toFixed(1)}%). Focus on ${bestGroup.label} and reduce ${worstGroup.label} entries.`
+              }
+            </p>
+          </div>
+        )}
+        {adviceType === "specific_group_bad" && (
+          <div className="flex gap-2 p-2.5 rounded-lg bg-[oklch(0.15_0.04_50)] border border-[oklch(0.78_0.15_75/0.2)]">
+            <AlertTriangle className="w-3.5 h-3.5 text-[oklch(0.78_0.15_75)] shrink-0 mt-0.5" />
+            <p className="text-xs text-[oklch(0.78_0.15_75)] leading-relaxed">
+              {ja
+                ? `${worstGroup.label}（${worstGroup.trades}件）のPFが${worstGroup.profitFactor.toFixed(2)}と低く、損益は${worstGroup.netProfit.toFixed(2)}です。このサイズでのトレードを見直すか、成績が安定するまでロットを落としてください。`
+                : `${worstGroup.label} (${worstGroup.trades} trades) has a low PF of ${worstGroup.profitFactor.toFixed(2)} with P/L of ${worstGroup.netProfit.toFixed(2)}. Review trades at this size or reduce lot until performance stabilizes.`
+              }
+            </p>
+          </div>
+        )}
+        {adviceType === "stable_mediocre" && hasMultipleGroups && (
+          <div className="flex gap-2 p-2.5 rounded-lg bg-[oklch(0.15_0.04_50)] border border-[oklch(0.78_0.15_75/0.2)]">
+            <AlertTriangle className="w-3.5 h-3.5 text-[oklch(0.78_0.15_75)] shrink-0 mt-0.5" />
+            <p className="text-xs text-[oklch(0.78_0.15_75)] leading-relaxed">
+              {ja
+                ? `ロットサイズ間で大きな差はありませんが、全体的にパフォーマンスが低調です（加重平均勝率: ${weightedWinRate.toFixed(1)}%、平均PF: ${avgPF.toFixed(2)}）。ロットサイズの調整よりも先に、エントリー精度の改善や損切りルールの最適化に取り組むことを推奨します。`
+                : `No significant difference across lot sizes, but overall performance is below target (weighted WR: ${weightedWinRate.toFixed(1)}%, avg PF: ${avgPF.toFixed(2)}). Focus on improving entry accuracy and SL/TP rules before adjusting lot sizes.`
+              }
+            </p>
+          </div>
+        )}
+        {adviceType === "stable_good" && hasMultipleGroups && (
+          <div className="flex gap-2 p-2.5 rounded-lg bg-[oklch(0.15_0.04_145)] border border-[oklch(0.72_0.18_145/0.2)]">
+            <span className="text-[oklch(0.72_0.18_145)] text-xs shrink-0 mt-0.5">✓</span>
+            <p className="text-xs text-[oklch(0.72_0.18_145)] leading-relaxed">
+              {ja
+                ? `ロットサイズに関わらず安定した成績を維持しています（加重平均勝率: ${weightedWinRate.toFixed(1)}%、平均PF: ${avgPF.toFixed(2)}）。感情的なトレードの影響は少なく、ポジションサイズ管理が適切です。`
+                : `Performance is consistent across lot sizes (weighted WR: ${weightedWinRate.toFixed(1)}%, avg PF: ${avgPF.toFixed(2)}). Position sizing is well-managed with minimal emotional impact.`
+              }
+            </p>
+          </div>
+        )}
+      </div>
     </motion.div>
   );
 }

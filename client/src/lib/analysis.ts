@@ -1024,6 +1024,160 @@ export function generateSuggestions(
     }
   }
 
+  // ========== Pattern 18: Recovery After Losses ==========
+  if (trades && trades.length > 10) {
+    let afterLossWins = 0;
+    let afterLossTrades = 0;
+    let afterLossLotIncrease = 0;
+    for (let i = 1; i < trades.length; i++) {
+      if (trades[i - 1].profit < 0) {
+        afterLossTrades++;
+        if (trades[i].profit > 0) afterLossWins++;
+        if (trades[i].lots > trades[i - 1].lots * 1.2) afterLossLotIncrease++;
+      }
+    }
+    const afterLossWinRate = afterLossTrades > 0 ? (afterLossWins / afterLossTrades) * 100 : 0;
+    if (afterLossTrades >= 5 && afterLossLotIncrease > afterLossTrades * 0.3) {
+      suggestions.push({
+        title: lang === "ja" ? "損失後のロット増加（リベンジトレード）" : "Post-Loss Lot Increase (Revenge Trading)",
+        description: lang === "ja"
+          ? `負けトレードの後、${((afterLossLotIncrease / afterLossTrades) * 100).toFixed(0)}%の確率でロットサイズを増加させています。損失を取り戻そうとする「リベンジトレード」の兆候です。負けた後こそ冷静にルール通りのロットを維持してください。`
+          : `After losing trades, lot size increases ${((afterLossLotIncrease / afterLossTrades) * 100).toFixed(0)}% of the time. This suggests "revenge trading". Maintain consistent lot sizing especially after losses.`,
+        priority: "high",
+        category: lang === "ja" ? "メンタル管理" : "Mental Management",
+      });
+    }
+    if (afterLossTrades >= 10 && afterLossWinRate < metrics.winRate - 10) {
+      suggestions.push({
+        title: lang === "ja" ? "損失後の勝率低下" : "Lower Win Rate After Losses",
+        description: lang === "ja"
+          ? `負けた直後のトレードの勝率（${afterLossWinRate.toFixed(1)}%）が通常時（${metrics.winRate.toFixed(1)}%）より${(metrics.winRate - afterLossWinRate).toFixed(1)}%低下しています。負けた後は1〜2トレード休むか、ロットを小さくして冷静さを取り戻してからエントリーしてください。`
+          : `Win rate immediately after a loss (${afterLossWinRate.toFixed(1)}%) drops ${(metrics.winRate - afterLossWinRate).toFixed(1)}% below overall (${metrics.winRate.toFixed(1)}%). Consider pausing 1-2 trades or reducing lot size after a loss to regain composure.`,
+        priority: "medium",
+        category: lang === "ja" ? "メンタル管理" : "Mental Management",
+      });
+    }
+  }
+
+  // ========== Pattern 19: Lot Size All Losing ==========
+  if (lotSizeAnalysis && lotSizeAnalysis.length >= 2) {
+    const allLotGroupsLosing = lotSizeAnalysis.every(g => g.netProfit < 0);
+    const allLotGroupsLowPF = lotSizeAnalysis.filter(g => g.trades >= 3).every(g => g.profitFactor < 1);
+    if (allLotGroupsLosing || allLotGroupsLowPF) {
+      const totalLotLoss = lotSizeAnalysis.reduce((s, g) => s + g.netProfit, 0);
+      suggestions.push({
+        title: lang === "ja" ? "全ロットサイズで損失発生" : "All Lot Sizes Losing",
+        description: lang === "ja"
+          ? `小ロットから大ロットまで全てのサイズ区分で損失が発生しています（合計: ${totalLotLoss.toFixed(2)}）。ロットサイズの調整では解決できない根本的な戦略の問題があります。まず最小ロットに固定して勝てるルールを確立し、その後にサイズを拡大してください。`
+          : `All lot size groups are losing (total: ${totalLotLoss.toFixed(2)}). This indicates a fundamental strategy issue that lot size adjustment cannot fix. Fix rules at minimum lot first, then scale up.`,
+        priority: "high",
+        category: lang === "ja" ? "戦略全体" : "Overall Strategy",
+      });
+    }
+  }
+
+  // ========== Pattern 20: Win Rate vs Risk Reward Imbalance ==========
+  if (metrics.winRate > 0 && metrics.riskReward > 0) {
+    // Required RR for break-even given the win rate: RR_be = (1 - WR) / WR
+    const requiredRR = (100 - metrics.winRate) / metrics.winRate;
+    if (metrics.riskReward < requiredRR * 0.8) {
+      suggestions.push({
+        title: lang === "ja" ? "勝率とリスクリワードのバランス不良" : "Win Rate / Risk Reward Imbalance",
+        description: lang === "ja"
+          ? `現在の勝率${metrics.winRate.toFixed(1)}%では、損益分岐点のリスクリワード比は約${requiredRR.toFixed(2)}ですが、実際は${metrics.riskReward.toFixed(2)}しかありません。勝率を上げるか、1回あたりの利益幅を損失幅に対して大きくする必要があります。具体的には、損切り幅を現在の${(100 / (requiredRR / metrics.riskReward)).toFixed(0)}%に縮小するか、利確幅を${((requiredRR / metrics.riskReward) * 100).toFixed(0)}%に拡大してください。`
+          : `At ${metrics.winRate.toFixed(1)}% win rate, break-even RR is ~${requiredRR.toFixed(2)}, but actual RR is only ${metrics.riskReward.toFixed(2)}. Either improve win rate or widen the gap between avg win and avg loss.`,
+        priority: "high",
+        category: lang === "ja" ? "戦略全体" : "Overall Strategy",
+      });
+    }
+  }
+
+  // ========== Pattern 21: First Half vs Second Half Performance Trend ==========
+  if (trades && trades.length >= 20) {
+    const mid = Math.floor(trades.length / 2);
+    const firstHalf = trades.slice(0, mid);
+    const secondHalf = trades.slice(mid);
+    const firstWR = (firstHalf.filter(t => t.profit > 0).length / firstHalf.length) * 100;
+    const secondWR = (secondHalf.filter(t => t.profit > 0).length / secondHalf.length) * 100;
+    const firstAvgPL = firstHalf.reduce((s, t) => s + t.profit, 0) / firstHalf.length;
+    const secondAvgPL = secondHalf.reduce((s, t) => s + t.profit, 0) / secondHalf.length;
+
+    if (secondWR < firstWR - 10 && secondAvgPL < firstAvgPL) {
+      suggestions.push({
+        title: lang === "ja" ? "後半にかけて成績が悪化" : "Performance Declining Over Time",
+        description: lang === "ja"
+          ? `前半${firstHalf.length}件（勝率${firstWR.toFixed(1)}%、平均損益${firstAvgPL.toFixed(2)}）に対し、後半${secondHalf.length}件（勝率${secondWR.toFixed(1)}%、平均損益${secondAvgPL.toFixed(2)}）と成績が悪化しています。市場環境の変化にルールが適応できていない、またはルールの逸脱が進んでいる可能性があります。直近のトレードを重点的に見直してください。`
+          : `First ${firstHalf.length} trades: WR ${firstWR.toFixed(1)}%, avg P/L ${firstAvgPL.toFixed(2)}. Last ${secondHalf.length}: WR ${secondWR.toFixed(1)}%, avg P/L ${secondAvgPL.toFixed(2)}. Performance is declining. Review recent trades for rule deviations or market environment changes.`,
+        priority: "medium",
+        category: lang === "ja" ? "戦略全体" : "Overall Strategy",
+      });
+    } else if (secondWR > firstWR + 10 && secondAvgPL > firstAvgPL) {
+      suggestions.push({
+        title: lang === "ja" ? "後半にかけて成績が改善" : "Performance Improving Over Time",
+        description: lang === "ja"
+          ? `前半${firstHalf.length}件（勝率${firstWR.toFixed(1)}%）に対し後半${secondHalf.length}件（勝率${secondWR.toFixed(1)}%）と改善傾向です。直近のトレードルールが機能しているため、最近の判断基準を言語化してルール化することで、さらなる安定が期待できます。`
+          : `Performance improved from ${firstWR.toFixed(1)}% to ${secondWR.toFixed(1)}% win rate. Recent rules are working. Document and formalize your recent decision criteria.`,
+        priority: "low",
+        category: lang === "ja" ? "戦略全体" : "Overall Strategy",
+      });
+    }
+  }
+
+  // ========== Pattern 22: Profit Giving Back (Win → Loss Sequence) ==========
+  if (trades && trades.length >= 20) {
+    let giveBackCount = 0;
+    let giveBackAmount = 0;
+    for (let i = 1; i < trades.length; i++) {
+      if (trades[i - 1].profit > 0 && trades[i].profit < 0 && Math.abs(trades[i].profit) > trades[i - 1].profit) {
+        giveBackCount++;
+        giveBackAmount += Math.abs(trades[i].profit) - trades[i - 1].profit;
+      }
+    }
+    const giveBackRate = giveBackCount / (trades.length - 1) * 100;
+    if (giveBackCount >= 5 && giveBackRate > 15) {
+      suggestions.push({
+        title: lang === "ja" ? "利益の吐き出しパターン" : "Profit Give-Back Pattern",
+        description: lang === "ja"
+          ? `勝ちトレードの直後に、前回の利益を超える損失を出すパターンが${giveBackCount}回（${giveBackRate.toFixed(1)}%）発生し、合計${giveBackAmount.toFixed(2)}の余分な損失が生じています。勝った後に気が緩んでエントリー精度が落ちている可能性があります。勝った後も同じ基準でエントリーし、勝ち分を守る意識を持ちましょう。`
+          : `${giveBackCount} times (${giveBackRate.toFixed(1)}%) a losing trade immediately after a win exceeded the prior win, giving back ${giveBackAmount.toFixed(2)} extra. Maintain the same entry criteria after winning to protect gains.`,
+        priority: "medium",
+        category: lang === "ja" ? "メンタル管理" : "Mental Management",
+      });
+    }
+  }
+
+  // ========== Pattern 23: Symbol Diversification ==========
+  if (trades && trades.length >= 10) {
+    const symbolCounts = new Map<string, number>();
+    for (const t of trades) {
+      symbolCounts.set(t.symbol, (symbolCounts.get(t.symbol) || 0) + 1);
+    }
+    if (symbolCounts.size === 1) {
+      const symbol = Array.from(symbolCounts.keys())[0];
+      suggestions.push({
+        title: lang === "ja" ? "単一通貨ペアへの集中" : "Single Pair Concentration",
+        description: lang === "ja"
+          ? `全トレードが${symbol}に集中しています。この通貨ペアの特性が変わった場合、戦略全体が機能しなくなるリスクがあります。相関の低い通貨ペアを1〜2つ追加してリスク分散を検討してください。`
+          : `All trades are on ${symbol}. If this pair's characteristics change, the entire strategy may fail. Consider adding 1-2 uncorrelated pairs for diversification.`,
+        priority: "low",
+        category: lang === "ja" ? "通貨ペア選定" : "Pair Selection",
+      });
+    } else if (symbolCounts.size >= 2) {
+      const sorted = Array.from(symbolCounts.entries()).sort((a, b) => b[1] - a[1]);
+      const topPairShare = sorted[0][1] / trades.length * 100;
+      if (topPairShare > 80) {
+        suggestions.push({
+          title: lang === "ja" ? "通貨ペアの偏り" : "Pair Concentration",
+          description: lang === "ja"
+            ? `トレードの${topPairShare.toFixed(0)}%が${sorted[0][0]}に集中しています。この通貨ペアへの依存度が高いため、他の通貨ペアでの検証も行い、リスクの分散を図ることを推奨します。`
+            : `${topPairShare.toFixed(0)}% of trades are on ${sorted[0][0]}. High dependence on a single pair increases risk. Consider diversifying.`,
+          priority: "low",
+          category: lang === "ja" ? "通貨ペア選定" : "Pair Selection",
+        });
+      }
+    }
+  }
+
   return suggestions.sort((a, b) => {
     const order = { high: 0, medium: 1, low: 2 };
     return order[a.priority] - order[b.priority];
