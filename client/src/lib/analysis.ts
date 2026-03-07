@@ -787,59 +787,137 @@ export function generateSuggestions(
 ): ImprovementSuggestion[] {
   const suggestions: ImprovementSuggestion[] = [];
 
+  // Pattern 1: Profit Factor - severity-based
   if (metrics.profitFactor < 1.2) {
-    suggestions.push({
-      title: lang === "ja" ? "損切りルールの見直し" : "Review Stop-Loss Rules",
-      description: lang === "ja"
-        ? "Profit Factorが低いため、損切りラインを厳格化し、損失の拡大を防ぐことを検討してください。"
-        : "Profit Factor is low. Consider tightening stop-loss levels to prevent losses from expanding.",
-      priority: "high",
-      category: lang === "ja" ? "リスク管理" : "Risk Management",
-    });
+    if (metrics.profitFactor < 0.5) {
+      suggestions.push({
+        title: lang === "ja" ? "PFが極端に低い（緊急）" : "Critically Low Profit Factor",
+        description: lang === "ja"
+          ? `PFが${metrics.profitFactor.toFixed(2)}で、利益の2倍以上の損失が出ています。現在の戦略を即座に停止し、デモ口座で再検証すべきです。損切り幅が大きすぎる、または利確が早すぎる可能性が高いです。まず損切り幅を現在の半分に設定してテストしてください。`
+          : `PF is ${metrics.profitFactor.toFixed(2)}. Stop live trading immediately, test on demo. Try halving your stop-loss width.`,
+        priority: "high",
+        category: lang === "ja" ? "リスク管理" : "Risk Management",
+      });
+    } else if (metrics.profitFactor < 1) {
+      suggestions.push({
+        title: lang === "ja" ? "PFが1未満（損失拡大中）" : "Profit Factor Below 1",
+        description: lang === "ja"
+          ? `PFが${metrics.profitFactor.toFixed(2)}で、トレードするほど資金が減る状態です。損切りラインを厳格化（現在の70-80%程度に縮小）し、同時に利確を粘れるようトレーリングストップの導入を検討してください。改善が見られない場合はデモ口座に切り替えてください。`
+          : `PF is ${metrics.profitFactor.toFixed(2)}. Tighten SL to 70-80% of current width and consider trailing stops. Switch to demo if no improvement.`,
+        priority: "high",
+        category: lang === "ja" ? "リスク管理" : "Risk Management",
+      });
+    } else {
+      suggestions.push({
+        title: lang === "ja" ? "PFの改善余地あり" : "Room to Improve Profit Factor",
+        description: lang === "ja"
+          ? `PFが${metrics.profitFactor.toFixed(2)}で利益は出ていますが、マージンが薄く、スプレッドやスリッページで容易にマイナスになりえます。損切り幅を少し縮小するか、利確ポイントを10-20%広げることでPFの改善が期待できます。`
+          : `PF is ${metrics.profitFactor.toFixed(2)}. Thin margin. Slightly tighten SL or widen TP by 10-20%.`,
+        priority: "medium",
+        category: lang === "ja" ? "リスク管理" : "Risk Management",
+      });
+    }
   }
 
+  // Pattern 2: Risk Reward - severity-based
   if (metrics.riskReward < 1) {
-    suggestions.push({
-      title: lang === "ja" ? "利確ターゲットの拡大" : "Widen Take-Profit Targets",
-      description: lang === "ja"
-        ? "Risk Rewardが1未満のため、利確ポイントを広げるか、トレーリングストップの導入を検討してください。"
-        : "Risk Reward is below 1. Consider widening take-profit points or introducing trailing stops.",
-      priority: "high",
-      category: lang === "ja" ? "エントリー/イグジット" : "Entry/Exit",
-    });
+    if (metrics.riskReward < 0.5) {
+      suggestions.push({
+        title: lang === "ja" ? "RRが極端に低い" : "Critically Low Risk Reward",
+        description: lang === "ja"
+          ? `RR比が${metrics.riskReward.toFixed(2)}で、平均損失（${metrics.avgLoss.toFixed(2)}）が平均利益（${metrics.avgProfit.toFixed(2)}）の2倍以上です。これは勝率が70%以上ないと利益が出ない水準です。利確を粘る（トレーリングストップ）か、損切りを早める（ストップ幅縮小）か、または両方を実施してください。`
+          : `RR ${metrics.riskReward.toFixed(2)}: avg loss (${metrics.avgLoss.toFixed(2)}) is 2x+ avg profit (${metrics.avgProfit.toFixed(2)}). Needs 70%+ WR to be profitable. Use trailing stops and tighten SL.`,
+        priority: "high",
+        category: lang === "ja" ? "エントリー/イグジット" : "Entry/Exit",
+      });
+    } else {
+      suggestions.push({
+        title: lang === "ja" ? "RR比の改善" : "Improve Risk Reward Ratio",
+        description: lang === "ja"
+          ? `RR比が${metrics.riskReward.toFixed(2)}でやや不利です。利確ポイントをもう少し遠くに設定するか、トレーリングストップで利益を伸ばす工夫を検討してください。RR1.5以上を目標にすると安定性が大幅に向上します。`
+          : `RR is ${metrics.riskReward.toFixed(2)}. Try widening TP or using trailing stops. Target RR 1.5+ for stability.`,
+        priority: "high",
+        category: lang === "ja" ? "エントリー/イグジット" : "Entry/Exit",
+      });
+    }
   }
 
+  // Pattern 3: Win Rate - severity-based
   if (metrics.winRate < 40) {
-    suggestions.push({
-      title: lang === "ja" ? "エントリー条件の精査" : "Refine Entry Conditions",
-      description: lang === "ja"
-        ? "勝率が低いため、エントリー条件にフィルターを追加し、より確度の高いセットアップに絞ることを推奨します。"
-        : "Win rate is low. Add filters to entry conditions and focus on higher-probability setups.",
-      priority: "high",
-      category: lang === "ja" ? "エントリー/イグジット" : "Entry/Exit",
-    });
+    if (metrics.winRate < 25) {
+      suggestions.push({
+        title: lang === "ja" ? "勝率が極端に低い" : "Critically Low Win Rate",
+        description: lang === "ja"
+          ? `勝率${metrics.winRate.toFixed(1)}%は非常に低く、4回中3回以上負けている状態です。エントリーの根拠自体を見直す必要があります。①トレンド方向のみにエントリーを限定する ②上位足のサポート/レジスタンスを確認してからエントリーする ③ニュース時のエントリーを避ける、の3点から始めてください。`
+          : `Win rate ${metrics.winRate.toFixed(1)}% is critically low. Limit entries to trend direction, confirm S/R on higher timeframes, and avoid news events.`,
+        priority: "high",
+        category: lang === "ja" ? "エントリー/イグジット" : "Entry/Exit",
+      });
+    } else {
+      suggestions.push({
+        title: lang === "ja" ? "エントリー精度の改善" : "Improve Entry Accuracy",
+        description: lang === "ja"
+          ? `勝率${metrics.winRate.toFixed(1)}%はやや低めです。RR比が${metrics.riskReward.toFixed(2)}以上あれば利益は出ますが、エントリーフィルターを1つ追加して勝率を${(metrics.winRate + 10).toFixed(0)}%まで改善できれば、PFが大幅に向上します。例えば、移動平均線の方向や出来高の確認を追加してみてください。`
+          : `Win rate ${metrics.winRate.toFixed(1)}% is below average. Adding one entry filter could improve WR by ~10% and significantly boost PF.`,
+        priority: "high",
+        category: lang === "ja" ? "エントリー/イグジット" : "Entry/Exit",
+      });
+    }
   }
 
-  if (metrics.maxDrawdownPercent > 30) {
-    suggestions.push({
-      title: lang === "ja" ? "ポジションサイズの縮小" : "Reduce Position Size",
-      description: lang === "ja"
-        ? "最大ドローダウンが大きいため、1トレードあたりのリスクを資金の1-2%に制限することを推奨します。"
-        : "Max drawdown is large. Limit risk per trade to 1-2% of capital.",
-      priority: "high",
-      category: lang === "ja" ? "リスク管理" : "Risk Management",
-    });
+  // Pattern 4: Max Drawdown - severity-based
+  if (metrics.maxDrawdownPercent > 15) {
+    if (metrics.maxDrawdownPercent > 50) {
+      suggestions.push({
+        title: lang === "ja" ? "ドローダウンが致命的水準" : "Critical Drawdown Level",
+        description: lang === "ja"
+          ? `最大ドローダウン${metrics.maxDrawdownPercent.toFixed(1)}%は資金の半分以上を失った経験があることを意味します。この水準からの回復には100%以上のリターンが必要です。即座にロットサイズを現在の1/3〜1/4に落とし、資金の1%以上をリスクにさらさないルールを徹底してください。`
+          : `Max DD ${metrics.maxDrawdownPercent.toFixed(1)}% means over half the capital was lost. Need 100%+ return to recover. Immediately cut lot to 1/4 and limit risk to 1% per trade.`,
+        priority: "high",
+        category: lang === "ja" ? "リスク管理" : "Risk Management",
+      });
+    } else if (metrics.maxDrawdownPercent > 30) {
+      suggestions.push({
+        title: lang === "ja" ? "ドローダウンが大きすぎる" : "Excessive Drawdown",
+        description: lang === "ja"
+          ? `最大ドローダウン${metrics.maxDrawdownPercent.toFixed(1)}%は、回復に${(metrics.maxDrawdownPercent / (100 - metrics.maxDrawdownPercent) * 100).toFixed(0)}%のリターンが必要な水準です。1トレードあたりのリスクを資金の1%以下に制限し、ポジションサイズを縮小してください。`
+          : `Max DD ${metrics.maxDrawdownPercent.toFixed(1)}% requires ${(metrics.maxDrawdownPercent / (100 - metrics.maxDrawdownPercent) * 100).toFixed(0)}% return to recover. Limit risk to 1% per trade.`,
+        priority: "high",
+        category: lang === "ja" ? "リスク管理" : "Risk Management",
+      });
+    } else {
+      suggestions.push({
+        title: lang === "ja" ? "ドローダウンに注意" : "Drawdown Caution",
+        description: lang === "ja"
+          ? `最大ドローダウン${metrics.maxDrawdownPercent.toFixed(1)}%はまだ管理可能な水準ですが、これ以上拡大しないよう1トレードあたりのリスクを資金の2%以内に抑え、連敗時のロット縮小ルールを検討してください。`
+          : `Max DD ${metrics.maxDrawdownPercent.toFixed(1)}%. Keep risk per trade under 2% and consider reducing lot size during losing streaks.`,
+        priority: "medium",
+        category: lang === "ja" ? "リスク管理" : "Risk Management",
+      });
+    }
   }
 
+  // Pattern 5: Consecutive Losses - severity-based
   if (metrics.maxConsecutiveLosses >= 5) {
-    suggestions.push({
-      title: lang === "ja" ? "連敗時のルール設定" : "Set Losing Streak Rules",
-      description: lang === "ja"
-        ? `最大${metrics.maxConsecutiveLosses}連敗が発生しています。連敗時にロットを下げる、または一時休止するルールの導入を検討してください。`
-        : `Max ${metrics.maxConsecutiveLosses} consecutive losses occurred. Consider reducing lot size or pausing during losing streaks.`,
-      priority: "medium",
-      category: lang === "ja" ? "メンタル管理" : "Mental Management",
-    });
+    if (metrics.maxConsecutiveLosses >= 10) {
+      suggestions.push({
+        title: lang === "ja" ? "10連敗以上の経験あり（深刻）" : "10+ Consecutive Losses (Critical)",
+        description: lang === "ja"
+          ? `最大${metrics.maxConsecutiveLosses}連敗は、戦略とメンタルの両面で深刻な問題を示唆します。①3連敗でロットを半分に ②5連敗でその日のトレードを停止 ③${metrics.maxConsecutiveLosses > 7 ? "7" : "5"}連敗でリアルトレードを1週間休止、というルールを必ず設けてください。連敗中はメンタルが正常に機能しません。`
+          : `${metrics.maxConsecutiveLosses} consecutive losses. Set rules: halve lots at 3 losses, stop for the day at 5, pause live trading for a week at 7+.`,
+        priority: "high",
+        category: lang === "ja" ? "メンタル管理" : "Mental Management",
+      });
+    } else {
+      suggestions.push({
+        title: lang === "ja" ? "連敗対策の導入" : "Set Losing Streak Rules",
+        description: lang === "ja"
+          ? `最大${metrics.maxConsecutiveLosses}連敗が発生しています。連敗はどの戦略でも起こりますが、ダメージを最小化するルールが重要です。3連敗でロットを50%に減らし、連敗が終わるまで維持してください。また連敗後はトレード日誌を振り返り、共通パターンがないか確認しましょう。`
+          : `${metrics.maxConsecutiveLosses} consecutive losses occurred. Halve lot size after 3 losses and review trading journal for patterns.`,
+        priority: "medium",
+        category: lang === "ja" ? "メンタル管理" : "Mental Management",
+      });
+    }
   }
 
   const catSymbol = lang === "ja" ? "通貨ペア" : "Symbol";
@@ -870,15 +948,29 @@ export function generateSuggestions(
     });
   }
 
+  // Pattern 8: Expectancy - severity-based
   if (metrics.expectancy <= 0) {
-    suggestions.push({
-      title: lang === "ja" ? "戦略の根本的な見直し" : "Fundamental Strategy Review",
-      description: lang === "ja"
-        ? "期待値がマイナスのため、現在の戦略では長期的に資金が減少します。バックテストを含めた戦略の再構築を強く推奨します。"
-        : "Expectancy is negative. The current strategy will lose capital over time. A full strategy rebuild including backtesting is strongly recommended.",
-      priority: "high",
-      category: lang === "ja" ? "戦略全体" : "Overall Strategy",
-    });
+    const expPerTrade = metrics.expectancy;
+    const projected100 = expPerTrade * 100;
+    if (expPerTrade < -metrics.avgLoss * 0.3) {
+      suggestions.push({
+        title: lang === "ja" ? "期待値が大幅マイナス（緊急）" : "Deeply Negative Expectancy (Urgent)",
+        description: lang === "ja"
+          ? `1トレードあたりの期待値${expPerTrade.toFixed(2)}は、100トレード継続すると約${projected100.toFixed(0)}の損失になる水準です。現在の戦略をこのまま続けるのは危険です。リアルトレードを停止し、①損切り幅の縮小 ②エントリー条件の追加 ③利確幅の拡大 のいずれかをデモ口座で検証してから再開してください。`
+          : `Expectancy ${expPerTrade.toFixed(2)}/trade = ~${projected100.toFixed(0)} loss over 100 trades. Stop live trading. Test SL tightening, entry filters, or TP widening on demo.`,
+        priority: "high",
+        category: lang === "ja" ? "戦略全体" : "Overall Strategy",
+      });
+    } else {
+      suggestions.push({
+        title: lang === "ja" ? "期待値がマイナス" : "Negative Expectancy",
+        description: lang === "ja"
+          ? `期待値が${expPerTrade.toFixed(2)}でわずかにマイナスです。小さな改善で黒字化できる可能性があります。勝率を${(metrics.winRate + 5).toFixed(0)}%に上げるか、RR比を${(metrics.riskReward * 1.2).toFixed(2)}に改善するだけで期待値がプラスに転じます。具体的には、最も成績の悪い通貨ペアや時間帯のトレードを除外することから始めてください。`
+          : `Expectancy is ${expPerTrade.toFixed(2)} (slightly negative). Small improvements can turn it positive. Try improving WR by 5% or RR by 20%.`,
+        priority: "high",
+        category: lang === "ja" ? "戦略全体" : "Overall Strategy",
+      });
+    }
   }
 
   // ========== Pattern 9: Kotsukotsu-Dokan Warning ==========
@@ -1175,6 +1267,404 @@ export function generateSuggestions(
           category: lang === "ja" ? "通貨ペア選定" : "Pair Selection",
         });
       }
+    }
+  }
+
+  // ========== Pattern 24: Session-Based Performance (Tokyo/London/NY) ==========
+  if (trades && trades.length >= 10) {
+    const sessions = [
+      { name: lang === "ja" ? "東京" : "Tokyo", start: 0, end: 9 },    // 0:00-9:00 UTC ≈ Tokyo
+      { name: lang === "ja" ? "ロンドン" : "London", start: 7, end: 16 }, // 7:00-16:00 UTC ≈ London
+      { name: lang === "ja" ? "ニューヨーク" : "New York", start: 13, end: 22 }, // 13:00-22:00 UTC ≈ NY
+    ];
+    const sessionStats = sessions.map(s => {
+      const sTrades = trades.filter(t => {
+        const h = t.time.getHours();
+        return h >= s.start && h < s.end;
+      });
+      if (sTrades.length < 3) return null;
+      const wins = sTrades.filter(t => t.profit > 0);
+      const losses = sTrades.filter(t => t.profit < 0);
+      const grossWin = wins.reduce((a, t) => a + t.profit, 0);
+      const grossLoss = Math.abs(losses.reduce((a, t) => a + t.profit, 0));
+      return {
+        name: s.name,
+        trades: sTrades.length,
+        winRate: (wins.length / sTrades.length) * 100,
+        pf: grossLoss > 0 ? grossWin / grossLoss : grossWin > 0 ? 999 : 0,
+        net: sTrades.reduce((a, t) => a + t.profit, 0),
+      };
+    }).filter(s => s !== null);
+
+    if (sessionStats.length >= 2) {
+      const bestSession = sessionStats.reduce((a, b) => a.pf > b.pf ? a : b);
+      const worstSession = sessionStats.reduce((a, b) => a.pf < b.pf ? a : b);
+      if (worstSession.pf < 0.8 && bestSession.pf > 1.2 && worstSession.trades >= 5) {
+        suggestions.push({
+          title: lang === "ja" ? "セッション別パフォーマンス差" : "Session Performance Gap",
+          description: lang === "ja"
+            ? `${worstSession.name}セッション（${worstSession.trades}件、PF: ${worstSession.pf.toFixed(2)}、損益: ${worstSession.net.toFixed(2)}）の成績が${bestSession.name}セッション（PF: ${bestSession.pf >= 999 ? "999+" : bestSession.pf.toFixed(2)}）と比べて大幅に低いです。${worstSession.name}セッションでのトレードを減らし、${bestSession.name}セッションに集中することで全体の成績改善が期待できます。`
+            : `${worstSession.name} session (${worstSession.trades} trades, PF: ${worstSession.pf.toFixed(2)}, P/L: ${worstSession.net.toFixed(2)}) significantly underperforms ${bestSession.name} (PF: ${bestSession.pf >= 999 ? "999+" : bestSession.pf.toFixed(2)}). Focus on ${bestSession.name} session.`,
+          priority: worstSession.pf < 0.5 ? "high" : "medium",
+          category: lang === "ja" ? "時間管理" : "Time Management",
+        });
+      }
+    }
+  }
+
+  // ========== Pattern 25: Overtrading Detection (Daily Trade Count vs Performance) ==========
+  if (trades && trades.length >= 15) {
+    const dailyGroups = new Map<string, TradeRecord[]>();
+    for (const t of trades) {
+      const key = t.time.toISOString().split("T")[0];
+      const arr = dailyGroups.get(key) || [];
+      arr.push(t);
+      dailyGroups.set(key, arr);
+    }
+    const dailyStats = Array.from(dailyGroups.values()).map(dayTrades => ({
+      count: dayTrades.length,
+      winRate: (dayTrades.filter(t => t.profit > 0).length / dayTrades.length) * 100,
+      net: dayTrades.reduce((s, t) => s + t.profit, 0),
+    }));
+
+    const avgDailyCount = dailyStats.reduce((s, d) => s + d.count, 0) / dailyStats.length;
+    const highVolumeDays = dailyStats.filter(d => d.count > avgDailyCount * 1.5);
+    const lowVolumeDays = dailyStats.filter(d => d.count <= avgDailyCount);
+
+    if (highVolumeDays.length >= 3 && lowVolumeDays.length >= 3) {
+      const highVolumeWR = highVolumeDays.reduce((s, d) => s + d.winRate, 0) / highVolumeDays.length;
+      const lowVolumeWR = lowVolumeDays.reduce((s, d) => s + d.winRate, 0) / lowVolumeDays.length;
+      const highVolumeNet = highVolumeDays.reduce((s, d) => s + d.net, 0);
+      const lowVolumeNet = lowVolumeDays.reduce((s, d) => s + d.net, 0);
+
+      if (highVolumeWR < lowVolumeWR - 5 && highVolumeNet < 0) {
+        const severity: "high" | "medium" = highVolumeWR < lowVolumeWR - 15 ? "high" : "medium";
+        suggestions.push({
+          title: lang === "ja" ? "過剰トレードの傾向" : "Overtrading Tendency",
+          description: lang === "ja"
+            ? severity === "high"
+              ? `1日のトレード数が多い日（平均${avgDailyCount.toFixed(1)}件超）の勝率${highVolumeWR.toFixed(1)}%は、少ない日の勝率${lowVolumeWR.toFixed(1)}%より${(lowVolumeWR - highVolumeWR).toFixed(1)}%も低く、損益も${highVolumeNet.toFixed(2)}と大幅なマイナスです。1日のトレード回数に上限（例: ${Math.ceil(avgDailyCount)}回）を設け、厳選したエントリーのみ行ってください。`
+              : `トレード回数が多い日は勝率が${(lowVolumeWR - highVolumeWR).toFixed(1)}%低下する傾向があります（多い日: ${highVolumeWR.toFixed(1)}% vs 少ない日: ${lowVolumeWR.toFixed(1)}%）。エントリー回数を意識的に制限し、確度の高い場面に絞ることを検討してください。`
+            : `High-volume days (>${avgDailyCount.toFixed(1)} trades/day): WR ${highVolumeWR.toFixed(1)}%, net ${highVolumeNet.toFixed(2)}. Low-volume days: WR ${lowVolumeWR.toFixed(1)}%, net ${lowVolumeNet.toFixed(2)}. Consider limiting daily trade count.`,
+          priority: severity,
+          category: lang === "ja" ? "メンタル管理" : "Mental Management",
+        });
+      }
+    }
+  }
+
+  // ========== Pattern 26: Max Daily Loss Detection ==========
+  if (trades && trades.length >= 10) {
+    const dailyPL = new Map<string, number>();
+    for (const t of trades) {
+      const key = t.time.toISOString().split("T")[0];
+      dailyPL.set(key, (dailyPL.get(key) || 0) + t.profit);
+    }
+    const dailyPLArr = Array.from(dailyPL.values());
+    const worstDay = Math.min(...dailyPLArr);
+    const avgDailyPL = dailyPLArr.reduce((s, v) => s + v, 0) / dailyPLArr.length;
+    const badDays = dailyPLArr.filter(v => v < avgDailyPL * 3 && v < 0);
+
+    if (worstDay < 0 && badDays.length >= 1) {
+      const worstDayRatio = Math.abs(worstDay) / (metrics.totalLoss || 1) * 100;
+      if (worstDayRatio > 20) {
+        suggestions.push({
+          title: lang === "ja" ? "1日の最大損失が突出" : "Extreme Single-Day Loss",
+          description: lang === "ja"
+            ? worstDayRatio > 40
+              ? `最悪の1日で${worstDay.toFixed(2)}の損失が発生し、総損失の${worstDayRatio.toFixed(0)}%を占めています。1日の損失上限（デイリーストップロス）を設定し、上限に達したらその日のトレードを停止するルールが不可欠です。例えば1日の最大損失を${Math.abs(worstDay * 0.3).toFixed(0)}以内に制限してください。`
+              : `最悪の1日で${worstDay.toFixed(2)}の損失が発生しています（総損失の${worstDayRatio.toFixed(0)}%）。大きな損失日はメンタルにも影響します。1日の損失上限を設けることで、大崩れを防げます。`
+            : `Worst single day: ${worstDay.toFixed(2)} (${worstDayRatio.toFixed(0)}% of total losses). Set a daily stop-loss limit to prevent catastrophic days.`,
+          priority: worstDayRatio > 40 ? "high" : "medium",
+          category: lang === "ja" ? "リスク管理" : "Risk Management",
+        });
+      }
+    }
+  }
+
+  // ========== Pattern 27: Lot Size Trend Over Time ==========
+  if (trades && trades.length >= 20) {
+    const firstQuarter = trades.slice(0, Math.floor(trades.length / 4));
+    const lastQuarter = trades.slice(Math.floor(trades.length * 3 / 4));
+    const firstAvgLot = firstQuarter.reduce((s, t) => s + t.lots, 0) / firstQuarter.length;
+    const lastAvgLot = lastQuarter.reduce((s, t) => s + t.lots, 0) / lastQuarter.length;
+
+    if (firstAvgLot > 0 && lastAvgLot > firstAvgLot * 1.5) {
+      const lastQuarterWR = (lastQuarter.filter(t => t.profit > 0).length / lastQuarter.length) * 100;
+      const lastQuarterNet = lastQuarter.reduce((s, t) => s + t.profit, 0);
+      suggestions.push({
+        title: lang === "ja" ? "ロットサイズの増加傾向" : "Increasing Lot Size Trend",
+        description: lang === "ja"
+          ? lastQuarterNet < 0
+            ? `ロットサイズが初期（平均${firstAvgLot.toFixed(2)}）から直近（平均${lastAvgLot.toFixed(2)}）へ${((lastAvgLot / firstAvgLot - 1) * 100).toFixed(0)}%増加していますが、直近の成績は勝率${lastQuarterWR.toFixed(1)}%・損益${lastQuarterNet.toFixed(2)}と悪化しています。成績が伴わないままロットを増やすのは危険です。一度ロットを初期水準に戻し、成績を安定させてから再度拡大してください。`
+            : `ロットサイズが初期（平均${firstAvgLot.toFixed(2)}）から直近（平均${lastAvgLot.toFixed(2)}）へ増加しています。直近の成績は勝率${lastQuarterWR.toFixed(1)}%で安定していますが、ロット増加に伴うリスクも比例して増加します。ドローダウン耐性が十分か確認してください。`
+          : `Lot size increased ${((lastAvgLot / firstAvgLot - 1) * 100).toFixed(0)}% from ${firstAvgLot.toFixed(2)} to ${lastAvgLot.toFixed(2)}. Recent performance: WR ${lastQuarterWR.toFixed(1)}%, P/L ${lastQuarterNet.toFixed(2)}.`,
+        priority: lastQuarterNet < 0 ? "high" : "low",
+        category: lang === "ja" ? "リスク管理" : "Risk Management",
+      });
+    } else if (firstAvgLot > 0 && lastAvgLot < firstAvgLot * 0.5) {
+      suggestions.push({
+        title: lang === "ja" ? "ロットサイズの縮小傾向" : "Decreasing Lot Size Trend",
+        description: lang === "ja"
+          ? `ロットサイズが初期（平均${firstAvgLot.toFixed(2)}）から直近（平均${lastAvgLot.toFixed(2)}）へ大幅に縮小しています。連敗や自信喪失によるものであれば、戦略の根本的な見直しが先です。意図的なリスク管理であれば問題ありません。`
+          : `Lot size decreased significantly from ${firstAvgLot.toFixed(2)} to ${lastAvgLot.toFixed(2)}. If due to losing confidence, consider a strategy review first.`,
+        priority: "low",
+        category: lang === "ja" ? "メンタル管理" : "Mental Management",
+      });
+    }
+  }
+
+  // ========== Pattern 28: Consecutive Win Lot Increase (Overconfidence) ==========
+  if (trades && trades.length >= 15) {
+    let afterWinLotIncrease = 0;
+    let afterWinTrades = 0;
+    let afterWinIncreasedWins = 0;
+    let afterWinIncreasedTotal = 0;
+    for (let i = 1; i < trades.length; i++) {
+      if (trades[i - 1].profit > 0) {
+        afterWinTrades++;
+        if (trades[i].lots > trades[i - 1].lots * 1.2) {
+          afterWinLotIncrease++;
+          afterWinIncreasedTotal++;
+          if (trades[i].profit > 0) afterWinIncreasedWins++;
+        }
+      }
+    }
+    if (afterWinTrades >= 5 && afterWinLotIncrease > afterWinTrades * 0.3) {
+      const increasedWR = afterWinIncreasedTotal > 0 ? (afterWinIncreasedWins / afterWinIncreasedTotal) * 100 : 0;
+      suggestions.push({
+        title: lang === "ja" ? "勝ち後のロット増加" : "Post-Win Lot Increase",
+        description: lang === "ja"
+          ? increasedWR < metrics.winRate
+            ? `勝った後${((afterWinLotIncrease / afterWinTrades) * 100).toFixed(0)}%の確率でロットを増加させていますが、増加後の勝率は${increasedWR.toFixed(1)}%と通常（${metrics.winRate.toFixed(1)}%）より低下しています。勝った興奮でリスクを取りすぎている可能性があります。ロットサイズは成績に関係なく固定ルールで管理してください。`
+            : `勝った後${((afterWinLotIncrease / afterWinTrades) * 100).toFixed(0)}%の確率でロットを増加させています。現時点では成績に悪影響はありませんが、連勝が途切れた時の損失が大きくなるリスクがあります。計画的なスケールアップ以外のロット変更は避けましょう。`
+          : `Lot size increases ${((afterWinLotIncrease / afterWinTrades) * 100).toFixed(0)}% of the time after wins. Post-increase WR: ${increasedWR.toFixed(1)}% vs overall: ${metrics.winRate.toFixed(1)}%.`,
+        priority: increasedWR < metrics.winRate ? "medium" : "low",
+        category: lang === "ja" ? "メンタル管理" : "Mental Management",
+      });
+    }
+  }
+
+  // ========== Pattern 29: Friday Trade Performance ==========
+  if (trades && trades.length >= 10) {
+    const fridayTrades = trades.filter(t => t.time.getDay() === 5);
+    if (fridayTrades.length >= 5) {
+      const friWR = (fridayTrades.filter(t => t.profit > 0).length / fridayTrades.length) * 100;
+      const friNet = fridayTrades.reduce((s, t) => s + t.profit, 0);
+      const friLosses = fridayTrades.filter(t => t.profit < 0);
+      const friGrossLoss = Math.abs(friLosses.reduce((s, t) => s + t.profit, 0));
+      const friWins = fridayTrades.filter(t => t.profit > 0);
+      const friGrossWin = friWins.reduce((s, t) => s + t.profit, 0);
+      const friPF = friGrossLoss > 0 ? friGrossWin / friGrossLoss : friGrossWin > 0 ? 999 : 0;
+
+      if (friPF < 0.8 && friNet < 0) {
+        suggestions.push({
+          title: lang === "ja" ? "金曜日のトレードに注意" : "Friday Trading Caution",
+          description: lang === "ja"
+            ? friPF < 0.5
+              ? `金曜日のトレード（${fridayTrades.length}件）はPF${friPF.toFixed(2)}・損益${friNet.toFixed(2)}と非常に悪い成績です。週末前のポジション調整やスプレッド拡大の影響を受けやすく、また週をまたぐリスクもあります。金曜日のトレードを停止するか、大幅にロットを減らすことを強く推奨します。`
+              : `金曜日のトレード（${fridayTrades.length}件、PF: ${friPF.toFixed(2)}、損益: ${friNet.toFixed(2)}）の成績が低調です。金曜日は流動性の変化や週末リスクがあるため、エントリー条件を厳格化するかロットを小さくすることを検討してください。`
+            : `Friday trades (${fridayTrades.length}): PF ${friPF.toFixed(2)}, P/L ${friNet.toFixed(2)}. Consider reducing or avoiding Friday trades due to weekend risk.`,
+          priority: friPF < 0.5 ? "high" : "medium",
+          category: lang === "ja" ? "時間管理" : "Time Management",
+        });
+      }
+    }
+  }
+
+  // ========== Pattern 30: Monthly Performance Trend ==========
+  if (trades && trades.length >= 20) {
+    const monthlyGroups = new Map<string, TradeRecord[]>();
+    for (const t of trades) {
+      const key = `${t.time.getFullYear()}-${String(t.time.getMonth() + 1).padStart(2, "0")}`;
+      const arr = monthlyGroups.get(key) || [];
+      arr.push(t);
+      monthlyGroups.set(key, arr);
+    }
+    if (monthlyGroups.size >= 3) {
+      const monthlyStats = Array.from(monthlyGroups.entries())
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([month, mTrades]) => ({
+          month,
+          net: mTrades.reduce((s, t) => s + t.profit, 0),
+          trades: mTrades.length,
+        }));
+
+      const losingMonths = monthlyStats.filter(m => m.net < 0);
+      const losingRate = losingMonths.length / monthlyStats.length * 100;
+
+      if (losingRate > 70 && monthlyStats.length >= 3) {
+        suggestions.push({
+          title: lang === "ja" ? "月単位で継続的に損失" : "Consistently Losing Months",
+          description: lang === "ja"
+            ? `${monthlyStats.length}ヶ月中${losingMonths.length}ヶ月（${losingRate.toFixed(0)}%）で損失が出ています。月単位で安定して利益を出せないのは、戦略自体に構造的な問題がある可能性が高いです。デモ口座に切り替え、最低3ヶ月連続プラスを達成してからリアル口座に戻ることを推奨します。`
+            : `${losingMonths.length} of ${monthlyStats.length} months (${losingRate.toFixed(0)}%) are losing. This structural issue suggests demo trading until achieving 3 consecutive profitable months.`,
+          priority: "high",
+          category: lang === "ja" ? "戦略全体" : "Overall Strategy",
+        });
+      }
+
+      // Check for worsening monthly trend
+      if (monthlyStats.length >= 4) {
+        const recentHalf = monthlyStats.slice(Math.floor(monthlyStats.length / 2));
+        const olderHalf = monthlyStats.slice(0, Math.floor(monthlyStats.length / 2));
+        const recentAvgNet = recentHalf.reduce((s, m) => s + m.net, 0) / recentHalf.length;
+        const olderAvgNet = olderHalf.reduce((s, m) => s + m.net, 0) / olderHalf.length;
+        if (recentAvgNet < olderAvgNet && recentAvgNet < 0 && olderAvgNet > 0) {
+          suggestions.push({
+            title: lang === "ja" ? "月次成績がプラスからマイナスに転落" : "Monthly Performance Turned Negative",
+            description: lang === "ja"
+              ? `前半の月平均損益${olderAvgNet.toFixed(2)}に対し、直近の月平均損益は${recentAvgNet.toFixed(2)}とマイナスに転じています。市場環境の変化か、トレードルールの逸脱が考えられます。一旦ロットを落として直近のトレードを分析し、何が変わったのかを特定してください。`
+              : `Monthly avg P/L shifted from ${olderAvgNet.toFixed(2)} to ${recentAvgNet.toFixed(2)}. Reduce lot size, analyze recent trades, and identify what changed.`,
+            priority: "high",
+            category: lang === "ja" ? "戦略全体" : "Overall Strategy",
+          });
+        }
+      }
+    }
+  }
+
+  // ========== Pattern 31: Same-Day Multiple Loss Trades ==========
+  if (trades && trades.length >= 15) {
+    const dailyLossGroups = new Map<string, number>();
+    const dailyTradeGroups = new Map<string, number>();
+    for (const t of trades) {
+      const key = t.time.toISOString().split("T")[0];
+      dailyTradeGroups.set(key, (dailyTradeGroups.get(key) || 0) + 1);
+      if (t.profit < 0) dailyLossGroups.set(key, (dailyLossGroups.get(key) || 0) + 1);
+    }
+    const daysWithMultipleLosses = Array.from(dailyLossGroups.entries()).filter(([, cnt]) => cnt >= 3);
+    const totalDays = dailyTradeGroups.size;
+
+    if (daysWithMultipleLosses.length >= 2 && totalDays >= 5) {
+      const multiLossDayRate = (daysWithMultipleLosses.length / totalDays) * 100;
+      if (multiLossDayRate > 20) {
+        suggestions.push({
+          title: lang === "ja" ? "同日に3回以上の損失が頻発" : "Frequent Multi-Loss Days",
+          description: lang === "ja"
+            ? multiLossDayRate > 40
+              ? `取引日の${multiLossDayRate.toFixed(0)}%で1日3回以上の損失が発生しています。損失が続いた時に取り返そうとしてエントリーを繰り返す「ティルト状態」の可能性があります。2連敗したらその日のトレードを停止するルールを設け、冷静さを保ちましょう。`
+              : `取引日の${multiLossDayRate.toFixed(0)}%で1日3回以上の損失が出ています。連続損失時は判断力が低下しやすいため、1日の最大損失回数を制限するルールの導入を検討してください。`
+            : `${multiLossDayRate.toFixed(0)}% of trading days have 3+ losses. Consider a rule to stop trading after 2 consecutive losses in a day.`,
+          priority: multiLossDayRate > 40 ? "high" : "medium",
+          category: lang === "ja" ? "メンタル管理" : "Mental Management",
+        });
+      }
+    }
+  }
+
+  // ========== Pattern 32: Symbol Switch After Loss ==========
+  if (trades && trades.length >= 15) {
+    let switchAfterLoss = 0;
+    let switchAfterLossWin = 0;
+    let noSwitchAfterLoss = 0;
+    let noSwitchAfterLossWin = 0;
+    for (let i = 1; i < trades.length; i++) {
+      if (trades[i - 1].profit < 0) {
+        if (trades[i].symbol !== trades[i - 1].symbol) {
+          switchAfterLoss++;
+          if (trades[i].profit > 0) switchAfterLossWin++;
+        } else {
+          noSwitchAfterLoss++;
+          if (trades[i].profit > 0) noSwitchAfterLossWin++;
+        }
+      }
+    }
+    if (switchAfterLoss >= 5 && noSwitchAfterLoss >= 5) {
+      const switchWR = (switchAfterLossWin / switchAfterLoss) * 100;
+      const noSwitchWR = (noSwitchAfterLossWin / noSwitchAfterLoss) * 100;
+      if (switchWR < noSwitchWR - 10) {
+        suggestions.push({
+          title: lang === "ja" ? "損失後の通貨ペア変更が逆効果" : "Symbol Switching After Loss Hurts",
+          description: lang === "ja"
+            ? `負けた後に通貨ペアを変更した場合の勝率${switchWR.toFixed(1)}%に対し、同じ通貨ペアを続けた場合は${noSwitchWR.toFixed(1)}%です。負けた後の焦りから慣れない通貨ペアに手を出すと裏目に出やすいです。負けても得意な通貨ペアに集中し、ルール通りのトレードを続けてください。`
+            : `WR after switching symbols post-loss: ${switchWR.toFixed(1)}%. WR staying on same symbol: ${noSwitchWR.toFixed(1)}%. Avoid switching to unfamiliar pairs after losses.`,
+          priority: "medium",
+          category: lang === "ja" ? "通貨ペア選定" : "Pair Selection",
+        });
+      }
+    }
+  }
+
+  // ========== Pattern 33: Largest Loss Impact ==========
+  if (trades && trades.length >= 10 && metrics.largestLoss < 0) {
+    const largestLossImpact = Math.abs(metrics.largestLoss) / (metrics.totalLoss || 1) * 100;
+    const netWithoutLargest = metrics.netProfit - metrics.largestLoss;
+    if (largestLossImpact > 15) {
+      suggestions.push({
+        title: lang === "ja" ? "最大損失トレードの影響" : "Largest Loss Impact",
+        description: lang === "ja"
+          ? largestLossImpact > 30
+            ? `最大損失（${metrics.largestLoss.toFixed(2)}）が総損失の${largestLossImpact.toFixed(0)}%を占めています。このトレードがなければ純損益は${netWithoutLargest.toFixed(2)}でした。1回のトレードでこれほどの損失が出るのは、ストップロスが機能していない証拠です。必ず事前にストップロスを設定し、手動ではなく自動執行させてください。`
+            : `最大損失（${metrics.largestLoss.toFixed(2)}）が総損失の${largestLossImpact.toFixed(0)}%です。このトレードを除外すると純損益は${netWithoutLargest.toFixed(2)}になります。突発的な大損失を防ぐため、最大損失額のルール（例: 1トレードあたり口座の2%以内）を設けてください。`
+          : `Largest loss (${metrics.largestLoss.toFixed(2)}) is ${largestLossImpact.toFixed(0)}% of total losses. Net without it: ${netWithoutLargest.toFixed(2)}. Set a max loss per trade rule.`,
+        priority: largestLossImpact > 30 ? "high" : "medium",
+        category: lang === "ja" ? "リスク管理" : "Risk Management",
+      });
+    }
+  }
+
+  // ========== Pattern 34: Win/Loss Streak Distribution ==========
+  if (trades && trades.length >= 20) {
+    let currentStreak = 0;
+    let isWinStreak = trades[0].profit > 0;
+    const streaks: { length: number; isWin: boolean }[] = [];
+    for (const t of trades) {
+      const isWin = t.profit > 0;
+      if (isWin === isWinStreak) {
+        currentStreak++;
+      } else {
+        streaks.push({ length: currentStreak, isWin: isWinStreak });
+        currentStreak = 1;
+        isWinStreak = isWin;
+      }
+    }
+    streaks.push({ length: currentStreak, isWin: isWinStreak });
+
+    const lossStreaks = streaks.filter(s => !s.isWin);
+    const winStreaks = streaks.filter(s => s.isWin);
+    const avgLossStreak = lossStreaks.length > 0 ? lossStreaks.reduce((s, st) => s + st.length, 0) / lossStreaks.length : 0;
+    const avgWinStreak = winStreaks.length > 0 ? winStreaks.reduce((s, st) => s + st.length, 0) / winStreaks.length : 0;
+    const maxLossStreak = lossStreaks.length > 0 ? Math.max(...lossStreaks.map(s => s.length)) : 0;
+
+    if (avgLossStreak > avgWinStreak * 1.5 && avgLossStreak > 2) {
+      suggestions.push({
+        title: lang === "ja" ? "連敗が連勝より長い" : "Loss Streaks Longer Than Win Streaks",
+        description: lang === "ja"
+          ? `平均連敗${avgLossStreak.toFixed(1)}回に対し平均連勝${avgWinStreak.toFixed(1)}回で、負け始めると止まらない傾向があります（最大連敗: ${maxLossStreak}回）。連敗を短く切るための対策として、2連敗でロットを半分に、3連敗でその日のトレードを停止するルールを推奨します。また、連敗中に「取り返さなければ」という焦りがないか振り返ってください。`
+          : `Avg loss streak: ${avgLossStreak.toFixed(1)}, avg win streak: ${avgWinStreak.toFixed(1)} (max loss streak: ${maxLossStreak}). Losses tend to cluster. Set rules to reduce exposure during losing streaks.`,
+        priority: avgLossStreak > 3 ? "high" : "medium",
+        category: lang === "ja" ? "メンタル管理" : "Mental Management",
+      });
+    }
+  }
+
+  // ========== Pattern 35: Profit Factor Breakdown (Win Rate vs RR Contribution) ==========
+  if (metrics.winRate > 0 && metrics.winRate < 100 && metrics.avgProfit > 0 && metrics.avgLoss > 0) {
+    const wrContribution = metrics.winRate / (100 - metrics.winRate); // WR ratio
+    const rrContribution = metrics.avgProfit / metrics.avgLoss;       // RR ratio
+    // PF = wrContribution * rrContribution
+
+    if (wrContribution > 1 && rrContribution < 0.7) {
+      // High win rate but poor RR
+      suggestions.push({
+        title: lang === "ja" ? "勝率は高いがリスクリワードが低い" : "High Win Rate, Low Risk Reward",
+        description: lang === "ja"
+          ? `勝率${metrics.winRate.toFixed(1)}%は良好ですが、RR比${metrics.riskReward.toFixed(2)}（平均利益${metrics.avgProfit.toFixed(2)} / 平均損失${metrics.avgLoss.toFixed(2)}）が低く、少ない負けで多くの勝ちが帳消しになります。利確ポイントを現在の${(metrics.avgProfit * 1.5).toFixed(0)}程度まで拡大するか、損切り幅を${(metrics.avgLoss * 0.7).toFixed(0)}程度に縮小することで、PFの大幅な改善が期待できます。`
+          : `Win rate ${metrics.winRate.toFixed(1)}% is good, but RR ${metrics.riskReward.toFixed(2)} is low. Few losses erase many wins. Widen TP or tighten SL.`,
+        priority: "medium",
+        category: lang === "ja" ? "エントリー/イグジット" : "Entry/Exit",
+      });
+    } else if (wrContribution < 0.7 && rrContribution > 1.5) {
+      // Low win rate but high RR
+      suggestions.push({
+        title: lang === "ja" ? "リスクリワードは高いが勝率が低すぎる" : "Good RR but Win Rate Too Low",
+        description: lang === "ja"
+          ? `RR比${metrics.riskReward.toFixed(2)}は良好ですが、勝率${metrics.winRate.toFixed(1)}%が低すぎてRRの優位性を活かしきれていません。エントリーの精度を上げるために、トレンドの方向確認・複数時間足の一致・ボラティリティフィルターなどの追加条件を検討してください。勝率を${(metrics.winRate + 10).toFixed(0)}%まで改善できれば、PFは大幅に向上します。`
+          : `RR ${metrics.riskReward.toFixed(2)} is good, but ${metrics.winRate.toFixed(1)}% win rate is too low to capitalize on it. Improve entry precision with additional filters.`,
+        priority: "medium",
+        category: lang === "ja" ? "エントリー/イグジット" : "Entry/Exit",
+      });
     }
   }
 
