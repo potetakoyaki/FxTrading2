@@ -6,3 +6,13 @@ ADMIN_USERNAME = "admin"
 
 # ADMIN_PASSWORD は Cloudflare ダッシュボードの
 # Settings > Environment variables で設定してください（暗号化推奨）
+
+# KV Namespace for buyer accounts
+# デプロイ前に以下のコマンドで KV namespace を作成してください:
+#   npx wrangler kv namespace create BUYERS_KV
+#   npx wrangler kv namespace create BUYERS_KV --preview
+# 作成後、出力された ID を以下に貼り付けてください
+[[kv_namespaces]]
+binding = "BUYERS_KV"
+id = "PLACEHOLDER_KV_ID"
+preview_id = "PLACEHOLDER_PREVIEW_KV_ID"

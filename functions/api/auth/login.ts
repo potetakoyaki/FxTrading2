@@ -1,10 +1,21 @@
+interface BuyerAccount {
+  id: string;
+  username: string;
+  password: string;
+  note: string;
+  createdAt: string;
+  isActive: boolean;
+}
+
 interface Env {
   ADMIN_USERNAME: string;
   ADMIN_PASSWORD: string;
+  BUYERS_KV: KVNamespace;
 }
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
+  const headers = { "Content-Type": "application/json" };
 
   let body: { username?: string; password?: string };
   try {
@@ -12,7 +23,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   } catch {
     return new Response(
       JSON.stringify({ success: false, message: "Invalid request body" }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
+      { status: 400, headers }
     );
   }
 
@@ -21,29 +32,42 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   if (!username || !password) {
     return new Response(
       JSON.stringify({ success: false, message: "Username and password are required" }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
+      { status: 400, headers }
     );
   }
 
+  // 管理者ログインチェック
   const adminUsername = env.ADMIN_USERNAME || "admin";
   const adminPassword = env.ADMIN_PASSWORD;
 
-  if (!adminPassword) {
+  if (adminPassword && username === adminUsername && password === adminPassword) {
     return new Response(
-      JSON.stringify({ success: false, message: "Server configuration error" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      JSON.stringify({ success: true, isAdmin: true, username }),
+      { status: 200, headers }
     );
   }
 
-  if (username === adminUsername && password === adminPassword) {
-    return new Response(
-      JSON.stringify({ success: true, isAdmin: true, username }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
-    );
+  // 購入者ログインチェック（KV）
+  try {
+    const buyersJson = await env.BUYERS_KV.get("buyers");
+    if (buyersJson) {
+      const buyers: BuyerAccount[] = JSON.parse(buyersJson);
+      const buyer = buyers.find(
+        b => b.username === username && b.password === password && b.isActive
+      );
+      if (buyer) {
+        return new Response(
+          JSON.stringify({ success: true, isAdmin: false, username }),
+          { status: 200, headers }
+        );
+      }
+    }
+  } catch {
+    console.error("KV read error during buyer login");
   }
 
   return new Response(
-    JSON.stringify({ success: false, isAdmin: false, message: "Invalid admin credentials" }),
-    { status: 200, headers: { "Content-Type": "application/json" } }
+    JSON.stringify({ success: false, message: "Invalid credentials" }),
+    { status: 200, headers }
   );
 };

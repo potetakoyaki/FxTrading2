@@ -1,10 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 export interface BuyerAccount {
   id: string;
   username: string;
   password: string;
-  note: string; // 購入者メモ（プラットフォーム名など）
+  note: string;
   createdAt: string;
   isActive: boolean;
 }
@@ -17,31 +17,33 @@ interface AuthContextType {
   logout: () => void;
   // 管理者機能
   buyers: BuyerAccount[];
-  addBuyer: (username: string, password: string, note: string) => boolean;
-  removeBuyer: (id: string) => void;
-  updateBuyer: (id: string, updates: Partial<BuyerAccount>) => void;
-  toggleBuyerActive: (id: string) => void;
+  buyersLoading: boolean;
+  fetchBuyers: () => Promise<void>;
+  addBuyer: (username: string, password: string, note: string) => Promise<boolean>;
+  removeBuyer: (id: string) => Promise<void>;
+  updateBuyer: (id: string, updates: Partial<BuyerAccount>) => Promise<void>;
+  toggleBuyerActive: (id: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'fx-doctor-auth';
-const BUYERS_STORAGE_KEY = 'fx-doctor-buyers';
+const CREDENTIALS_KEY = 'fx-doctor-admin-creds';
 
-const generateId = () => `buyer_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-
-const getDefaultBuyers = (): BuyerAccount[] => {
-  // 初期サンプル購入者（実際の運用では削除してください）
-  return [];
-};
+function getAuthHeaders(): HeadersInit {
+  const creds = sessionStorage.getItem(CREDENTIALS_KEY);
+  if (!creds) return {};
+  return { Authorization: `Basic ${btoa(creds)}` };
+}
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
   const [buyers, setBuyers] = useState<BuyerAccount[]>([]);
+  const [buyersLoading, setBuyersLoading] = useState(false);
 
-  // ページロード時にLocalStorageから認証情報と購入者リストを復元
+  // ページロード時にLocalStorageから認証状態を復元
   useEffect(() => {
     const storedAuth = localStorage.getItem(STORAGE_KEY);
     if (storedAuth) {
@@ -54,26 +56,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem(STORAGE_KEY);
       }
     }
+  }, []);
 
-    const storedBuyers = localStorage.getItem(BUYERS_STORAGE_KEY);
-    if (storedBuyers) {
-      try {
-        setBuyers(JSON.parse(storedBuyers));
-      } catch {
-        setBuyers(getDefaultBuyers());
+  // 管理者がログインしたら購入者リストを取得
+  const fetchBuyers = useCallback(async () => {
+    setBuyersLoading(true);
+    try {
+      const res = await fetch("/api/buyers", { headers: getAuthHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setBuyers(data.buyers);
+        }
       }
-    } else {
-      setBuyers(getDefaultBuyers());
+    } catch {
+      console.warn("Failed to fetch buyers from API");
+    } finally {
+      setBuyersLoading(false);
     }
   }, []);
 
-  const saveBuyers = (newBuyers: BuyerAccount[]) => {
-    setBuyers(newBuyers);
-    localStorage.setItem(BUYERS_STORAGE_KEY, JSON.stringify(newBuyers));
-  };
+  useEffect(() => {
+    if (isAdmin && sessionStorage.getItem(CREDENTIALS_KEY)) {
+      fetchBuyers();
+    }
+  }, [isAdmin, fetchBuyers]);
 
   const login = async (inputUsername: string, inputPassword: string): Promise<boolean> => {
-    // 管理者ログイン（サーバーAPIで検証）
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
@@ -83,33 +92,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (response.ok) {
         const data = await response.json();
-        if (data.success && data.isAdmin) {
+        if (data.success) {
           setUsername(inputUsername);
           setIsAuthenticated(true);
-          setIsAdmin(true);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify({ username: inputUsername, isAdmin: true }));
+          setIsAdmin(!!data.isAdmin);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            username: inputUsername,
+            isAdmin: !!data.isAdmin,
+          }));
+
+          // 管理者の場合、認証情報をセッションに保存（API呼び出し用）
+          if (data.isAdmin) {
+            sessionStorage.setItem(CREDENTIALS_KEY, `${inputUsername}:${inputPassword}`);
+          }
+
           return true;
         }
       }
     } catch {
-      // サーバー未起動時は購入者ログインにフォールバック
-      console.warn("Admin auth API unavailable, trying buyer login only");
-    }
-
-    // 購入者ログイン（LocalStorageから最新の購入者リストを取得）
-    const storedBuyers = localStorage.getItem(BUYERS_STORAGE_KEY);
-    const currentBuyers: BuyerAccount[] = storedBuyers ? JSON.parse(storedBuyers) : buyers;
-
-    const buyer = currentBuyers.find(
-      b => b.username === inputUsername && b.password === inputPassword && b.isActive
-    );
-
-    if (buyer) {
-      setUsername(inputUsername);
-      setIsAuthenticated(true);
-      setIsAdmin(false);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ username: inputUsername, isAdmin: false }));
-      return true;
+      console.warn("Auth API unavailable");
     }
 
     return false;
@@ -119,39 +120,68 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUsername(null);
     setIsAuthenticated(false);
     setIsAdmin(false);
+    setBuyers([]);
     localStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(CREDENTIALS_KEY);
   };
 
   // 購入者追加
-  const addBuyer = (username: string, password: string, note: string): boolean => {
-    // 重複チェック
-    if (buyers.some(b => b.username === username)) return false;
-
-    const newBuyer: BuyerAccount = {
-      id: generateId(),
-      username,
-      password,
-      note,
-      createdAt: new Date().toISOString(),
-      isActive: true,
-    };
-    saveBuyers([...buyers, newBuyer]);
-    return true;
+  const addBuyer = async (username: string, password: string, note: string): Promise<boolean> => {
+    try {
+      const res = await fetch("/api/buyers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({ username, password, note }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBuyers(prev => [...prev, data.buyer]);
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
   };
 
   // 購入者削除
-  const removeBuyer = (id: string) => {
-    saveBuyers(buyers.filter(b => b.id !== id));
+  const removeBuyer = async (id: string) => {
+    try {
+      const res = await fetch(`/api/buyers?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBuyers(prev => prev.filter(b => b.id !== id));
+      }
+    } catch {
+      console.error("Failed to remove buyer");
+    }
   };
 
   // 購入者更新
-  const updateBuyer = (id: string, updates: Partial<BuyerAccount>) => {
-    saveBuyers(buyers.map(b => (b.id === id ? { ...b, ...updates } : b)));
+  const updateBuyer = async (id: string, updates: Partial<BuyerAccount>) => {
+    try {
+      const res = await fetch("/api/buyers", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({ id, ...updates }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBuyers(prev => prev.map(b => (b.id === id ? data.buyer : b)));
+      }
+    } catch {
+      console.error("Failed to update buyer");
+    }
   };
 
   // 購入者の有効/無効切替
-  const toggleBuyerActive = (id: string) => {
-    saveBuyers(buyers.map(b => (b.id === id ? { ...b, isActive: !b.isActive } : b)));
+  const toggleBuyerActive = async (id: string) => {
+    const buyer = buyers.find(b => b.id === id);
+    if (!buyer) return;
+    await updateBuyer(id, { isActive: !buyer.isActive });
   };
 
   return (
@@ -163,6 +193,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         logout,
         buyers,
+        buyersLoading,
+        fetchBuyers,
         addBuyer,
         removeBuyer,
         updateBuyer,

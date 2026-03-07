@@ -19,11 +19,17 @@ import {
   Eye,
   EyeOff,
   AlertCircle,
+  Loader2,
+  RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Admin() {
-  const { buyers, addBuyer, removeBuyer, updateBuyer, toggleBuyerActive, logout, username } = useAuth();
+  const {
+    buyers, buyersLoading, fetchBuyers,
+    addBuyer, removeBuyer, updateBuyer, toggleBuyerActive,
+    logout, username,
+  } = useAuth();
   const [, navigate] = useLocation();
 
   // 新規追加フォーム
@@ -32,6 +38,7 @@ export default function Admin() {
   const [newNote, setNewNote] = useState('');
   const [addError, setAddError] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [adding, setAdding] = useState(false);
 
   // 編集状態
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -47,7 +54,7 @@ export default function Admin() {
     navigate('/login');
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     setAddError('');
     if (!newUsername.trim() || !newPassword.trim()) {
       setAddError('ユーザーIDとパスワードは必須です');
@@ -61,16 +68,18 @@ export default function Admin() {
       setAddError('パスワードは6文字以上にしてください');
       return;
     }
-    const success = addBuyer(newUsername.trim(), newPassword.trim(), newNote.trim());
+    setAdding(true);
+    const success = await addBuyer(newUsername.trim(), newPassword.trim(), newNote.trim());
+    setAdding(false);
     if (!success) {
       setAddError('このユーザーIDは既に使用されています');
       return;
     }
+    toast.success(`購入者 "${newUsername}" を追加しました`);
     setNewUsername('');
     setNewPassword('');
     setNewNote('');
     setShowAddForm(false);
-    toast.success(`購入者 "${newUsername}" を追加しました`);
   };
 
   const handleEdit = (buyer: BuyerAccount) => {
@@ -80,9 +89,9 @@ export default function Admin() {
     setEditNote(buyer.note);
   };
 
-  const handleEditSave = (id: string) => {
+  const handleEditSave = async (id: string) => {
     if (!editUsername.trim() || !editPassword.trim()) return;
-    updateBuyer(id, {
+    await updateBuyer(id, {
       username: editUsername.trim(),
       password: editPassword.trim(),
       note: editNote.trim(),
@@ -91,9 +100,9 @@ export default function Admin() {
     toast.success('購入者情報を更新しました');
   };
 
-  const handleRemove = (buyer: BuyerAccount) => {
+  const handleRemove = async (buyer: BuyerAccount) => {
     if (window.confirm(`"${buyer.username}" を削除しますか？この操作は元に戻せません。`)) {
-      removeBuyer(buyer.id);
+      await removeBuyer(buyer.id);
       toast.success(`"${buyer.username}" を削除しました`);
     }
   };
@@ -176,14 +185,26 @@ export default function Admin() {
               <Users className="w-4 h-4 text-emerald-400" />
               <h2 className="text-white font-semibold">購入者管理</h2>
             </div>
-            <Button
-              size="sm"
-              onClick={() => setShowAddForm(!showAddForm)}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
-            >
-              <Plus className="w-3 h-3 mr-1" />
-              新規追加
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => fetchBuyers()}
+                disabled={buyersLoading}
+                className="text-slate-400 hover:text-white text-xs"
+              >
+                <RefreshCw className={`w-3 h-3 mr-1 ${buyersLoading ? 'animate-spin' : ''}`} />
+                更新
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => setShowAddForm(!showAddForm)}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                新規追加
+              </Button>
+            </div>
           </div>
 
           {/* 追加フォーム */}
@@ -229,9 +250,14 @@ export default function Admin() {
                 <Button
                   size="sm"
                   onClick={handleAdd}
+                  disabled={adding}
                   className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
                 >
-                  <Check className="w-3 h-3 mr-1" />
+                  {adding ? (
+                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                  ) : (
+                    <Check className="w-3 h-3 mr-1" />
+                  )}
                   追加する
                 </Button>
                 <Button
@@ -247,8 +273,13 @@ export default function Admin() {
             </div>
           )}
 
-          {/* 購入者リスト */}
-          {buyers.length === 0 ? (
+          {/* ローディング */}
+          {buyersLoading && buyers.length === 0 ? (
+            <div className="text-center py-10 text-slate-500">
+              <Loader2 className="w-6 h-6 mx-auto mb-2 animate-spin" />
+              <p className="text-sm">購入者リストを読み込み中...</p>
+            </div>
+          ) : buyers.length === 0 ? (
             <div className="text-center py-10 text-slate-500">
               <Users className="w-8 h-8 mx-auto mb-2 opacity-30" />
               <p className="text-sm">購入者がまだいません</p>
@@ -415,7 +446,7 @@ export default function Admin() {
             <p>• <span className="text-slate-400">ID/PW通知:</span> 各行のコピーボタンでID・パスワードをクリップボードにコピーして購入者に送付します</p>
             <p>• <span className="text-slate-400">有効/無効:</span> トグルボタンでアカウントを一時停止・再開できます（返金対応時などに使用）</p>
             <p>• <span className="text-slate-400">管理者ログイン:</span> ID・パスワードはサーバー環境変数（ADMIN_USERNAME / ADMIN_PASSWORD）で設定されています</p>
-            <p>• <span className="text-slate-400">データ保存:</span> 購入者情報はブラウザのLocalStorageに保存されます。デプロイ後も維持されます</p>
+            <p>• <span className="text-slate-400">データ保存:</span> 購入者情報はCloudflare KVに保存されます。すべてのデバイスから管理可能です</p>
           </div>
         </Card>
       </main>
