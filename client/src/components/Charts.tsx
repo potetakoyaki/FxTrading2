@@ -38,6 +38,7 @@ const tooltipStyle = {
 
 export function EquityCurveChart({ data, initialBalance = 0 }: { data: EquityCurvePoint[]; initialBalance?: number }) {
   const { t } = useLanguage();
+  if (data.length === 0) return null;
   const chartData = useMemo(() =>
     data.map((p) => ({
       index: p.index,
@@ -113,16 +114,20 @@ export function MonteCarloChart({ result, initialBalance = 0 }: { result: MonteC
     for (let i = 0; i < numPoints; i += step) indices.push(i);
     if (indices[indices.length - 1] !== numPoints - 1) indices.push(numPoints - 1);
 
+    const pct = (arr: number[], p: number) => {
+      const i = Math.min(Math.max(0, Math.ceil((p / 100) * arr.length) - 1), arr.length - 1);
+      return arr[i];
+    };
+
     return indices.map((idx) => {
       const values = result.paths.map((p) => p[idx]).sort((a, b) => a - b);
-      const len = values.length;
       return {
         index: idx,
-        p5: Number(values[Math.floor(len * 0.05)].toFixed(2)),
-        p25: Number(values[Math.floor(len * 0.25)].toFixed(2)),
-        p50: Number(values[Math.floor(len * 0.5)].toFixed(2)),
-        p75: Number(values[Math.floor(len * 0.75)].toFixed(2)),
-        p95: Number(values[Math.floor(len * 0.95)].toFixed(2)),
+        p5: Number(pct(values, 5).toFixed(2)),
+        p25: Number(pct(values, 25).toFixed(2)),
+        p50: Number(pct(values, 50).toFixed(2)),
+        p75: Number(pct(values, 75).toFixed(2)),
+        p95: Number(pct(values, 95).toFixed(2)),
       };
     });
   }, [result]);

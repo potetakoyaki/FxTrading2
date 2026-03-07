@@ -621,7 +621,7 @@ export function LowQualityTradeImpactPanel({ data }: { data: LowQualityTradeImpa
             {data[data.length - 1].removedTrades.slice(0, 5).map((t, i) => (
               <div key={i} className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground font-mono text-[10px]">
-                  {t.time.toLocaleDateString("ja-JP", { month: "short", day: "numeric" })}
+                  {t.time.toLocaleDateString(ja ? "ja-JP" : "en-US", { month: "short", day: "numeric" })}
                 </span>
                 <span className="text-muted-foreground text-[10px]">{t.symbol}</span>
                 <span className="text-[oklch(0.65_0.2_20)] font-mono text-[10px]">{t.profit.toFixed(2)}</span>

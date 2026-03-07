@@ -285,7 +285,7 @@ function isMT5Format(headers: string[], columnMap: Record<string, string>): bool
 function processMT5Data(
   data: Record<string, string>[],
   columnMap: Record<string, string>,
-): { trades: TradeRecord[]; skippedRows: number } {
+): { trades: TradeRecord[]; skippedRows: number; unmatchedInRows: number } {
   const trades: TradeRecord[] = [];
   let skippedRows = 0;
 
@@ -345,8 +345,10 @@ function processMT5Data(
       const time = parseDate(timeStr);
       let profit = parseFloat(outRow[columnMap.profit] || "0");
 
-      // Sum commission, fee, swap from both "in" and "out" rows
-      const rowsToSum = inRow ? [inRow, outRow] : [outRow];
+      // Commission/fee/swap/taxes: take only from the "out" row to avoid double-counting.
+      // MT5 typically records commission on entry but P/L on exit — the "out" row
+      // already includes net commission in most broker exports.
+      const rowsToSum = [outRow];
       for (const row of rowsToSum) {
         if (columnMap.commission) {
           const commission = parseFloat(row[columnMap.commission] || "0");
@@ -398,8 +400,7 @@ function processMT5Data(
     }
   }
 
-  // Count unconsumed "in" rows as open positions (not errors)
-  // Don't count them as skipped - they are simply open trades without exits
+  const unmatchedInRows = inRows.length - consumedIn.size;
 
   // Process rows with no direction (neither in nor out) — treat as completed trades
   for (const row of otherRows) {
@@ -456,7 +457,7 @@ function processMT5Data(
     }
   }
 
-  return { trades, skippedRows };
+  return { trades, skippedRows, unmatchedInRows };
 }
 
 /**
@@ -585,6 +586,9 @@ export function parseCSV(csvText: string): { trades: TradeRecord[]; errors: stri
     const mt5Result = processMT5Data(data, columnMap);
     trades = mt5Result.trades;
     skippedRows = mt5Result.skippedRows;
+    if (mt5Result.unmatchedInRows > 0) {
+      errors.push(`${mt5Result.unmatchedInRows}件の未決済ポジション（"in"行）が検出されました。`);
+    }
   } else {
     const mt4Result = processMT4Data(data, columnMap);
     trades = mt4Result.trades;
@@ -603,17 +607,21 @@ export function parseCSV(csvText: string): { trades: TradeRecord[]; errors: stri
   trades.sort((a, b) => a.time.getTime() - b.time.getTime());
 
   // Extract initial balance from the Balance column if available.
-  // Strategy: find the first trade row (with a symbol) that has a Balance value,
+  // Strategy: sort data rows by time to find the earliest trade with a Balance value,
   // then subtract its profit to get the pre-trade balance.
-  // Skip deposit/withdrawal rows (no symbol) since their Balance/Profit fields
-  // represent account operations, not trade P/L.
   let initialBalance = 0;
   if (columnMap.balance && columnMap.symbol) {
-    for (const row of data) {
-      // Skip rows without a symbol (deposit/withdrawal/balance operations)
-      const symbol = (row[columnMap.symbol] || "").trim();
-      if (!symbol) continue;
+    // Sort data rows by time to find the chronologically first trade
+    const dataWithTime = data
+      .filter(row => {
+        const symbol = (row[columnMap.symbol] || "").trim();
+        return symbol.length > 0;
+      })
+      .map(row => ({ row, time: parseDate(row[columnMap.time] || "") }))
+      .filter(item => !isNaN(item.time.getTime()))
+      .sort((a, b) => a.time.getTime() - b.time.getTime());
 
+    for (const { row } of dataWithTime) {
       const balStr = row[columnMap.balance];
       if (balStr) {
         const bal = parseFloat(balStr.replace(/\s/g, ""));

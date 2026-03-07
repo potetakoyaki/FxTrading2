@@ -215,6 +215,8 @@ export function WeaknessPanel({ weaknesses }: { weaknesses: WeaknessItem[] }) {
 export function RiskPanel({ diagnosis }: { diagnosis: RiskDiagnosis }) {
   const { t } = useLanguage();
 
+  if (!diagnosis || diagnosis.factors.length === 0) return null;
+
   // Count statuses for summary
   const okCount = diagnosis.factors.filter(f => f.status === "ok").length;
   const cautionCount = diagnosis.factors.filter(f => f.status === "caution").length;

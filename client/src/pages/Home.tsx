@@ -104,7 +104,7 @@ function HomeContent() {
                   className="text-xs gap-1.5 border-emerald-800 text-emerald-400 hover:bg-emerald-900/30"
                 >
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">管理者</span>
+                  <span className="hidden sm:inline">{t("header.admin")}</span>
                 </Button>
               </Link>
             )}
@@ -117,10 +117,10 @@ function HomeContent() {
               size="sm"
               onClick={logout}
               className="text-xs gap-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-              title="ログアウト"
+              title={t("header.logout")}
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{language === "ja" ? "ログアウト" : "Logout"}</span>
+              <span className="hidden sm:inline">{t("header.logout")}</span>
             </Button>
 
             {state === "done" && (

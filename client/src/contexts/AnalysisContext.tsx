@@ -8,7 +8,6 @@ import {
   analyzeByTimeSlot,
   analyzeByDayOfWeek,
   analyzeLotSizeCorrelation,
-  analyzeLosingStreakPattern,
   analyzeTradeQuality,
   calculateWinLossDistribution,
   analyzeLowQualityTradeImpact,
@@ -22,7 +21,6 @@ import {
   type TimeSlotAnalysis,
   type DayOfWeekAnalysis,
   type LotSizeGroup,
-  type LosingStreakPattern,
   type TradeQualityAnalysis,
   type WinLossDistribution,
   type LowQualityTradeImpact,
@@ -49,7 +47,6 @@ interface AnalysisContextType {
   timeSlotAnalysis: TimeSlotAnalysis[];
   dayOfWeekAnalysis: DayOfWeekAnalysis[];
   lotSizeAnalysis: LotSizeGroup[];
-  losingStreakPattern: LosingStreakPattern[];
   tradeQuality: TradeQualityAnalysis | null;
   winLossDistribution: WinLossDistribution | null;
   lowQualityImpact: LowQualityTradeImpact[];
@@ -79,7 +76,6 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   const [timeSlotAnalysis, setTimeSlotAnalysis] = useState<TimeSlotAnalysis[]>([]);
   const [dayOfWeekAnalysis, setDayOfWeekAnalysis] = useState<DayOfWeekAnalysis[]>([]);
   const [lotSizeAnalysis, setLotSizeAnalysis] = useState<LotSizeGroup[]>([]);
-  const [losingStreakPattern, setLosingStreakPattern] = useState<LosingStreakPattern[]>([]);
   const [tradeQuality, setTradeQuality] = useState<TradeQualityAnalysis | null>(null);
   const [winLossDistribution, setWinLossDistribution] = useState<WinLossDistribution | null>(null);
   const [lowQualityImpact, setLowQualityImpact] = useState<LowQualityTradeImpact[]>([]);
@@ -115,7 +111,6 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
         const ta = analyzeByTimeSlot(parsedTrades);
         const dw = analyzeByDayOfWeek(parsedTrades, lang);
         const ls = analyzeLotSizeCorrelation(parsedTrades, lang);
-        const lsp = analyzeLosingStreakPattern(parsedTrades);
         const tq = analyzeTradeQuality(parsedTrades);
         const wld = calculateWinLossDistribution(parsedTrades);
         const w = findWeaknesses(sa, ta, lang);
@@ -134,7 +129,6 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
         setTimeSlotAnalysis(ta);
         setDayOfWeekAnalysis(dw);
         setLotSizeAnalysis(ls);
-        setLosingStreakPattern(lsp);
         setTradeQuality(tq);
         setWinLossDistribution(wld);
         setLowQualityImpact(lqi);
@@ -160,14 +154,12 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     runAnalysis(csvText, name, language);
   }, [language, runAnalysis]);
 
-  // Re-analyze with current language when language changes
   const reanalyze = useCallback(() => {
     if (rawCsvText && fileName && state === "done") {
       runAnalysis(rawCsvText, fileName, language);
     }
   }, [rawCsvText, fileName, state, language, runAnalysis]);
 
-  // Auto re-analyze when language changes
   const prevLangRef = useRef(language);
   useEffect(() => {
     if (prevLangRef.current !== language && rawCsvText && fileName) {
@@ -185,7 +177,6 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     setTimeSlotAnalysis([]);
     setDayOfWeekAnalysis([]);
     setLotSizeAnalysis([]);
-    setLosingStreakPattern([]);
     setTradeQuality(null);
     setWinLossDistribution(null);
     setLowQualityImpact([]);
@@ -205,7 +196,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     <AnalysisContext.Provider
       value={{
         state, trades, metrics, score, symbolAnalysis, timeSlotAnalysis,
-        dayOfWeekAnalysis, lotSizeAnalysis, losingStreakPattern,
+        dayOfWeekAnalysis, lotSizeAnalysis,
         tradeQuality, winLossDistribution, lowQualityImpact,
         weaknesses, suggestions, equityCurve, monteCarloResult, drawdownDist,
         riskDiagnosis, errors, fileName, initialBalance: initialBal,

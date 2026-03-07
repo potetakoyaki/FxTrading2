@@ -29,11 +29,19 @@ function shuffleArray<T>(arr: T[]): T[] {
   return shuffled;
 }
 
+const emptyMonteCarloResult: MonteCarloResult = {
+  paths: [], avgFinalEquity: 0, worstFinalEquity: 0, bestFinalEquity: 0,
+  maxDrawdown: 0, avgMaxDrawdown: 0, bankruptcyRate: 0,
+  percentile5: 0, percentile25: 0, percentile50: 0, percentile75: 0, percentile95: 0,
+};
+
 export function runMonteCarloSimulation(
   trades: TradeRecord[],
   numSimulations: number = 1000,
   initialCapital: number = 0
 ): MonteCarloResult {
+  if (trades.length === 0) return emptyMonteCarloResult;
+
   const profits = trades.map((t) => t.profit);
   const numTrades = profits.length;
 
@@ -74,12 +82,13 @@ export function runMonteCarloSimulation(
   finalEquities.sort((a, b) => a - b);
 
   const getPercentile = (arr: number[], p: number) => {
-    const idx = Math.floor((p / 100) * arr.length);
-    return arr[Math.min(idx, arr.length - 1)];
+    if (arr.length === 0) return 0;
+    const idx = Math.min(Math.ceil((p / 100) * arr.length) - 1, arr.length - 1);
+    return arr[Math.max(0, idx)];
   };
 
   return {
-    paths: paths.slice(0, 200), // Limit for performance
+    paths: paths.slice(0, 200),
     avgFinalEquity: finalEquities.reduce((s, v) => s + v, 0) / finalEquities.length,
     worstFinalEquity: finalEquities[0],
     bestFinalEquity: finalEquities[finalEquities.length - 1],
@@ -98,9 +107,9 @@ export function calculateDrawdownDistribution(
   trades: TradeRecord[],
   initialBalance: number = 0
 ): DrawdownDistribution {
-  // Calculate drawdown percentage at each point in the equity curve.
-  // DD% = (peak - equity) / peak * 100, capped at 100%.
-  // initialBalance is added so DD% is relative to the actual account size.
+  const emptyResult = { ranges: ["0-5%", "5-10%", "10-15%", "15-20%", "20-30%", "30-50%", "50%+"], counts: new Array(7).fill(0) };
+  if (trades.length === 0) return emptyResult;
+
   const drawdowns: number[] = [];
   let equity = initialBalance;
   let peak = initialBalance;
@@ -109,9 +118,10 @@ export function calculateDrawdownDistribution(
     equity += trade.profit;
     if (equity > peak) peak = equity;
     const rawDD = peak - equity;
-    const dd = rawDD > 0
-      ? (peak > 0 ? Math.min((rawDD / peak) * 100, 100) : 100)
-      : 0;
+    let dd = 0;
+    if (rawDD > 0 && peak > 0) {
+      dd = Math.min((rawDD / peak) * 100, 100);
+    }
     drawdowns.push(dd);
   }
 

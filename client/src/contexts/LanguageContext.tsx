@@ -127,6 +127,10 @@ const translations = {
   "error.checkFormat": { ja: "CSVファイルの形式を確認してください。", en: "Please check the CSV file format." },
   "error.analysis": { ja: "分析中にエラーが発生しました", en: "An error occurred during analysis" },
 
+  // Header actions
+  "header.admin": { ja: "管理者", en: "Admin" },
+  "header.logout": { ja: "ログアウト", en: "Logout" },
+
   // Footer
   "footer.text": { ja: "FX Strategy Doctor - トレード戦略評価ツール", en: "FX Strategy Doctor - Trade Strategy Evaluator" },
 } as const;

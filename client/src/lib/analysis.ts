@@ -110,58 +110,6 @@ export function analyzeLotSizeCorrelation(trades: TradeRecord[], lang: Language 
   }).filter((g): g is LotSizeGroup => g !== null);
 }
 
-// ==================== Losing Streak Pattern ====================
-
-export interface LosingStreakPattern {
-  streakLength: number;
-  count: number;
-  avgRecoveryTrades: number; // avg trades to recover after streak
-  nextTradeWinRate: number;  // win rate of trade immediately after streak
-}
-
-export function analyzeLosingStreakPattern(trades: TradeRecord[]): LosingStreakPattern[] {
-  const streaks: { length: number; nextTradeIndex: number }[] = [];
-  let currentStreak = 0;
-
-  for (let i = 0; i < trades.length; i++) {
-    if (trades[i].profit < 0) {
-      currentStreak++;
-    } else {
-      if (currentStreak >= 2) {
-        streaks.push({ length: currentStreak, nextTradeIndex: i });
-      }
-      currentStreak = 0;
-    }
-  }
-  // Record trailing losing streak (no recovery trade follows)
-  if (currentStreak >= 2) {
-    streaks.push({ length: currentStreak, nextTradeIndex: trades.length });
-  }
-
-  // Group by streak length
-  const grouped = new Map<number, { nextTradeIndices: number[] }>();
-  for (const s of streaks) {
-    const existing = grouped.get(s.length) || { nextTradeIndices: [] };
-    existing.nextTradeIndices.push(s.nextTradeIndex);
-    grouped.set(s.length, existing);
-  }
-
-  return Array.from(grouped.entries()).map(([length, data]) => {
-    // Only count streaks that have a following trade for win-rate calculation.
-    // Trailing streaks (nextTradeIndex === trades.length) have no next trade to evaluate.
-    const validIndices = data.nextTradeIndices.filter(idx => idx < trades.length);
-    const nextTradeWins = validIndices.filter(idx => trades[idx].profit > 0).length;
-    return {
-      streakLength: length,
-      count: data.nextTradeIndices.length,
-      avgRecoveryTrades: 0,
-      nextTradeWinRate: validIndices.length > 0
-        ? (nextTradeWins / validIndices.length) * 100
-        : 0,
-    };
-  }).sort((a, b) => a.streakLength - b.streakLength);
-}
-
 // ==================== Trade Quality Analysis ====================
 
 export interface TradeQualityAnalysis {
@@ -216,20 +164,45 @@ function median(arr: number[]): number {
   return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
-// Helper: standard deviation (sample)
+// Helper: standard deviation (population — we have all trades, not a sample)
 function stdDev(arr: number[]): number {
   if (arr.length <= 1) return 0;
   const mean = arr.reduce((s, v) => s + v, 0) / arr.length;
-  const variance = arr.reduce((s, v) => s + (v - mean) ** 2, 0) / (arr.length - 1);
+  const variance = arr.reduce((s, v) => s + (v - mean) ** 2, 0) / arr.length;
   return Math.sqrt(variance);
 }
 
 export function analyzeTradeQuality(trades: TradeRecord[]): TradeQualityAnalysis {
+  const defaultResult: TradeQualityAnalysis = {
+    avgWinAmount: 0, avgLossAmount: 0, medianWin: 0, medianLoss: 0,
+    winStdDev: 0, lossStdDev: 0, consistencyScore: 50,
+    profitConcentration: 0, lossConcentration: 0,
+    qualityScore: 50, qualityGrade: "C",
+    isKotsuKotsuDokan: false, isLargeWinDependent: false, hasLateSL: false, hasEarlyTP: false,
+  };
+
+  if (trades.length === 0) return defaultResult;
+
   const winAmounts = trades.filter(t => t.profit > 0).map(t => t.profit);
   const lossAmounts = trades.filter(t => t.profit < 0).map(t => Math.abs(t.profit));
 
-  const avgWin = winAmounts.length > 0 ? winAmounts.reduce((s, v) => s + v, 0) / winAmounts.length : 0;
-  const avgLoss = lossAmounts.length > 0 ? lossAmounts.reduce((s, v) => s + v, 0) / lossAmounts.length : 0;
+  // All wins or all losses — return basic stats without pattern detection
+  if (winAmounts.length === 0 || lossAmounts.length === 0) {
+    const amounts = winAmounts.length > 0 ? winAmounts : lossAmounts;
+    const avg = amounts.length > 0 ? amounts.reduce((s, v) => s + v, 0) / amounts.length : 0;
+    return {
+      ...defaultResult,
+      avgWinAmount: winAmounts.length > 0 ? avg : 0,
+      avgLossAmount: lossAmounts.length > 0 ? avg : 0,
+      medianWin: winAmounts.length > 0 ? median(amounts) : 0,
+      medianLoss: lossAmounts.length > 0 ? median(amounts) : 0,
+      winStdDev: winAmounts.length > 0 ? stdDev(amounts) : 0,
+      lossStdDev: lossAmounts.length > 0 ? stdDev(amounts) : 0,
+    };
+  }
+
+  const avgWin = winAmounts.reduce((s, v) => s + v, 0) / winAmounts.length;
+  const avgLoss = lossAmounts.reduce((s, v) => s + v, 0) / lossAmounts.length;
   const medWin = median(winAmounts);
   const medLoss = median(lossAmounts);
   const winSD = stdDev(winAmounts);
@@ -250,16 +223,16 @@ export function analyzeTradeQuality(trades: TradeRecord[]): TradeQualityAnalysis
   const lossConcentration = totalLossAmt > 0 ? (top20Loss / totalLossAmt) * 100 : 0;
 
   // Consistency score (lower CV = more consistent = higher score)
-  const winCV = avgWin > 0 ? winSD / avgWin : 1;
-  const lossCV = avgLoss > 0 ? lossSD / avgLoss : 1;
+  const winCV = avgWin > 0 ? winSD / avgWin : 0;
+  const lossCV = avgLoss > 0 ? lossSD / avgLoss : 0;
   const avgCV = (winCV + lossCV) / 2;
   const consistencyScore = Math.max(0, Math.min(100, Math.round(100 - avgCV * 50)));
 
   // Pattern detection
-  const isKotsuKotsuDokan = medWin < avgLoss * 0.5 && lossConcentration > 60;
+  const isKotsuKotsuDokan = medWin < avgLoss * 0.5 && lossConcentration > 50;
   const isLargeWinDependent = profitConcentration > 70;
-  const hasLateSL = avgLoss > avgWin * 2 && lossAmounts.length >= 3;
-  const hasEarlyTP = winAmounts.length > 10 && medWin < avgWin * 0.5;
+  const hasLateSL = avgLoss > avgWin * 2 && lossAmounts.length >= 1;
+  const hasEarlyTP = winAmounts.length >= 5 && medWin < avgWin * 0.5;
 
   // Quality score (composite)
   let qualityScore = 50;
@@ -1013,14 +986,10 @@ export function generateSuggestions(
       if (trades[i].profit > 0) {
         winStreak++;
       } else {
-        if (winStreak >= 3) {
-          // This losing trade broke a 3+ win streak
+        if (winStreak >= 3 && i + 1 < trades.length) {
+          // Count only the trade AFTER the streak-breaking loss
           postStreakTotal++;
-          // Check the next trade after this loss (i+1)
-          if (i + 1 < trades.length) {
-            postStreakTotal++;
-            if (trades[i + 1].profit > 0) postStreakWins++;
-          }
+          if (trades[i + 1].profit > 0) postStreakWins++;
         }
         winStreak = 0;
       }
@@ -1064,7 +1033,8 @@ export function generateSuggestions(
 // ==================== Equity Curve ====================
 
 export function calculateEquityCurve(trades: TradeRecord[], initialBalance: number = 0): EquityCurvePoint[] {
-  const points: EquityCurvePoint[] = [{ index: 0, equity: initialBalance, drawdown: 0, drawdownPct: 0, time: trades[0]?.time || new Date() }];
+  if (trades.length === 0) return [];
+  const points: EquityCurvePoint[] = [{ index: 0, equity: initialBalance, drawdown: 0, drawdownPct: 0, time: trades[0].time }];
   let equity = initialBalance;
   let peak = initialBalance;
 
