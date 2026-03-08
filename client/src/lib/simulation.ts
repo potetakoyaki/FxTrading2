@@ -23,17 +23,31 @@ export interface DrawdownDistribution {
 }
 
 /**
- * Bootstrap resampling: randomly pick n items from arr WITH replacement.
- * Unlike shuffling (which always yields the same sum), bootstrap produces
- * different total P&L each run, giving meaningful final-equity variance.
+ * Seeded PRNG (mulberry32) for deterministic Monte Carlo results.
+ * Given the same seed, produces the same sequence of random numbers.
  */
-function bootstrapSample<T>(arr: T[]): T[] {
-  const n = arr.length;
-  const sample: T[] = new Array(n);
-  for (let i = 0; i < n; i++) {
-    sample[i] = arr[Math.floor(Math.random() * n)];
+function createSeededRng(seed: number): () => number {
+  let s = seed | 0;
+  return () => {
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Derive a deterministic seed from trade data so identical inputs
+ * always produce the same simulation results.
+ */
+function deriveSeed(profits: number[]): number {
+  let hash = 0;
+  for (let i = 0; i < profits.length; i++) {
+    // Combine index and profit value into a stable hash
+    const bits = profits[i] * 100; // scale for precision
+    hash = ((hash << 5) - hash + (bits | 0)) | 0;
   }
-  return sample;
+  return hash;
 }
 
 const emptyMonteCarloResult: MonteCarloResult = {
@@ -51,6 +65,9 @@ export function runMonteCarloSimulation(
   if (trades.length === 0) return emptyMonteCarloResult;
 
   const profits = trades.map((t) => t.profit);
+  const seed = deriveSeed(profits);
+  const random = createSeededRng(seed);
+
   // Extend simulation to 2x the original trade count (min 200) to reveal
   // long-term bankruptcy risk that wouldn't surface in a short window.
   const numTrades = Math.max(profits.length * 2, 200);
@@ -68,7 +85,7 @@ export function runMonteCarloSimulation(
     let bankrupt = false;
 
     for (let i = 0; i < numTrades; i++) {
-      equity += profits[Math.floor(Math.random() * profits.length)];
+      equity += profits[Math.floor(random() * profits.length)];
       path.push(equity);
 
       if (equity > peak) peak = equity;
