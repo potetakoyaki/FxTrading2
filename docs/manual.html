@@ -313,8 +313,8 @@
 
 <p>主な機能:</p>
 <ul style="padding-left:1.5rem; margin-bottom:1rem;">
-  <li><strong>100点満点の戦略スコア</strong> — PF・RR・期待値・DD・勝率・連敗を総合評価</li>
-  <li><strong>5項目のリスク診断</strong> — 低/中/高の3段階で危険度を可視化</li>
+  <li><strong>100点満点の戦略スコア</strong> — PF・RR・期待値・DDの4指標を重み付けして総合評価</li>
+  <li><strong>5項目のリスク診断</strong> — DD・PF・連敗・期待値・勝率を各3段階（安全/注意/危険）で評価</li>
   <li><strong>通貨ペア別・時間帯別・曜日別分析</strong> — 弱い通貨ペアや時間帯を特定</li>
   <li><strong>モンテカルロシミュレーション</strong> — 1,000回の統計シミュレーションで破綻確率を算出</li>
   <li><strong>改善提案</strong> — 具体的なフィルター条件付きの改善アドバイス</li>
@@ -387,7 +387,7 @@
 
 <h3>4-1. 戦略スコア（Strategy Score）</h3>
 
-<p>100点満点で戦略の総合力を評価します。以下の5項目を重み付けして算出します。</p>
+<p>100点満点で戦略の総合力を評価します。以下の4項目を重み付けして算出します。</p>
 
 <table>
   <thead>
@@ -411,11 +411,12 @@
     <tr><th>グレード</th><th>スコア範囲</th><th>評価</th></tr>
   </thead>
   <tbody>
-    <tr><td style="color:#00D4AA; font-weight:700;">S</td><td>90〜100</td><td>非常に優秀な戦略</td></tr>
-    <tr><td style="color:#00D4AA; font-weight:700;">A</td><td>75〜89</td><td>優秀な戦略</td></tr>
-    <tr><td style="color:#3B82F6; font-weight:700;">B</td><td>60〜74</td><td>改善の余地あり</td></tr>
-    <tr><td style="color:#F59E0B; font-weight:700;">C</td><td>40〜59</td><td>要改善</td></tr>
-    <tr><td style="color:#FF4757; font-weight:700;">D</td><td>0〜39</td><td>戦略の見直しが必要</td></tr>
+    <tr><td style="color:#FFD700; font-weight:700;">S</td><td>85〜100</td><td>非常に優秀な戦略</td></tr>
+    <tr><td style="color:#00D4AA; font-weight:700;">A</td><td>70〜84</td><td>優秀な戦略</td></tr>
+    <tr><td style="color:#3B82F6; font-weight:700;">B</td><td>55〜69</td><td>改善の余地あり</td></tr>
+    <tr><td style="color:#F59E0B; font-weight:700;">C</td><td>40〜54</td><td>要改善</td></tr>
+    <tr><td style="color:#EF4444; font-weight:700;">D</td><td>25〜39</td><td>戦略の見直しが必要</td></tr>
+    <tr><td style="color:#DC2626; font-weight:700;">F</td><td>0〜24</td><td>根本的な戦略変更が必要</td></tr>
   </tbody>
 </table>
 
@@ -438,14 +439,14 @@
 
 <table>
   <thead>
-    <tr><th>診断項目</th><th>安全の目安</th></tr>
+    <tr><th>診断項目</th><th style="color:#00D4AA;">安全</th><th style="color:#F59E0B;">注意</th><th style="color:#EF4444;">危険</th></tr>
   </thead>
   <tbody>
-    <tr><td>Profit Factor</td><td>1.3以上</td></tr>
-    <tr><td>最大ドローダウン</td><td>20%以下</td></tr>
-    <tr><td>リスクリワード比</td><td>1.0以上</td></tr>
-    <tr><td>連敗耐性</td><td>最大連敗5回以下</td></tr>
-    <tr><td>期待値</td><td>正の値</td></tr>
+    <tr><td>最大ドローダウン</td><td>15%以下</td><td>15〜30%</td><td>30%超</td></tr>
+    <tr><td>Profit Factor</td><td>1.2以上</td><td>1.0〜1.2</td><td>1.0未満</td></tr>
+    <tr><td>最大連敗数</td><td>5回未満</td><td>5〜7回</td><td>8回以上</td></tr>
+    <tr><td>期待値</td><td>十分にプラス</td><td>平均損失の10%未満</td><td>マイナス</td></tr>
+    <tr><td>勝率</td><td>45%以上</td><td>30〜45%</td><td>30%未満</td></tr>
   </tbody>
 </table>
 
