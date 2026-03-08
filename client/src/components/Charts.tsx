@@ -212,11 +212,11 @@ export function MonteCarloChart({ result, initialBalance = 0 }: { result: MonteC
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
         {[
-          { label: t("chart.avgEquity"), value: result.avgFinalEquity.toFixed(2), color: CHART_COLORS.profit },
-          { label: t("chart.worstEquity"), value: result.worstFinalEquity.toFixed(2), color: CHART_COLORS.loss },
-          { label: t("chart.avgMaxDD"), value: initialBalance > 0
-            ? `${((result.avgMaxDrawdown / initialBalance) * 100).toFixed(1)}%`
-            : result.avgMaxDrawdown.toFixed(2), color: CHART_COLORS.warning },
+          { label: t("chart.medianFinal"), value: result.percentile50.toFixed(0), color: CHART_COLORS.profit },
+          { label: t("chart.worstDD95"), value: initialBalance > 0
+            ? `${((result.percentile95MaxDD / initialBalance) * 100).toFixed(1)}%`
+            : result.percentile95MaxDD.toFixed(0), color: CHART_COLORS.warning },
+          { label: t("chart.profitProb"), value: `${result.profitProbability.toFixed(1)}%`, color: result.profitProbability >= 50 ? CHART_COLORS.profit : CHART_COLORS.loss },
           { label: t("chart.bankruptcyRate"), value: `${result.bankruptcyRate.toFixed(1)}%`, color: result.bankruptcyRate > 10 ? CHART_COLORS.loss : CHART_COLORS.profit },
         ].map((stat) => (
           <div key={stat.label} className="text-center py-2 bg-[oklch(0.14_0.02_260)] rounded-md">

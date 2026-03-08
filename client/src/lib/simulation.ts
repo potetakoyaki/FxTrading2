@@ -8,6 +8,8 @@ export interface MonteCarloResult {
   maxDrawdown: number;
   avgMaxDrawdown: number;
   bankruptcyRate: number; // percentage of paths that went below 0
+  profitProbability: number; // percentage of paths that ended with positive P&L
+  percentile95MaxDD: number; // 95th percentile of max drawdown across simulations
   percentile5: number;
   percentile25: number;
   percentile50: number;
@@ -36,7 +38,8 @@ function bootstrapSample<T>(arr: T[]): T[] {
 
 const emptyMonteCarloResult: MonteCarloResult = {
   paths: [], avgFinalEquity: 0, worstFinalEquity: 0, bestFinalEquity: 0,
-  maxDrawdown: 0, avgMaxDrawdown: 0, bankruptcyRate: 0,
+  maxDrawdown: 0, avgMaxDrawdown: 0, bankruptcyRate: 0, profitProbability: 0,
+  percentile95MaxDD: 0,
   percentile5: 0, percentile25: 0, percentile50: 0, percentile75: 0, percentile95: 0,
 };
 
@@ -85,12 +88,15 @@ export function runMonteCarloSimulation(
   }
 
   finalEquities.sort((a, b) => a - b);
+  maxDrawdowns.sort((a, b) => a - b);
 
   const getPercentile = (arr: number[], p: number) => {
     if (arr.length === 0) return 0;
     const idx = Math.min(Math.ceil((p / 100) * arr.length) - 1, arr.length - 1);
     return arr[Math.max(0, idx)];
   };
+
+  const profitableCount = finalEquities.filter((e) => e > initialCapital).length;
 
   return {
     paths: paths.slice(0, 200),
@@ -100,6 +106,8 @@ export function runMonteCarloSimulation(
     maxDrawdown: Math.max(...maxDrawdowns),
     avgMaxDrawdown: maxDrawdowns.reduce((s, v) => s + v, 0) / maxDrawdowns.length,
     bankruptcyRate: (bankruptcyCount / numSimulations) * 100,
+    profitProbability: (profitableCount / numSimulations) * 100,
+    percentile95MaxDD: getPercentile(maxDrawdowns, 95),
     percentile5: getPercentile(finalEquities, 5),
     percentile25: getPercentile(finalEquities, 25),
     percentile50: getPercentile(finalEquities, 50),
