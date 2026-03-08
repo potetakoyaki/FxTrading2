@@ -20,13 +20,18 @@ export interface DrawdownDistribution {
   counts: number[];
 }
 
-function shuffleArray<T>(arr: T[]): T[] {
-  const shuffled = [...arr];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+/**
+ * Bootstrap resampling: randomly pick n items from arr WITH replacement.
+ * Unlike shuffling (which always yields the same sum), bootstrap produces
+ * different total P&L each run, giving meaningful final-equity variance.
+ */
+function bootstrapSample<T>(arr: T[]): T[] {
+  const n = arr.length;
+  const sample: T[] = new Array(n);
+  for (let i = 0; i < n; i++) {
+    sample[i] = arr[Math.floor(Math.random() * n)];
   }
-  return shuffled;
+  return sample;
 }
 
 const emptyMonteCarloResult: MonteCarloResult = {
@@ -51,7 +56,7 @@ export function runMonteCarloSimulation(
   let bankruptcyCount = 0;
 
   for (let sim = 0; sim < numSimulations; sim++) {
-    const shuffled = shuffleArray(profits);
+    const shuffled = bootstrapSample(profits);
     const path: number[] = [initialCapital];
     let equity = initialCapital;
     let peak = initialCapital;
