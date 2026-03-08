@@ -1,6 +1,12 @@
 name = "fx-strategy-doctor"
-pages_build_output_dir = "dist/public"
+main = "functions/worker.ts"
 compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "dist/public"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
 
 [vars]
 ADMIN_USERNAME = "admin"
