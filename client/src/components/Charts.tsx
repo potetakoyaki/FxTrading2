@@ -2,7 +2,7 @@
  * Design: Trading Terminal - Dark themed charts
  * Equity Curve, Monte Carlo Simulation, Drawdown Distribution
  */
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   LineChart, Line, AreaChart, Area, BarChart, Bar,
@@ -99,6 +99,87 @@ export function EquityCurveChart({ data, initialBalance = 0 }: { data: EquityCur
         </ResponsiveContainer>
       </div>
     </motion.div>
+  );
+}
+
+// ==================== Monte Carlo Stats with expandable descriptions ====================
+
+function MonteCarloStats({ result, initialBalance }: { result: MonteCarloResult; initialBalance: number }) {
+  const { t } = useLanguage();
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+
+  const bankruptcyIsNA = result.bankruptcyRate < 0;
+
+  const stats = [
+    {
+      label: t("chart.medianFinal"),
+      desc: t("chart.medianFinal.desc"),
+      value: result.percentile50.toFixed(0),
+      color: CHART_COLORS.profit,
+    },
+    {
+      label: t("chart.worstDD95"),
+      desc: t("chart.worstDD95.desc"),
+      value: initialBalance > 0
+        ? `${((result.percentile95MaxDD / initialBalance) * 100).toFixed(1)}%`
+        : result.percentile95MaxDD.toFixed(0),
+      color: CHART_COLORS.warning,
+    },
+    {
+      label: t("chart.profitProb"),
+      desc: t("chart.profitProb.desc"),
+      value: `${result.profitProbability.toFixed(1)}%`,
+      color: result.profitProbability >= 50 ? CHART_COLORS.profit : CHART_COLORS.loss,
+    },
+    {
+      label: t("chart.bankruptcyRate"),
+      desc: t("chart.bankruptcyRate.desc"),
+      value: bankruptcyIsNA ? t("chart.na") : `${result.bankruptcyRate.toFixed(1)}%`,
+      color: bankruptcyIsNA
+        ? CHART_COLORS.text
+        : result.bankruptcyRate > 10 ? CHART_COLORS.loss : CHART_COLORS.profit,
+      subNote: bankruptcyIsNA ? t("chart.noInitialBalance") : undefined,
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+      {stats.map((stat, i) => (
+        <div key={stat.label}>
+          <button
+            type="button"
+            onClick={() => setExpandedIndex(expandedIndex === i ? null : i)}
+            className="w-full text-center py-2 bg-[oklch(0.14_0.02_260)] rounded-md cursor-pointer hover:bg-[oklch(0.17_0.02_260)] transition-colors"
+          >
+            <div className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+              {stat.label}
+              <svg
+                className={`w-3 h-3 transition-transform ${expandedIndex === i ? "rotate-180" : ""}`}
+                fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+            <div className="metric-value text-sm font-semibold mt-0.5" style={{ color: stat.color }}>
+              {stat.value}
+            </div>
+            {stat.subNote && (
+              <div className="text-[10px] text-muted-foreground mt-0.5">{stat.subNote}</div>
+            )}
+          </button>
+          {expandedIndex === i && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-1 p-2 bg-[oklch(0.12_0.02_260)] rounded-md text-xs text-muted-foreground leading-relaxed"
+            >
+              {stat.desc}
+            </motion.div>
+          )}
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -210,23 +291,7 @@ export function MonteCarloChart({ result, initialBalance = 0 }: { result: MonteC
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-        {[
-          { label: t("chart.medianFinal"), value: result.percentile50.toFixed(0), color: CHART_COLORS.profit },
-          { label: t("chart.worstDD95"), value: initialBalance > 0
-            ? `${((result.percentile95MaxDD / initialBalance) * 100).toFixed(1)}%`
-            : result.percentile95MaxDD.toFixed(0), color: CHART_COLORS.warning },
-          { label: t("chart.profitProb"), value: `${result.profitProbability.toFixed(1)}%`, color: result.profitProbability >= 50 ? CHART_COLORS.profit : CHART_COLORS.loss },
-          { label: t("chart.bankruptcyRate"), value: `${result.bankruptcyRate.toFixed(1)}%`, color: result.bankruptcyRate > 10 ? CHART_COLORS.loss : CHART_COLORS.profit },
-        ].map((stat) => (
-          <div key={stat.label} className="text-center py-2 bg-[oklch(0.14_0.02_260)] rounded-md">
-            <div className="text-xs text-muted-foreground">{stat.label}</div>
-            <div className="metric-value text-sm font-semibold mt-0.5" style={{ color: stat.color }}>
-              {stat.value}
-            </div>
-          </div>
-        ))}
-      </div>
+      <MonteCarloStats result={result} initialBalance={initialBalance} />
     </motion.div>
   );
 }

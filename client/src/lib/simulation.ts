@@ -51,7 +51,9 @@ export function runMonteCarloSimulation(
   if (trades.length === 0) return emptyMonteCarloResult;
 
   const profits = trades.map((t) => t.profit);
-  const numTrades = profits.length;
+  // Extend simulation to 2x the original trade count (min 200) to reveal
+  // long-term bankruptcy risk that wouldn't surface in a short window.
+  const numTrades = Math.max(profits.length * 2, 200);
 
   const paths: number[][] = [];
   const finalEquities: number[] = [];
@@ -59,7 +61,6 @@ export function runMonteCarloSimulation(
   let bankruptcyCount = 0;
 
   for (let sim = 0; sim < numSimulations; sim++) {
-    const shuffled = bootstrapSample(profits);
     const path: number[] = [initialCapital];
     let equity = initialCapital;
     let peak = initialCapital;
@@ -67,14 +68,22 @@ export function runMonteCarloSimulation(
     let bankrupt = false;
 
     for (let i = 0; i < numTrades; i++) {
-      equity += shuffled[i];
+      equity += profits[Math.floor(Math.random() * profits.length)];
       path.push(equity);
 
       if (equity > peak) peak = equity;
       const dd = peak - equity;
       if (dd > maxDD) maxDD = dd;
 
-      if (equity < 0) bankrupt = true;
+      if (initialCapital > 0 && equity < 0) {
+        bankrupt = true;
+        break; // Stop trading after bankruptcy (realistic)
+      }
+    }
+
+    // Pad bankrupt paths so all paths have the same length for charting
+    while (path.length < numTrades + 1) {
+      path.push(equity);
     }
 
     // Store only a subset of paths for visualization (every 10th or first 100)
@@ -105,7 +114,7 @@ export function runMonteCarloSimulation(
     bestFinalEquity: finalEquities[finalEquities.length - 1],
     maxDrawdown: Math.max(...maxDrawdowns),
     avgMaxDrawdown: maxDrawdowns.reduce((s, v) => s + v, 0) / maxDrawdowns.length,
-    bankruptcyRate: (bankruptcyCount / numSimulations) * 100,
+    bankruptcyRate: initialCapital > 0 ? (bankruptcyCount / numSimulations) * 100 : -1,
     profitProbability: (profitableCount / numSimulations) * 100,
     percentile95MaxDD: getPercentile(maxDrawdowns, 95),
     percentile5: getPercentile(finalEquities, 5),
