@@ -182,6 +182,7 @@ function preprocessCSV(csvText: string): string {
     /^working\s*orders?/i,
     /^cancelled?\s*orders?/i,
     /^deleted?\s*orders?/i,
+    /^summary$/i,
     /^未決済/,
     /^ワーキング/,
   ];

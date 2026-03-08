@@ -234,6 +234,7 @@ function extractBestTable(doc: Document): string {
     /^working\s*orders?$/i,
     /^cancelled?\s*orders?$/i,
     /^deleted?\s*orders?$/i,
+    /^summary$/i,
     /^未決済/,
     /^ワーキング/,
   ];
@@ -241,18 +242,23 @@ function extractBestTable(doc: Document): string {
   const rows = Array.from((bestTable as Element).querySelectorAll('tr'));
   const csvRows: string[] = [];
 
+  // Helper: check if a row is a section header (single cell, or cell with colspan)
+  const isSectionHeaderRow = (row: Element): string | null => {
+    const cells = row.querySelectorAll('td, th');
+    if (cells.length !== 1) return null;
+    const text = (cells[0].textContent || '').trim();
+    return text || null;
+  };
+
   // First pass: find "Closed Transactions" header row if present
   let startIdx = 0;
   let foundClosedSection = false;
   for (let i = 0; i < rows.length; i++) {
-    const cells = rows[i].querySelectorAll('td, th');
-    if (cells.length === 1) {
-      const text = (cells[0].textContent || '').trim();
-      if (/^closed\s*transactions?$/i.test(text) || /^決済済み/i.test(text)) {
-        startIdx = i + 1; // skip the section header itself
-        foundClosedSection = true;
-        break;
-      }
+    const text = isSectionHeaderRow(rows[i]);
+    if (text && (/^closed\s*transactions?$/i.test(text) || /^決済済み/i.test(text))) {
+      startIdx = i + 1; // skip the section header itself
+      foundClosedSection = true;
+      break;
     }
   }
 
@@ -262,11 +268,11 @@ function extractBestTable(doc: Document): string {
     const cells = row.querySelectorAll('td, th');
 
     // Check for section boundary (single-cell row acting as a section header)
-    if (cells.length === 1 && foundClosedSection) {
-      const text = (cells[0].textContent || '').trim();
-      if (text && sectionStopPatterns.some(p => p.test(text))) {
-        break; // Stop — we've reached a non-closed-trades section
-      }
+    // Always check, even without "Closed Transactions" header — MT4 reports
+    // may have only "Open Trades" without an explicit "Closed Transactions" header.
+    const sectionText = isSectionHeaderRow(row);
+    if (sectionText && sectionStopPatterns.some(p => p.test(sectionText))) {
+      break; // Stop — we've reached a non-closed-trades section
     }
 
     const values: string[] = [];
