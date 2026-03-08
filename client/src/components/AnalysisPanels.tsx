@@ -289,8 +289,16 @@ export function RiskPanel({ diagnosis }: { diagnosis: RiskDiagnosis }) {
 
 export function SuggestionsPanel({ suggestions }: { suggestions: ImprovementSuggestion[] }) {
   const { t } = useLanguage();
+  const [expanded, setExpanded] = useState(false);
 
   if (suggestions.length === 0) return null;
+
+  const priorityOrder = { high: 0, medium: 1, low: 2 } as const;
+  const sorted = [...suggestions].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+
+  const DEFAULT_VISIBLE = 3;
+  const hasMore = sorted.length > DEFAULT_VISIBLE;
+  const visible = expanded ? sorted : sorted.slice(0, DEFAULT_VISIBLE);
 
   const priorityConfig = {
     high: { border: "border-l-[oklch(0.65_0.2_20)]", icon: "text-[oklch(0.65_0.2_20)]" },
@@ -310,26 +318,47 @@ export function SuggestionsPanel({ suggestions }: { suggestions: ImprovementSugg
         {t("panel.suggestions")}
       </h3>
       <div className="space-y-3">
-        {suggestions.map((s, i) => {
-          const config = priorityConfig[s.priority];
-          return (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className={`border-l-2 ${config.border} pl-4 py-2`}
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-semibold text-foreground">{s.title}</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                  {s.category}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">{s.description}</p>
-            </motion.div>
-          );
-        })}
+        <AnimatePresence initial={false}>
+          {visible.map((s, i) => {
+            const config = priorityConfig[s.priority];
+            return (
+              <motion.div
+                key={`${s.priority}-${s.title}`}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, height: 0, overflow: "hidden" }}
+                transition={{ delay: i < DEFAULT_VISIBLE ? i * 0.1 : (i - DEFAULT_VISIBLE) * 0.05 }}
+                className={`border-l-2 ${config.border} pl-4 py-2`}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-semibold text-foreground">{s.title}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                    {s.category}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">{s.description}</p>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+        {hasMore && (
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="flex items-center gap-1.5 text-xs text-[oklch(0.7_0.15_250)] hover:text-[oklch(0.8_0.15_250)] transition-colors mt-2 cursor-pointer"
+          >
+            {expanded ? (
+              <>
+                <ChevronDown className="w-3.5 h-3.5" />
+                {t("chart.showLess")}
+              </>
+            ) : (
+              <>
+                <ChevronRight className="w-3.5 h-3.5" />
+                {t("chart.showMore").replace("{count}", String(sorted.length - DEFAULT_VISIBLE))}
+              </>
+            )}
+          </button>
+        )}
       </div>
     </motion.div>
   );
