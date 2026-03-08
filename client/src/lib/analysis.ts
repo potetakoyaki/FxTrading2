@@ -527,7 +527,7 @@ export function calculateMetrics(trades: TradeRecord[], initialBalance: number =
     if (peakForMaxDD > 0) {
       maxDDPercent = (maxDD / peakForMaxDD) * 100;
     } else {
-      maxDDPercent = 100;
+      maxDDPercent = 0;
     }
     maxDDPercent = Math.min(maxDDPercent, 100);
   }
@@ -666,7 +666,7 @@ export function analyzeByTimeSlot(trades: TradeRecord[]): TimeSlotAnalysis[] {
 
     if (slotTrades.length === 0) {
       slots.push({
-        slot: `${String(h).padStart(2, "0")}:00-${String(h + 3).padStart(2, "0")}:00`,
+        slot: `${String(h).padStart(2, "0")}:00-${String((h + 3) % 24).padStart(2, "0")}:00`,
         hour: h,
         trades: 0,
         winRate: 0,
@@ -1686,8 +1686,8 @@ export function calculateEquityCurve(trades: TradeRecord[], initialBalance: numb
     equity += trades[i].profit;
     if (equity > peak) peak = equity;
     const drawdown = peak - equity;
-    const drawdownPct = drawdown > 0
-      ? (peak > 0 ? Math.min((drawdown / peak) * 100, 100) : 100)
+    const drawdownPct = drawdown > 0 && peak > 0
+      ? Math.min((drawdown / peak) * 100, 100)
       : 0;
     points.push({ index: i + 1, equity, drawdown, drawdownPct, time: trades[i].time });
   }
