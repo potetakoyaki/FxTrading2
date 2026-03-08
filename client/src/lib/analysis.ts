@@ -143,6 +143,12 @@ export interface WinLossDistribution {
   skewness: number;
 }
 
+export interface WorstTradeCommonPattern {
+  dominantSymbol: { symbol: string; count: number; total: number } | null;
+  dominantDay: { day: string; count: number; total: number } | null;
+  dominantHour: { hour: number; count: number; total: number } | null;
+}
+
 export interface LowQualityTradeImpact {
   removedCount: number;
   originalPF: number;
@@ -153,7 +159,8 @@ export interface LowQualityTradeImpact {
   newWinRate: number;
   originalExpectancy: number;
   newExpectancy: number;
-  removedTrades: { index: number; profit: number; symbol: string; time: Date }[];
+  removedTrades: { index: number; profit: number; symbol: string; time: Date; lots: number }[];
+  commonPattern: WorstTradeCommonPattern;
 }
 
 // Helper: median of an array of numbers
@@ -307,12 +314,47 @@ export function analyzeLowQualityTradeImpact(
   const maxRemoval = Math.floor(trades.length * 0.2);
   const scenarios = [1, 3, 5, 10].filter(n => n <= maxRemoval && n < trades.length);
 
+  const dayNames = ["日", "月", "火", "水", "木", "金", "土"];
+
   return scenarios.map(n => {
     const worstN = sortedByProfit.slice(0, n);
     const worstSet = new Set(worstN.map(t => t.originalIndex));
     const remaining = trades.filter((_, i) => !worstSet.has(i));
 
     const newM = calculateMetrics(remaining);
+
+    // Analyze common patterns in worst trades
+    const symbolCounts = new Map<string, number>();
+    const dayCounts = new Map<string, number>();
+    const hourCounts = new Map<number, number>();
+    for (const t of worstN) {
+      symbolCounts.set(t.symbol, (symbolCounts.get(t.symbol) || 0) + 1);
+      const day = dayNames[t.time.getDay()];
+      dayCounts.set(day, (dayCounts.get(day) || 0) + 1);
+      const hour = t.time.getHours();
+      hourCounts.set(hour, (hourCounts.get(hour) || 0) + 1);
+    }
+
+    const threshold = n >= 3 ? 0.5 : 1; // 50%+ share for 3+ trades, 100% for 1-2
+
+    let dominantSymbol: WorstTradeCommonPattern["dominantSymbol"] = null;
+    Array.from(symbolCounts.entries()).forEach(([symbol, count]) => {
+      if (!dominantSymbol && count / n >= threshold) {
+        dominantSymbol = { symbol, count, total: n };
+      }
+    });
+    let dominantDay: WorstTradeCommonPattern["dominantDay"] = null;
+    Array.from(dayCounts.entries()).forEach(([day, count]) => {
+      if (!dominantDay && count / n >= threshold) {
+        dominantDay = { day, count, total: n };
+      }
+    });
+    let dominantHour: WorstTradeCommonPattern["dominantHour"] = null;
+    Array.from(hourCounts.entries()).forEach(([hour, count]) => {
+      if (!dominantHour && count / n >= threshold) {
+        dominantHour = { hour, count, total: n };
+      }
+    });
 
     return {
       removedCount: n,
@@ -329,7 +371,9 @@ export function analyzeLowQualityTradeImpact(
         profit: t.profit,
         symbol: t.symbol,
         time: t.time,
+        lots: t.lots,
       })),
+      commonPattern: { dominantSymbol, dominantDay, dominantHour },
     };
   });
 }
@@ -1058,11 +1102,26 @@ export function generateSuggestions(
   if (lowQualityImpact && lowQualityImpact.length > 0) {
     const best = lowQualityImpact.find(s => s.originalPF > 0 && s.newPF > s.originalPF * 1.3);
     if (best) {
+      const p = best.commonPattern;
+      const patternParts: string[] = [];
+      if (lang === "ja") {
+        if (p.dominantSymbol) patternParts.push(`通貨ペア「${p.dominantSymbol.symbol}」(${p.dominantSymbol.count}/${p.dominantSymbol.total}件)`);
+        if (p.dominantDay) patternParts.push(`${p.dominantDay.day}曜日(${p.dominantDay.count}/${p.dominantDay.total}件)`);
+        if (p.dominantHour) patternParts.push(`${p.dominantHour.hour}時台(${p.dominantHour.count}/${p.dominantHour.total}件)`);
+      } else {
+        if (p.dominantSymbol) patternParts.push(`${p.dominantSymbol.symbol} (${p.dominantSymbol.count}/${p.dominantSymbol.total})`);
+        if (p.dominantDay) patternParts.push(`${p.dominantDay.day} (${p.dominantDay.count}/${p.dominantDay.total})`);
+        if (p.dominantHour) patternParts.push(`${p.dominantHour.hour}:00h (${p.dominantHour.count}/${p.dominantHour.total})`);
+      }
+      const patternStr = patternParts.length > 0
+        ? (lang === "ja" ? ` 共通パターン: ${patternParts.join("、")}。これらの条件でのエントリーを避けるかロットを下げてください。` : ` Common patterns: ${patternParts.join(", ")}. Avoid entries under these conditions or reduce lot size.`)
+        : "";
+
       suggestions.push({
         title: lang === "ja" ? "低品質トレード排除の提案" : "Remove Low-Quality Trades",
         description: lang === "ja"
-          ? `最も悪い${best.removedCount}件のトレードを除外した場合、PFが${best.originalPF.toFixed(2)}→${best.newPF.toFixed(2)}に改善されます。これらのトレードに共通するパターン（特定通貨・時間帯・ロット等）を特定し、エントリーフィルターとして活用してください。`
-          : `Removing the worst ${best.removedCount} trades would improve PF from ${best.originalPF.toFixed(2)} to ${best.newPF.toFixed(2)}. Identify common patterns in these trades to create entry filters.`,
+          ? `損益額ワースト${best.removedCount}件を除外するとPFが${best.originalPF.toFixed(2)}→${best.newPF.toFixed(2)}に改善されます。${patternStr} 詳細は上部の「低品質トレード影響分析」パネルを参照してください。`
+          : `Removing the ${best.removedCount} worst trades (by P&L) would improve PF from ${best.originalPF.toFixed(2)} to ${best.newPF.toFixed(2)}.${patternStr} See the "Low-Quality Trade Impact" panel above for details.`,
         priority: "medium",
         category: lang === "ja" ? "戦略全体" : "Overall Strategy",
       });

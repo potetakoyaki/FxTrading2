@@ -19,6 +19,7 @@ import type {
   TradeQualityAnalysis,
   WinLossDistribution,
   LowQualityTradeImpact,
+  WorstTradeCommonPattern,
 } from "@/lib/analysis";
 
 // ==================== Day of Week Analysis ====================
@@ -643,8 +644,8 @@ export function LowQualityTradeImpactPanel({ data }: { data: LowQualityTradeImpa
       </h3>
       <p className="text-xs text-muted-foreground mb-4">
         {ja
-          ? "最悪のトレードを除外した場合のメトリクス改善をシミュレーションします。共通パターンを見つけてフィルターに活用してください。"
-          : "Simulates metric improvement if worst trades were removed. Find common patterns to use as entry filters."
+          ? "損益額が最も悪い（大きなマイナスの）トレードを除外した場合のメトリクス改善をシミュレーションします。「最悪」＝損益額の降順で最も損失が大きいトレードです。"
+          : "Simulates metric improvement if the trades with the largest losses (most negative P&L) were removed. \"Worst\" = trades sorted by P&L ascending."
         }
       </p>
 
@@ -708,36 +709,92 @@ export function LowQualityTradeImpactPanel({ data }: { data: LowQualityTradeImpa
       </div>
 
       {/* Worst trades detail */}
-      {data.length > 0 && data[0].removedTrades.length > 0 && (
-        <div className="border-t border-border pt-3">
-          <p className="text-[10px] text-muted-foreground uppercase mb-2">
-            {ja ? "最悪トレード一覧" : "Worst Trades"}
-          </p>
-          <div className="space-y-1">
-            {data[data.length - 1].removedTrades.slice(0, 5).map((t, i) => (
-              <div key={i} className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground font-mono text-[10px]">
-                  {t.time.toLocaleDateString(ja ? "ja-JP" : "en-US", { month: "short", day: "numeric" })}
-                </span>
-                <span className="text-muted-foreground text-[10px]">{t.symbol}</span>
-                <span className="text-[oklch(0.65_0.2_20)] font-mono text-[10px]">{t.profit.toFixed(2)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {data.length > 0 && data[0].removedTrades.length > 0 && (() => {
+        const lastScenario = data[data.length - 1];
+        const worstTrades = lastScenario.removedTrades.slice(0, 5);
+        const dayNames = ja
+          ? ["日", "月", "火", "水", "木", "金", "土"]
+          : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-      {data.some(s => s.originalPF > 0 && s.newPF > s.originalPF * 1.3) && (
-        <div className="mt-3 flex gap-2 p-2.5 rounded-lg bg-[oklch(0.15_0.04_75)] border border-[oklch(0.78_0.15_75/0.2)]">
-          <AlertTriangle className="w-3.5 h-3.5 text-[oklch(0.78_0.15_75)] shrink-0 mt-0.5" />
-          <p className="text-xs text-[oklch(0.78_0.15_75)] leading-relaxed">
-            {ja
-              ? "少数の低品質トレードがパフォーマンスを大きく圧迫しています。これらのトレードに共通する特徴を分析し、エントリーフィルターとして活用することを推奨します。"
-              : "A few low-quality trades significantly drag down performance. Analyze common characteristics and use them as entry filters."
-            }
-          </p>
-        </div>
-      )}
+        return (
+          <div className="border-t border-border pt-3">
+            <p className="text-[10px] text-muted-foreground uppercase mb-2">
+              {ja ? "最悪トレード一覧（損益額が最も大きいマイナス順）" : "Worst Trades (sorted by largest loss)"}
+            </p>
+            <div className="space-y-1">
+              {worstTrades.map((t, i) => (
+                <div key={i} className="flex items-center text-xs gap-2">
+                  <span className="text-muted-foreground font-mono text-[10px] w-16 shrink-0">
+                    {t.time.toLocaleDateString(ja ? "ja-JP" : "en-US", { month: "short", day: "numeric" })}
+                  </span>
+                  <span className="text-muted-foreground/60 font-mono text-[10px] w-5 shrink-0">
+                    {dayNames[t.time.getDay()]}
+                  </span>
+                  <span className="text-muted-foreground/60 font-mono text-[10px] w-10 shrink-0">
+                    {t.time.getHours().toString().padStart(2, "0")}:{t.time.getMinutes().toString().padStart(2, "0")}
+                  </span>
+                  <span className="text-muted-foreground text-[10px] flex-1">{t.symbol}</span>
+                  <span className="text-muted-foreground/60 font-mono text-[10px] w-10 text-right shrink-0">
+                    {t.lots.toFixed(2)}
+                  </span>
+                  <span className="text-[oklch(0.65_0.2_20)] font-mono text-[10px] w-20 text-right shrink-0">{t.profit.toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Common pattern analysis & actionable advice */}
+      {data.some(s => s.originalPF > 0 && s.newPF > s.originalPF * 1.3) && (() => {
+        const bestScenario = data.find(s => s.originalPF > 0 && s.newPF > s.originalPF * 1.3)!;
+        const p = bestScenario.commonPattern;
+        const patternParts: string[] = [];
+        if (ja) {
+          if (p.dominantSymbol) patternParts.push(`通貨ペア「${p.dominantSymbol.symbol}」が${p.dominantSymbol.count}/${p.dominantSymbol.total}件`);
+          if (p.dominantDay) patternParts.push(`${p.dominantDay.day}曜日が${p.dominantDay.count}/${p.dominantDay.total}件`);
+          if (p.dominantHour) patternParts.push(`${p.dominantHour.hour}時台が${p.dominantHour.count}/${p.dominantHour.total}件`);
+        } else {
+          if (p.dominantSymbol) patternParts.push(`${p.dominantSymbol.symbol}: ${p.dominantSymbol.count}/${p.dominantSymbol.total}`);
+          if (p.dominantDay) patternParts.push(`${p.dominantDay.day}: ${p.dominantDay.count}/${p.dominantDay.total}`);
+          if (p.dominantHour) patternParts.push(`${p.dominantHour.hour}:00 hour: ${p.dominantHour.count}/${p.dominantHour.total}`);
+        }
+
+        return (
+          <div className="mt-3 flex gap-2 p-2.5 rounded-lg bg-[oklch(0.15_0.04_75)] border border-[oklch(0.78_0.15_75/0.2)]">
+            <AlertTriangle className="w-3.5 h-3.5 text-[oklch(0.78_0.15_75)] shrink-0 mt-0.5" />
+            <div className="text-xs text-[oklch(0.78_0.15_75)] leading-relaxed space-y-1">
+              <p>
+                {ja
+                  ? `最悪${bestScenario.removedCount}件を除外するとPFが${bestScenario.originalPF.toFixed(2)}→${bestScenario.newPF.toFixed(2)}に改善されます。`
+                  : `Removing the worst ${bestScenario.removedCount} trades would improve PF from ${bestScenario.originalPF.toFixed(2)} to ${bestScenario.newPF.toFixed(2)}.`
+                }
+              </p>
+              {patternParts.length > 0 && (
+                <p className="font-semibold">
+                  {ja ? "共通パターン: " : "Common patterns: "}
+                  {patternParts.join(ja ? "、" : ", ")}
+                </p>
+              )}
+              {patternParts.length > 0 ? (
+                <p>
+                  {ja
+                    ? `これらの条件でのエントリーを避けるか、ロットを下げることで損失を軽減できます。下部の「改善提案」セクションにも具体的なフィルター案が記載されています。`
+                    : `Avoid entries under these conditions or reduce lot size. See the "Improvement Suggestions" section below for specific filter recommendations.`
+                  }
+                </p>
+              ) : (
+                <p>
+                  {ja
+                    ? "共通パターンが明確ではありません。最悪トレード一覧の日時・通貨ペアを個別に確認し、エントリー時の判断基準を見直してください。下部の「改善提案」セクションも参照してください。"
+                    : "No clear common pattern. Review each worst trade's date/symbol individually. See the \"Improvement Suggestions\" section for actionable recommendations."
+                  }
+                </p>
+              )}
+            </div>
+          </div>
+        );
+      })()}
     </motion.div>
   );
 }
