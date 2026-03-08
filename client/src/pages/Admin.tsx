@@ -44,7 +44,7 @@ export default function Admin() {
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newNote, setNewNote] = useState("");
-  const [newLicenseDays, setNewLicenseDays] = useState("90");
+  const [newLicenseDays, setNewLicenseDays] = useState("0");
   const [addError, setAddError] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -104,7 +104,7 @@ export default function Admin() {
     setNewUsername("");
     setNewPassword("");
     setNewNote("");
-    setNewLicenseDays("90");
+    setNewLicenseDays("0");
     setShowAddForm(false);
   };
 
@@ -336,11 +336,12 @@ export default function Admin() {
                     onChange={e => setNewLicenseDays(e.target.value)}
                     className="w-full bg-slate-700/50 border border-slate-600 text-white text-sm h-8 rounded-md px-2"
                   >
-                    <option value="30">30日（ライト）</option>
-                    <option value="90">90日（スタンダード）</option>
-                    <option value="180">180日（プレミアム）</option>
+                    <option value="0">無期限（買い切り）</option>
+                    <option value="7">7日（お試し）</option>
+                    <option value="30">30日</option>
+                    <option value="90">90日</option>
+                    <option value="180">180日</option>
                     <option value="365">365日</option>
-                    <option value="0">無期限</option>
                   </select>
                 </div>
               </div>
@@ -609,7 +610,7 @@ export default function Admin() {
             </p>
             <p>
               • <span className="text-slate-400">利用期限:</span>{" "}
-              新規追加時にプラン（30/90/180/365日/無期限）を選択。期限切れアカウントは自動的にログイン不可になります。編集で期限日を変更可能
+              デフォルトは「無期限（買い切り）」。お試し用に期間限定も設定可能。期限切れアカウントは自動的にログイン不可になります
             </p>
             <p>
               • <span className="text-slate-400">管理者ログイン:</span>{" "}
