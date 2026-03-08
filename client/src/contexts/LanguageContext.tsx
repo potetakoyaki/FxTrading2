@@ -92,13 +92,13 @@ const translations = {
   },
   "chart.profitProb": { ja: "利益確率", en: "Profit Prob." },
   "chart.profitProb.desc": {
-    ja: "シミュレーション終了時に初期資金を上回っているパスの割合。50%以上なら優位性があると判断できます。",
-    en: "Percentage of simulation paths ending above starting capital. Above 50% indicates a statistical edge."
+    ja: "元データの2倍のトレード数でシミュレーションした終了時に初期資金を上回っているパスの割合。50%以上なら優位性があると判断できます。",
+    en: "Percentage of paths ending above starting capital after simulating 2x the original trade count. Above 50% indicates a statistical edge."
   },
   "chart.bankruptcyRate": { ja: "破綻確率", en: "Bankruptcy Rate" },
   "chart.bankruptcyRate.desc": {
-    ja: "シミュレーション中に口座残高が0以下になったパスの割合。初期資金が設定されていない場合は算出できません。",
-    en: "Percentage of paths where the account balance dropped to zero or below. Cannot be calculated without an initial balance."
+    ja: "元データの2倍のトレード数でシミュレーションした際に口座残高が0以下になったパスの割合。初期資金が設定されていない場合は算出できません。",
+    en: "Percentage of paths where account balance dropped to zero during a simulation of 2x the original trade count. Requires initial balance."
   },
   "chart.na": { ja: "N/A", en: "N/A" },
   "chart.noInitialBalance": {
