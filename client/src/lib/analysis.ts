@@ -1120,8 +1120,8 @@ export function generateSuggestions(
       suggestions.push({
         title: lang === "ja" ? "低品質トレード排除の提案" : "Remove Low-Quality Trades",
         description: lang === "ja"
-          ? `損益額ワースト${best.removedCount}件を除外するとPFが${best.originalPF.toFixed(2)}→${best.newPF.toFixed(2)}に改善されます。${patternStr} 詳細は上部の「低品質トレード影響分析」パネルを参照してください。`
-          : `Removing the ${best.removedCount} worst trades (by P&L) would improve PF from ${best.originalPF.toFixed(2)} to ${best.newPF.toFixed(2)}.${patternStr} See the "Low-Quality Trade Impact" panel above for details.`,
+          ? `損益額ワースト${best.removedCount}件を除外するとPFが${best.originalPF.toFixed(2)}→${best.newPF.toFixed(2)}に改善されます。${patternStr}`
+          : `Removing the ${best.removedCount} worst trades (by P&L) would improve PF from ${best.originalPF.toFixed(2)} to ${best.newPF.toFixed(2)}.${patternStr}`,
         priority: "medium",
         category: lang === "ja" ? "戦略全体" : "Overall Strategy",
       });
