@@ -197,16 +197,23 @@
     font-family: "Consolas", "Monaco", monospace;
   }
 
-  /* Screenshot placeholder */
-  .screenshot {
-    background: #F1F5F9;
-    border: 2px dashed #CBD5E1;
+  /* Screenshots */
+  .screenshot-block {
+    margin: 1rem 0 1.4rem;
+    page-break-inside: avoid;
+  }
+  .screenshot-block img {
+    width: 100%;
+    height: auto;
+    border: 1px solid #E2E8F0;
     border-radius: 8px;
-    padding: 2rem;
+    display: block;
+  }
+  .screenshot-block figcaption {
+    margin-top: 0.5rem;
+    color: #64748B;
+    font-size: 0.8rem;
     text-align: center;
-    color: #94A3B8;
-    margin: 1rem 0;
-    font-size: 0.85rem;
   }
 
   /* Footer */
@@ -370,6 +377,11 @@
   アップロードエリア下の「サンプルデータで試す」ボタンをクリックすると、デモ用のトレード履歴で分析を体験できます。
 </div>
 
+<figure class="screenshot-block">
+  <img src="./images/1_top.png" alt="ログイン後のアップロード画面">
+  <figcaption>画面例: ログイン後のアップロード画面（ファイル投入前）</figcaption>
+</figure>
+
 <!-- ========== 4. 分析結果の見方 ========== -->
 <h2>4. 分析結果の見方</h2>
 
@@ -388,6 +400,11 @@
     <tr><td>最大DD</td><td>25点</td><td>最大ドローダウン率。低いほど高評価</td></tr>
   </tbody>
 </table>
+
+<figure class="screenshot-block">
+  <img src="./images/2_score_kpi.png" alt="戦略スコアとKPIの分析結果画面">
+  <figcaption>分析結果画面: 戦略スコア・主要KPI</figcaption>
+</figure>
 
 <table>
   <thead>
@@ -432,11 +449,21 @@
   </tbody>
 </table>
 
+<figure class="screenshot-block">
+  <img src="./images/3_risk_weakness.png" alt="リスク診断と弱点ランキング画面">
+  <figcaption>分析結果画面: リスク診断と弱点ランキング</figcaption>
+</figure>
+
 <h3>4-4. 弱点ランキング</h3>
 <p>通貨ペア別・時間帯別の分析結果から、パフォーマンスが低い項目を自動検出し、重要度順にランキング表示します。「HIGH」は即座の対応が必要、「MEDIUM」は改善推奨を意味します。</p>
 
 <h3>4-5. 改善提案</h3>
 <p>35種類の分析パターンに基づき、具体的な改善アドバイスを提供します。各提案には優先度（高/中/低）とカテゴリ（リスク管理/エントリー/メンタル等）が表示されます。提案内容にはフィルター条件（例: 「金曜16時以降のトレードを避ける」）など、実行可能な具体策が含まれます。</p>
+
+<figure class="screenshot-block">
+  <img src="./images/4_proposals.png" alt="改善提案の分析結果画面">
+  <figcaption>分析結果画面: 優先度付きの改善提案</figcaption>
+</figure>
 
 <!-- ========== 5. 詳細分析パネル ========== -->
 <h2>5. 詳細分析パネル</h2>
@@ -462,6 +489,11 @@
 <h3>5-5. 低品質トレード影響度</h3>
 <p>最も損失の大きいトレード（最悪トレード）を除外した場合の成績改善シミュレーションです。除外対象トレードの共通パターン（通貨ペア・曜日・時間帯）も分析され、具体的なフィルター提案に繋がります。</p>
 
+<figure class="screenshot-block">
+  <img src="./images/5_advanced.png" alt="詳細分析パネルの画面">
+  <figcaption>分析結果画面: 詳細分析パネル（曜日別・品質分析など）</figcaption>
+</figure>
+
 <!-- ========== 6. モンテカルロ ========== -->
 <h2>6. モンテカルロシミュレーション</h2>
 
@@ -486,6 +518,11 @@
 
 <h4>エクイティカーブの読み方</h4>
 <p>チャートには複数のシミュレーションパスが表示されます。緑色の線は利益で終わったパス、赤色は損失で終わったパスを示します。パスの広がりが大きいほど、結果のバラつき（リスク）が大きいことを意味します。</p>
+
+<figure class="screenshot-block">
+  <img src="./images/6_monte_carlo.png" alt="モンテカルロシミュレーション画面">
+  <figcaption>分析結果画面: モンテカルロシミュレーション</figcaption>
+</figure>
 
 <!-- ========== 7. レポート出力 ========== -->
 <h2>7. レポートの出力・ダウンロード</h2>
