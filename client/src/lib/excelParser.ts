@@ -102,7 +102,26 @@ function tryExtractMT5DealsSection(data: unknown[][]): string | null {
     '残高': 'Balance',
     'コメント': 'Comment',
   };
+  // Translate headers, handling duplicate column names.
+  // MT5 reports often have column 8 = 費用 (Fee) and column 9 = 手数料 (Commission),
+  // but some brokers export both as 手数料. In that case, the first occurrence at
+  // the expected Fee position is treated as Fee (matching the known MT5 column order).
   const translatedHeaders = headers.map(h => JP_TO_EN[h] ?? h);
+  const seenCols = new Set<string>();
+  for (let i = 0; i < translatedHeaders.length; i++) {
+    const h = translatedHeaders[i];
+    if (!h) continue;
+    if (seenCols.has(h)) {
+      // Duplicate "Commission" → the first was actually Fee in MT5 layout
+      if (h === 'Commission') {
+        const firstIdx = translatedHeaders.indexOf(h);
+        if (firstIdx >= 0 && firstIdx < i) {
+          translatedHeaders[firstIdx] = 'Fee';
+        }
+      }
+    }
+    seenCols.add(h);
+  }
 
   // Strip trailing empty columns from header
   let lastNonEmptyIdx = translatedHeaders.length - 1;
