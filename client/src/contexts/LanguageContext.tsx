@@ -81,9 +81,30 @@ const translations = {
   "chart.median": { ja: "中央値", en: "Median" },
   "chart.count": { ja: "回数", en: "Count" },
   "chart.medianFinal": { ja: "中央値リターン", en: "Median Return" },
+  "chart.medianFinal.desc": {
+    ja: "1,000回のシミュレーション結果の中央値（50パーセンタイル）。同じトレード成績を繰り返した場合の「典型的な最終損益」を示します。",
+    en: "The median (50th percentile) of 1,000 simulation outcomes. Represents the 'typical' final P&L if you repeated the same trading performance."
+  },
   "chart.worstDD95": { ja: "95% 最大DD", en: "95% Worst DD" },
+  "chart.worstDD95.desc": {
+    ja: "95パーセンタイルの最大ドローダウン。1,000回中950回はこの範囲内に収まる「ほぼ最悪ケース」の資金減少幅です。100%を超える場合は元本を全て失うリスクがあります。",
+    en: "The 95th percentile of maximum drawdown. 950 out of 1,000 simulations stay within this range. Values above 100% indicate risk of losing the entire account."
+  },
   "chart.profitProb": { ja: "利益確率", en: "Profit Prob." },
+  "chart.profitProb.desc": {
+    ja: "シミュレーション終了時に初期資金を上回っているパスの割合。50%以上なら優位性があると判断できます。",
+    en: "Percentage of simulation paths ending above starting capital. Above 50% indicates a statistical edge."
+  },
   "chart.bankruptcyRate": { ja: "破綻確率", en: "Bankruptcy Rate" },
+  "chart.bankruptcyRate.desc": {
+    ja: "シミュレーション中に口座残高が0以下になったパスの割合。初期資金が設定されていない場合は算出できません。",
+    en: "Percentage of paths where the account balance dropped to zero or below. Cannot be calculated without an initial balance."
+  },
+  "chart.na": { ja: "N/A", en: "N/A" },
+  "chart.noInitialBalance": {
+    ja: "初期資金が設定されていないため算出できません",
+    en: "Cannot calculate without initial balance"
+  },
   "chart.showMore": { ja: "他 {count} 件を表示", en: "Show {count} more" },
   "chart.showLess": { ja: "折りたたむ", en: "Show less" },
   "chart.tradeCount": { ja: "トレード数", en: "Trade Count" },

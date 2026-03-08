@@ -74,7 +74,7 @@ export function runMonteCarloSimulation(
       const dd = peak - equity;
       if (dd > maxDD) maxDD = dd;
 
-      if (equity < 0) bankrupt = true;
+      if (initialCapital > 0 && equity < 0) bankrupt = true;
     }
 
     // Store only a subset of paths for visualization (every 10th or first 100)
@@ -105,7 +105,7 @@ export function runMonteCarloSimulation(
     bestFinalEquity: finalEquities[finalEquities.length - 1],
     maxDrawdown: Math.max(...maxDrawdowns),
     avgMaxDrawdown: maxDrawdowns.reduce((s, v) => s + v, 0) / maxDrawdowns.length,
-    bankruptcyRate: (bankruptcyCount / numSimulations) * 100,
+    bankruptcyRate: initialCapital > 0 ? (bankruptcyCount / numSimulations) * 100 : -1,
     profitProbability: (profitableCount / numSimulations) * 100,
     percentile95MaxDD: getPercentile(maxDrawdowns, 95),
     percentile5: getPercentile(finalEquities, 5),
