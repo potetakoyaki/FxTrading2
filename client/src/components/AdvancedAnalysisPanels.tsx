@@ -9,8 +9,9 @@
  * - Low-quality trade impact analysis
  */
 
-import { motion } from "framer-motion";
-import { Calendar, Layers, AlertTriangle, BarChart3, TrendingDown, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Calendar, Layers, AlertTriangle, BarChart3, TrendingDown, Trash2, ChevronDown } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type {
@@ -22,11 +23,44 @@ import type {
   WorstTradeCommonPattern,
 } from "@/lib/analysis";
 
+// ==================== Collapsible Panel Header ====================
+
+function PanelHeader({
+  icon, title, summary, open, onToggle,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  summary?: string;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      onClick={onToggle}
+      className="w-full flex items-center justify-between cursor-pointer group"
+    >
+      <div className="flex-1 min-w-0 text-left">
+        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
+          {icon}
+          {title}
+        </h3>
+        {summary && (
+          <p className="text-xs text-muted-foreground mt-0.5 truncate">{summary}</p>
+        )}
+      </div>
+      <ChevronDown
+        className={`w-4 h-4 text-muted-foreground shrink-0 ml-2 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+      />
+    </button>
+  );
+}
+
 // ==================== Day of Week Analysis ====================
 
 export function DayOfWeekPanel({ data }: { data: DayOfWeekAnalysis[] }) {
   const { language } = useLanguage();
   const ja = language === "ja";
+  const [open, setOpen] = useState(false);
 
   if (data.length === 0) return null;
 
@@ -40,19 +74,29 @@ export function DayOfWeekPanel({ data }: { data: DayOfWeekAnalysis[] }) {
       transition={{ duration: 0.5 }}
       className="bg-card border border-border rounded-lg p-5"
     >
-      <h3 className="text-sm font-semibold text-foreground mb-1 uppercase tracking-wider flex items-center gap-2">
-        <Calendar className="w-4 h-4 text-[oklch(0.65_0.18_250)]" />
-        {ja ? "曜日別パフォーマンス" : "Day of Week Performance"}
-      </h3>
-      <p className="text-xs text-muted-foreground mb-4">
-        {ja
-          ? `最も成績が良い曜日: ${bestDay.day}曜日（勝率 ${bestDay.winRate.toFixed(1)}%）、最も悪い曜日: ${worstDay.day}曜日（勝率 ${worstDay.winRate.toFixed(1)}%）`
-          : `Best day: ${bestDay.day} (win rate ${bestDay.winRate.toFixed(1)}%), Worst day: ${worstDay.day} (win rate ${worstDay.winRate.toFixed(1)}%)`
+      <PanelHeader
+        icon={<Calendar className="w-4 h-4 text-[oklch(0.65_0.18_250)]" />}
+        title={ja ? "曜日別パフォーマンス" : "Day of Week Performance"}
+        summary={ja
+          ? `最良: ${bestDay.day}曜（${bestDay.winRate.toFixed(1)}%） / 最悪: ${worstDay.day}曜（${worstDay.winRate.toFixed(1)}%）`
+          : `Best: ${bestDay.day} (${bestDay.winRate.toFixed(1)}%) / Worst: ${worstDay.day} (${worstDay.winRate.toFixed(1)}%)`
         }
-      </p>
+        open={open}
+        onToggle={() => setOpen(!open)}
+      />
+
+      <AnimatePresence>
+      {open && (
+      <motion.div
+        initial={{ height: 0, opacity: 0 }}
+        animate={{ height: "auto", opacity: 1 }}
+        exit={{ height: 0, opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="overflow-hidden"
+      >
 
       {/* Bar chart visualization */}
-      <div className="space-y-2 mb-4">
+      <div className="space-y-2 mb-4 mt-4">
         {data.map((d, i) => (
           <motion.div
             key={d.day}
@@ -123,6 +167,10 @@ export function DayOfWeekPanel({ data }: { data: DayOfWeekAnalysis[] }) {
           </div>
         )}
       </div>
+
+      </motion.div>
+      )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -132,6 +180,7 @@ export function DayOfWeekPanel({ data }: { data: DayOfWeekAnalysis[] }) {
 export function LotSizeCorrelationPanel({ data }: { data: LotSizeGroup[] }) {
   const { language } = useLanguage();
   const ja = language === "ja";
+  const [open, setOpen] = useState(false);
 
   if (data.length === 0) return null;
 
@@ -187,18 +236,28 @@ export function LotSizeCorrelationPanel({ data }: { data: LotSizeGroup[] }) {
       transition={{ duration: 0.5, delay: 0.1 }}
       className="bg-card border border-border rounded-lg p-5"
     >
-      <h3 className="text-sm font-semibold text-foreground mb-1 uppercase tracking-wider flex items-center gap-2">
-        <Layers className="w-4 h-4 text-[oklch(0.65_0.18_250)]" />
-        {ja ? "ロットサイズ別パフォーマンス" : "Lot Size Performance"}
-      </h3>
-      <p className="text-xs text-muted-foreground mb-4">
-        {ja
-          ? "ロットサイズと勝率・損益の相関を分析します。大ロット時に成績が悪化している場合は感情的なトレードの可能性があります。"
-          : "Analyzes correlation between lot size and win rate/P&L. Poor performance at large lots may indicate emotional trading."
+      <PanelHeader
+        icon={<Layers className="w-4 h-4 text-[oklch(0.65_0.18_250)]" />}
+        title={ja ? "ロットサイズ別パフォーマンス" : "Lot Size Performance"}
+        summary={ja
+          ? `${data.length}グループ / 加重平均勝率: ${weightedWinRate.toFixed(1)}% / 平均PF: ${avgPF.toFixed(2)}`
+          : `${data.length} groups / Weighted WR: ${weightedWinRate.toFixed(1)}% / Avg PF: ${avgPF.toFixed(2)}`
         }
-      </p>
+        open={open}
+        onToggle={() => setOpen(!open)}
+      />
 
-      <div className="overflow-x-auto">
+      <AnimatePresence>
+      {open && (
+      <motion.div
+        initial={{ height: 0, opacity: 0 }}
+        animate={{ height: "auto", opacity: 1 }}
+        exit={{ height: 0, opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="overflow-hidden"
+      >
+
+      <div className="overflow-x-auto mt-4">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border">
@@ -329,6 +388,10 @@ export function LotSizeCorrelationPanel({ data }: { data: LotSizeGroup[] }) {
           </div>
         )}
       </div>
+
+      </motion.div>
+      )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -338,6 +401,7 @@ export function LotSizeCorrelationPanel({ data }: { data: LotSizeGroup[] }) {
 export function TradeQualityPanel({ data }: { data: TradeQualityAnalysis }) {
   const { language } = useLanguage();
   const ja = language === "ja";
+  const [open, setOpen] = useState(false);
 
   const gradeColors: Record<string, string> = {
     A: "oklch(0.72 0.18 145)",
@@ -364,21 +428,36 @@ export function TradeQualityPanel({ data }: { data: TradeQualityAnalysis }) {
       transition={{ duration: 0.5, delay: 0.2 }}
       className="bg-card border border-border rounded-lg p-5"
     >
-      <div className="flex items-center justify-between mb-1">
-        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
-          <BarChart3 className="w-4 h-4 text-[oklch(0.78_0.15_75)]" />
-          {ja ? "トレード品質分析" : "Trade Quality Analysis"}
-        </h3>
+      <div className="flex items-center gap-2">
+        <div className="flex-1 min-w-0">
+          <PanelHeader
+            icon={<BarChart3 className="w-4 h-4 text-[oklch(0.78_0.15_75)]" />}
+            title={ja ? "トレード品質分析" : "Trade Quality Analysis"}
+            summary={ja ? `品質スコア: ${data.qualityScore}/100` : `Quality Score: ${data.qualityScore}/100`}
+            open={open}
+            onToggle={() => setOpen(!open)}
+          />
+        </div>
         <div
-          className="text-xs font-bold px-2.5 py-0.5 rounded"
+          className="text-xs font-bold px-2.5 py-0.5 rounded shrink-0"
           style={{ backgroundColor: `${gradeColor}20`, color: gradeColor }}
         >
           {ja ? "グレード" : "Grade"} {data.qualityGrade}
         </div>
       </div>
 
+      <AnimatePresence>
+      {open && (
+      <motion.div
+        initial={{ height: 0, opacity: 0 }}
+        animate={{ height: "auto", opacity: 1 }}
+        exit={{ height: 0, opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="overflow-hidden"
+      >
+
       {/* Quality Score Bar */}
-      <div className="mb-4">
+      <div className="mb-4 mt-4">
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs text-muted-foreground">
             {ja ? "品質スコア" : "Quality Score"}
@@ -442,10 +521,16 @@ export function TradeQualityPanel({ data }: { data: TradeQualityAnalysis }) {
 
       {/* Concentration Bars */}
       <div className="space-y-2 mb-4">
+        <p className="text-[10px] text-muted-foreground/70 mb-1">
+          {ja
+            ? "利益/損失が少数のトレードに偏っていないかを示します。値が高いほど一部のトレードに依存しており、再現性が低い可能性があります。"
+            : "Shows whether profits/losses are concentrated in a few trades. Higher values mean more dependency on outliers, less reproducibility."
+          }
+        </p>
         <div>
           <div className="flex items-center justify-between mb-1">
             <span className="text-[10px] text-muted-foreground">
-              {ja ? "利益集中率（上位20%）" : "Profit concentration (top 20%)"}
+              {ja ? "利益集中率（上位20%のトレードが総利益の何%を占めるか）" : "Profit concentration (% of total profit from top 20% of trades)"}
             </span>
             <span className={`text-xs font-mono ${data.profitConcentration > 70 ? "text-[oklch(0.65_0.2_20)]" : "text-muted-foreground"}`}>
               {data.profitConcentration.toFixed(0)}%
@@ -463,7 +548,7 @@ export function TradeQualityPanel({ data }: { data: TradeQualityAnalysis }) {
         <div>
           <div className="flex items-center justify-between mb-1">
             <span className="text-[10px] text-muted-foreground">
-              {ja ? "損失集中率（上位20%）" : "Loss concentration (top 20%)"}
+              {ja ? "損失集中率（上位20%のトレードが総損失の何%を占めるか）" : "Loss concentration (% of total loss from top 20% of trades)"}
             </span>
             <span className={`text-xs font-mono ${data.lossConcentration > 60 ? "text-[oklch(0.65_0.2_20)]" : "text-muted-foreground"}`}>
               {data.lossConcentration.toFixed(0)}%
@@ -479,7 +564,10 @@ export function TradeQualityPanel({ data }: { data: TradeQualityAnalysis }) {
           </div>
         </div>
         <p className="text-[10px] text-muted-foreground/70">
-          {ja ? "一貫性スコア" : "Consistency Score"}: {data.consistencyScore}/100
+          {ja
+            ? `一貫性スコア: ${data.consistencyScore}/100（集中率が低いほどトレード結果にバラつきが少なく、スコアが高くなります）`
+            : `Consistency Score: ${data.consistencyScore}/100 (lower concentration = less variance = higher score)`
+          }
         </p>
       </div>
 
@@ -518,6 +606,10 @@ export function TradeQualityPanel({ data }: { data: TradeQualityAnalysis }) {
           </p>
         </div>
       )}
+
+      </motion.div>
+      )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -527,6 +619,7 @@ export function TradeQualityPanel({ data }: { data: TradeQualityAnalysis }) {
 export function WinLossDistributionPanel({ data }: { data: WinLossDistribution }) {
   const { language } = useLanguage();
   const ja = language === "ja";
+  const [open, setOpen] = useState(false);
 
   if (data.buckets.length === 0) return null;
 
@@ -543,18 +636,28 @@ export function WinLossDistributionPanel({ data }: { data: WinLossDistribution }
       transition={{ duration: 0.5, delay: 0.1 }}
       className="bg-card border border-border rounded-lg p-5"
     >
-      <h3 className="text-sm font-semibold text-foreground mb-1 uppercase tracking-wider flex items-center gap-2">
-        <TrendingDown className="w-4 h-4 text-[oklch(0.65_0.18_250)]" />
-        {ja ? "損益分布" : "Profit/Loss Distribution"}
-      </h3>
-      <p className="text-xs text-muted-foreground mb-4">
-        {ja
-          ? `トレード損益の分布を表示します。歪度: ${data.skewness.toFixed(2)}（正の値=右寄り=良好、負の値=左寄り=注意）`
-          : `Distribution of trade P/L. Skewness: ${data.skewness.toFixed(2)} (positive=right-skewed=good, negative=left-skewed=caution)`
+      <PanelHeader
+        icon={<TrendingDown className="w-4 h-4 text-[oklch(0.65_0.18_250)]" />}
+        title={ja ? "損益分布" : "Profit/Loss Distribution"}
+        summary={ja
+          ? `歪度: ${data.skewness.toFixed(2)}（${data.skewness >= 0 ? "良好" : "注意"}）`
+          : `Skewness: ${data.skewness.toFixed(2)} (${data.skewness >= 0 ? "good" : "caution"})`
         }
-      </p>
+        open={open}
+        onToggle={() => setOpen(!open)}
+      />
 
-      <div className="h-[180px]">
+      <AnimatePresence>
+      {open && (
+      <motion.div
+        initial={{ height: 0, opacity: 0 }}
+        animate={{ height: "auto", opacity: 1 }}
+        exit={{ height: 0, opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="overflow-hidden"
+      >
+
+      <div className="h-[180px] mt-4">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.2 0.02 260)" />
@@ -619,6 +722,10 @@ export function WinLossDistributionPanel({ data }: { data: WinLossDistribution }
           </p>
         </div>
       )}
+
+      </motion.div>
+      )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -628,8 +735,17 @@ export function WinLossDistributionPanel({ data }: { data: WinLossDistribution }
 export function LowQualityTradeImpactPanel({ data }: { data: LowQualityTradeImpact[] }) {
   const { language } = useLanguage();
   const ja = language === "ja";
+  const [open, setOpen] = useState(false);
 
   if (data.length === 0) return null;
+
+  // Summary for collapsed state
+  const bestScenarioForSummary = data.find(s => s.originalPF > 0 && s.newPF > s.originalPF * 1.3);
+  const summaryText = bestScenarioForSummary
+    ? (ja
+        ? `ワースト${bestScenarioForSummary.removedCount}件除外でPF ${bestScenarioForSummary.originalPF.toFixed(2)}→${bestScenarioForSummary.newPF.toFixed(2)}`
+        : `Remove worst ${bestScenarioForSummary.removedCount}: PF ${bestScenarioForSummary.originalPF.toFixed(2)}→${bestScenarioForSummary.newPF.toFixed(2)}`)
+    : (ja ? "大きな改善は見込めません" : "No significant improvement expected");
 
   return (
     <motion.div
@@ -638,11 +754,25 @@ export function LowQualityTradeImpactPanel({ data }: { data: LowQualityTradeImpa
       transition={{ duration: 0.5, delay: 0.2 }}
       className="bg-card border border-border rounded-lg p-5"
     >
-      <h3 className="text-sm font-semibold text-foreground mb-1 uppercase tracking-wider flex items-center gap-2">
-        <Trash2 className="w-4 h-4 text-[oklch(0.65_0.18_250)]" />
-        {ja ? "低品質トレード影響分析" : "Low-Quality Trade Impact"}
-      </h3>
-      <p className="text-xs text-muted-foreground mb-4">
+      <PanelHeader
+        icon={<Trash2 className="w-4 h-4 text-[oklch(0.65_0.18_250)]" />}
+        title={ja ? "低品質トレード影響分析" : "Low-Quality Trade Impact"}
+        summary={summaryText}
+        open={open}
+        onToggle={() => setOpen(!open)}
+      />
+
+      <AnimatePresence>
+      {open && (
+      <motion.div
+        initial={{ height: 0, opacity: 0 }}
+        animate={{ height: "auto", opacity: 1 }}
+        exit={{ height: 0, opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="overflow-hidden"
+      >
+
+      <p className="text-xs text-muted-foreground mb-4 mt-4">
         {ja
           ? "損益額が最も悪い（大きなマイナスの）トレードを除外した場合のメトリクス改善をシミュレーションします。「最悪」＝損益額の降順で最も損失が大きいトレードです。"
           : "Simulates metric improvement if the trades with the largest losses (most negative P&L) were removed. \"Worst\" = trades sorted by P&L ascending."
@@ -779,15 +909,15 @@ export function LowQualityTradeImpactPanel({ data }: { data: LowQualityTradeImpa
               {patternParts.length > 0 ? (
                 <p>
                   {ja
-                    ? `これらの条件でのエントリーを避けるか、ロットを下げることで損失を軽減できます。下部の「改善提案」セクションにも具体的なフィルター案が記載されています。`
-                    : `Avoid entries under these conditions or reduce lot size. See the "Improvement Suggestions" section below for specific filter recommendations.`
+                    ? "これらの条件でのエントリーを避けるか、ロットを下げることで損失を軽減できます。"
+                    : "Avoid entries under these conditions or reduce lot size to mitigate losses."
                   }
                 </p>
               ) : (
                 <p>
                   {ja
-                    ? "共通パターンが明確ではありません。最悪トレード一覧の日時・通貨ペアを個別に確認し、エントリー時の判断基準を見直してください。下部の「改善提案」セクションも参照してください。"
-                    : "No clear common pattern. Review each worst trade's date/symbol individually. See the \"Improvement Suggestions\" section for actionable recommendations."
+                    ? "共通パターンが明確ではありません。最悪トレード一覧の日時・通貨ペアを個別に確認し、エントリー時の判断基準を見直してください。"
+                    : "No clear common pattern. Review each worst trade's date/symbol individually and reconsider entry criteria."
                   }
                 </p>
               )}
@@ -795,6 +925,10 @@ export function LowQualityTradeImpactPanel({ data }: { data: LowQualityTradeImpa
           </div>
         );
       })()}
+
+      </motion.div>
+      )}
+      </AnimatePresence>
     </motion.div>
   );
 }
