@@ -2,7 +2,7 @@
  * Design: Trading Terminal - Dark themed charts
  * Equity Curve, Monte Carlo Simulation, Drawdown Distribution
  */
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   LineChart, Line, AreaChart, Area, BarChart, Bar,
@@ -121,16 +121,51 @@ export function MonteCarloChart({ result, initialBalance = 0 }: { result: MonteC
 
     return indices.map((idx) => {
       const values = result.paths.map((p) => p[idx]).sort((a, b) => a - b);
+      const p5Val = pct(values, 5);
+      const p25Val = pct(values, 25);
+      const p50Val = pct(values, 50);
+      const p75Val = pct(values, 75);
+      const p95Val = pct(values, 95);
       return {
         index: idx,
-        p5: Number(pct(values, 5).toFixed(2)),
-        p25: Number(pct(values, 25).toFixed(2)),
-        p50: Number(pct(values, 50).toFixed(2)),
-        p75: Number(pct(values, 75).toFixed(2)),
-        p95: Number(pct(values, 95).toFixed(2)),
+        // Stacked band data: base offset + band heights
+        base: Number(p5Val.toFixed(2)),
+        band_5_25: Number((p25Val - p5Val).toFixed(2)),
+        band_25_75: Number((p75Val - p25Val).toFixed(2)),
+        band_75_95: Number((p95Val - p75Val).toFixed(2)),
+        // Absolute values for median line and tooltip
+        p50: Number(p50Val.toFixed(2)),
+        p5: Number(p5Val.toFixed(2)),
+        p25: Number(p25Val.toFixed(2)),
+        p75: Number(p75Val.toFixed(2)),
+        p95: Number(p95Val.toFixed(2)),
       };
     });
   }, [result]);
+
+  // Custom tooltip showing absolute percentile values
+  const renderTooltip = useCallback(({ active, payload, label }: { active?: boolean; payload?: Array<{ payload: Record<string, number> }>; label?: number }) => {
+    if (!active || !payload || payload.length === 0) return null;
+    const d = payload[0].payload;
+    return (
+      <div style={{
+        backgroundColor: "oklch(0.18 0.02 260)",
+        border: "1px solid oklch(0.25 0.02 260)",
+        borderRadius: "8px",
+        padding: "8px 12px",
+        color: "oklch(0.9 0.01 250)",
+        fontSize: "12px",
+        fontFamily: "'JetBrains Mono', monospace",
+      }}>
+        <div style={{ color: "oklch(0.6 0.02 260)", marginBottom: 4 }}>Trade #{label}</div>
+        <div>95th: {d.p95?.toFixed(0)}</div>
+        <div>75th: {d.p75?.toFixed(0)}</div>
+        <div style={{ color: CHART_COLORS.blue, fontWeight: 600 }}>Median: {d.p50?.toFixed(0)}</div>
+        <div>25th: {d.p25?.toFixed(0)}</div>
+        <div>5th: {d.p5?.toFixed(0)}</div>
+      </div>
+    );
+  }, []);
 
   return (
     <motion.div
@@ -146,12 +181,6 @@ export function MonteCarloChart({ result, initialBalance = 0 }: { result: MonteC
       <div className="h-72">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
-            <defs>
-              <linearGradient id="mcGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={CHART_COLORS.blue} stopOpacity={0.2} />
-                <stop offset="100%" stopColor={CHART_COLORS.blue} stopOpacity={0} />
-              </linearGradient>
-            </defs>
             <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
             <XAxis
               dataKey="index"
@@ -166,13 +195,15 @@ export function MonteCarloChart({ result, initialBalance = 0 }: { result: MonteC
               fontSize={10}
               tickLine={false}
               axisLine={false}
+              domain={["auto", "auto"]}
             />
-            <Tooltip {...tooltipStyle} />
+            <Tooltip content={renderTooltip as never} />
             <ReferenceLine y={initialBalance} stroke="rgba(255,255,255,0.15)" strokeDasharray="3 3" />
-            <Area type="monotone" dataKey="p95" stroke="none" fill={CHART_COLORS.blue} fillOpacity={0.08} name="95th" />
-            <Area type="monotone" dataKey="p75" stroke="none" fill={CHART_COLORS.blue} fillOpacity={0.12} name="75th" />
-            <Area type="monotone" dataKey="p25" stroke="none" fill={CHART_COLORS.blue} fillOpacity={0.08} name="25th" />
-            <Area type="monotone" dataKey="p5" stroke="none" fill="transparent" name="5th" />
+            {/* Stacked fan chart: base (transparent) + 3 bands */}
+            <Area stackId="mc" type="monotone" dataKey="base" stroke="none" fill="transparent" name="base" />
+            <Area stackId="mc" type="monotone" dataKey="band_5_25" stroke="none" fill={CHART_COLORS.blue} fillOpacity={0.15} name="5-25th" />
+            <Area stackId="mc" type="monotone" dataKey="band_25_75" stroke="none" fill={CHART_COLORS.blue} fillOpacity={0.35} name="25-75th" />
+            <Area stackId="mc" type="monotone" dataKey="band_75_95" stroke="none" fill={CHART_COLORS.blue} fillOpacity={0.15} name="75-95th" />
             <Line type="monotone" dataKey="p50" stroke={CHART_COLORS.blue} strokeWidth={2} dot={false} name={t("chart.median")} />
           </AreaChart>
         </ResponsiveContainer>
@@ -183,7 +214,9 @@ export function MonteCarloChart({ result, initialBalance = 0 }: { result: MonteC
         {[
           { label: t("chart.avgEquity"), value: result.avgFinalEquity.toFixed(2), color: CHART_COLORS.profit },
           { label: t("chart.worstEquity"), value: result.worstFinalEquity.toFixed(2), color: CHART_COLORS.loss },
-          { label: t("chart.avgMaxDD"), value: result.avgMaxDrawdown.toFixed(2), color: CHART_COLORS.warning },
+          { label: t("chart.avgMaxDD"), value: initialBalance > 0
+            ? `${((result.avgMaxDrawdown / initialBalance) * 100).toFixed(1)}%`
+            : result.avgMaxDrawdown.toFixed(2), color: CHART_COLORS.warning },
           { label: t("chart.bankruptcyRate"), value: `${result.bankruptcyRate.toFixed(1)}%`, color: result.bankruptcyRate > 10 ? CHART_COLORS.loss : CHART_COLORS.profit },
         ].map((stat) => (
           <div key={stat.label} className="text-center py-2 bg-[oklch(0.14_0.02_260)] rounded-md">

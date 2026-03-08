@@ -345,10 +345,10 @@ function processMT5Data(
       const time = parseDate(timeStr);
       let profit = parseFloat(outRow[columnMap.profit] || "0");
 
-      // Commission/fee/swap/taxes: take only from the "out" row to avoid double-counting.
-      // MT5 typically records commission on entry but P/L on exit — the "out" row
-      // already includes net commission in most broker exports.
-      const rowsToSum = [outRow];
+      // Commission/fee/swap/taxes: sum from BOTH "in" and "out" rows.
+      // MT5 brokers typically record commission on entry ("in" row) and
+      // profit/swap on exit ("out" row). We need both to get the true net P&L.
+      const rowsToSum = inRow ? [inRow, outRow] : [outRow];
       for (const row of rowsToSum) {
         if (columnMap.commission) {
           const commission = parseFloat(row[columnMap.commission] || "0");
@@ -626,8 +626,26 @@ export function parseCSV(csvText: string): { trades: TradeRecord[]; errors: stri
       if (balStr) {
         const bal = parseFloat(balStr.replace(/\s/g, ""));
         if (!isNaN(bal) && bal > 0) {
-          const rowProfit = parseFloat(row[columnMap.profit] || "0");
-          initialBalance = !isNaN(rowProfit) ? bal - rowProfit : bal;
+          // Subtract ALL costs (profit + commission + swap + fee + taxes)
+          // to recover the balance before this row's transaction.
+          let rowCost = parseFloat(row[columnMap.profit] || "0") || 0;
+          if (columnMap.commission) {
+            const c = parseFloat(row[columnMap.commission] || "0");
+            if (!isNaN(c)) rowCost += c;
+          }
+          if (columnMap.fee) {
+            const f = parseFloat(row[columnMap.fee] || "0");
+            if (!isNaN(f)) rowCost += f;
+          }
+          if (columnMap.swap) {
+            const s = parseFloat(row[columnMap.swap] || "0");
+            if (!isNaN(s)) rowCost += s;
+          }
+          if (columnMap.taxes) {
+            const t = parseFloat(row[columnMap.taxes] || "0");
+            if (!isNaN(t)) rowCost += t;
+          }
+          initialBalance = bal - rowCost;
           break;
         }
       }
