@@ -6,7 +6,13 @@
 import { useCallback, useState, useRef } from "react";
 import { useAnalysis } from "@/contexts/AnalysisContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Upload, FileText, FileSpreadsheet, AlertCircle, FlaskConical } from "lucide-react";
+import {
+  Upload,
+  FileText,
+  FileSpreadsheet,
+  AlertCircle,
+  FlaskConical,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { generateSampleCSV } from "@/lib/sampleData";
@@ -21,18 +27,21 @@ export default function CsvUploader() {
   const [fileError, setFileError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = useCallback((file: File) => {
-    setFileError("");
-    if (!isSupportedFile(file.name)) {
-      setFileError(t("upload.unsupported"));
-      return;
-    }
-    if (file.size > 50 * 1024 * 1024) {
-      setFileError(t("upload.tooLarge"));
-      return;
-    }
-    setSelectedFile(file);
-  }, [t]);
+  const handleFile = useCallback(
+    (file: File) => {
+      setFileError("");
+      if (!isSupportedFile(file.name)) {
+        setFileError(t("upload.unsupported"));
+        return;
+      }
+      if (file.size > 50 * 1024 * 1024) {
+        setFileError(t("upload.tooLarge"));
+        return;
+      }
+      setSelectedFile(file);
+    },
+    [t]
+  );
 
   const handleAnalyze = useCallback(() => {
     if (!selectedFile) return;
@@ -40,14 +49,16 @@ export default function CsvUploader() {
     if (isExcelFile(selectedFile.name)) {
       // Read as ArrayBuffer for Excel files
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = e => {
         try {
           const buffer = e.target?.result as ArrayBuffer;
           const csvText = excelToCSV(buffer);
           analyzeCSV(csvText, selectedFile.name);
         } catch (err) {
           setFileError(
-            err instanceof Error ? err.message : "Excelファイルの読み込みに失敗しました。"
+            err instanceof Error
+              ? err.message
+              : "Excelファイルの読み込みに失敗しました。"
           );
         }
       };
@@ -55,14 +66,16 @@ export default function CsvUploader() {
     } else if (isHtmlFile(selectedFile.name)) {
       // Read as ArrayBuffer for HTML files (handles UTF-16 encoding)
       const reader = new FileReader();
-      reader.onload = async (e) => {
+      reader.onload = async e => {
         try {
           const buffer = e.target?.result as ArrayBuffer;
           const csvText = await htmlToCSV(buffer);
           analyzeCSV(csvText, selectedFile.name);
         } catch (err) {
           setFileError(
-            err instanceof Error ? err.message : "HTMLファイルの読み込みに失敗しました。"
+            err instanceof Error
+              ? err.message
+              : "HTMLファイルの読み込みに失敗しました。"
           );
         }
       };
@@ -70,7 +83,7 @@ export default function CsvUploader() {
     } else {
       // Read as text for CSV files
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = e => {
         const text = e.target?.result as string;
         analyzeCSV(text, selectedFile.name);
       };
@@ -83,12 +96,15 @@ export default function CsvUploader() {
     analyzeCSV(csv, "sample_data.csv");
   }, [analyzeCSV]);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
-  }, [handleFile]);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    },
+    [handleFile]
+  );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -102,10 +118,17 @@ export default function CsvUploader() {
 
   /** Get the appropriate icon for the selected file type */
   const getFileIcon = () => {
-    if (!selectedFile) return <FileText className="w-5 h-5 text-[oklch(0.65_0.18_250)]" />;
+    if (!selectedFile)
+      return <FileText className="w-5 h-5 text-[oklch(0.65_0.18_250)]" />;
     const lower = selectedFile.name.toLowerCase();
-    if (lower.endsWith(".xlsx") || lower.endsWith(".xls") || lower.endsWith(".xml")) {
-      return <FileSpreadsheet className="w-5 h-5 text-[oklch(0.72_0.19_145)]" />;
+    if (
+      lower.endsWith(".xlsx") ||
+      lower.endsWith(".xls") ||
+      lower.endsWith(".xml")
+    ) {
+      return (
+        <FileSpreadsheet className="w-5 h-5 text-[oklch(0.72_0.19_145)]" />
+      );
     }
     if (lower.endsWith(".htm") || lower.endsWith(".html")) {
       return <FileText className="w-5 h-5 text-[oklch(0.75_0.15_50)]" />;
@@ -129,9 +152,10 @@ export default function CsvUploader() {
           className={`
             relative rounded-lg border-2 border-dashed p-10 text-center cursor-pointer
             transition-all duration-300 group
-            ${isDragging
-              ? "border-[oklch(0.82_0.18_165)] bg-[oklch(0.82_0.18_165_/_0.08)]"
-              : "border-[oklch(0.3_0.02_260)] hover:border-[oklch(0.65_0.18_250_/_0.5)] bg-[oklch(0.14_0.02_260)]"
+            ${
+              isDragging
+                ? "border-[oklch(0.82_0.18_165)] bg-[oklch(0.82_0.18_165_/_0.08)]"
+                : "border-[oklch(0.3_0.02_260)] hover:border-[oklch(0.65_0.18_250_/_0.5)] bg-[oklch(0.14_0.02_260)]"
             }
           `}
         >
@@ -140,21 +164,26 @@ export default function CsvUploader() {
             type="file"
             accept=".csv,.xlsx,.xls,.xml,.htm,.html"
             className="hidden"
-            onChange={(e) => {
+            onChange={e => {
               const file = e.target.files?.[0];
               if (file) handleFile(file);
             }}
           />
 
           <div className="flex flex-col items-center gap-4">
-            <div className={`
+            <div
+              className={`
               w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300
-              ${isDragging
-                ? "bg-[oklch(0.82_0.18_165_/_0.2)]"
-                : "bg-[oklch(0.2_0.02_260)] group-hover:bg-[oklch(0.65_0.18_250_/_0.15)]"
+              ${
+                isDragging
+                  ? "bg-[oklch(0.82_0.18_165_/_0.2)]"
+                  : "bg-[oklch(0.2_0.02_260)] group-hover:bg-[oklch(0.65_0.18_250_/_0.15)]"
               }
-            `}>
-              <Upload className={`w-7 h-7 transition-colors duration-300 ${isDragging ? "text-[oklch(0.82_0.18_165)]" : "text-muted-foreground group-hover:text-[oklch(0.65_0.18_250)]"}`} />
+            `}
+            >
+              <Upload
+                className={`w-7 h-7 transition-colors duration-300 ${isDragging ? "text-[oklch(0.82_0.18_165)]" : "text-muted-foreground group-hover:text-[oklch(0.65_0.18_250)]"}`}
+              />
             </div>
 
             <div>
@@ -179,7 +208,7 @@ export default function CsvUploader() {
           <Button
             variant="outline"
             size="sm"
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               handleSampleData();
             }}
@@ -220,7 +249,9 @@ export default function CsvUploader() {
                   {getFileIcon()}
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-foreground">{selectedFile.name}</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {selectedFile.name}
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     {(selectedFile.size / 1024).toFixed(1)} KB
                   </p>
@@ -228,7 +259,7 @@ export default function CsvUploader() {
               </div>
 
               <Button
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation();
                   handleAnalyze();
                 }}

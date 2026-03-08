@@ -51,10 +51,20 @@ function deriveSeed(profits: number[]): number {
 }
 
 const emptyMonteCarloResult: MonteCarloResult = {
-  paths: [], avgFinalEquity: 0, worstFinalEquity: 0, bestFinalEquity: 0,
-  maxDrawdown: 0, avgMaxDrawdown: 0, bankruptcyRate: 0, profitProbability: 0,
+  paths: [],
+  avgFinalEquity: 0,
+  worstFinalEquity: 0,
+  bestFinalEquity: 0,
+  maxDrawdown: 0,
+  avgMaxDrawdown: 0,
+  bankruptcyRate: 0,
+  profitProbability: 0,
   percentile95MaxDD: 0,
-  percentile5: 0, percentile25: 0, percentile50: 0, percentile75: 0, percentile95: 0,
+  percentile5: 0,
+  percentile25: 0,
+  percentile50: 0,
+  percentile75: 0,
+  percentile95: 0,
 };
 
 export function runMonteCarloSimulation(
@@ -64,7 +74,7 @@ export function runMonteCarloSimulation(
 ): MonteCarloResult {
   if (trades.length === 0) return emptyMonteCarloResult;
 
-  const profits = trades.map((t) => t.profit);
+  const profits = trades.map(t => t.profit);
   const seed = deriveSeed(profits);
   const random = createSeededRng(seed);
 
@@ -122,16 +132,19 @@ export function runMonteCarloSimulation(
     return arr[Math.max(0, idx)];
   };
 
-  const profitableCount = finalEquities.filter((e) => e > initialCapital).length;
+  const profitableCount = finalEquities.filter(e => e > initialCapital).length;
 
   return {
     paths: paths.slice(0, 200),
-    avgFinalEquity: finalEquities.reduce((s, v) => s + v, 0) / finalEquities.length,
+    avgFinalEquity:
+      finalEquities.reduce((s, v) => s + v, 0) / finalEquities.length,
     worstFinalEquity: finalEquities[0],
     bestFinalEquity: finalEquities[finalEquities.length - 1],
     maxDrawdown: Math.max(...maxDrawdowns),
-    avgMaxDrawdown: maxDrawdowns.reduce((s, v) => s + v, 0) / maxDrawdowns.length,
-    bankruptcyRate: initialCapital > 0 ? (bankruptcyCount / numSimulations) * 100 : -1,
+    avgMaxDrawdown:
+      maxDrawdowns.reduce((s, v) => s + v, 0) / maxDrawdowns.length,
+    bankruptcyRate:
+      initialCapital > 0 ? (bankruptcyCount / numSimulations) * 100 : -1,
     profitProbability: (profitableCount / numSimulations) * 100,
     percentile95MaxDD: getPercentile(maxDrawdowns, 95),
     percentile5: getPercentile(finalEquities, 5),
@@ -146,7 +159,10 @@ export function calculateDrawdownDistribution(
   trades: TradeRecord[],
   initialBalance: number = 0
 ): DrawdownDistribution {
-  const emptyResult = { ranges: ["0-5%", "5-10%", "10-15%", "15-20%", "20-30%", "30-50%", "50%+"], counts: new Array(7).fill(0) };
+  const emptyResult = {
+    ranges: ["0-5%", "5-10%", "10-15%", "15-20%", "20-30%", "30-50%", "50%+"],
+    counts: new Array(7).fill(0),
+  };
   if (trades.length === 0) return emptyResult;
 
   const drawdowns: number[] = [];
@@ -165,7 +181,15 @@ export function calculateDrawdownDistribution(
   }
 
   // Create histogram
-  const ranges = ["0-5%", "5-10%", "10-15%", "15-20%", "20-30%", "30-50%", "50%+"];
+  const ranges = [
+    "0-5%",
+    "5-10%",
+    "10-15%",
+    "15-20%",
+    "20-30%",
+    "30-50%",
+    "50%+",
+  ];
   const thresholds = [0, 5, 10, 15, 20, 30, 50, Infinity];
   const counts = new Array(ranges.length).fill(0);
 

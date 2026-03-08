@@ -1,10 +1,12 @@
 # FX Strategy Doctor
 
 ## プロジェクト概要
+
 MT4/MT5のトレード履歴CSV/Excelを解析し、戦略評価レポートを自動生成するWebアプリ。
 ターゲット: FXトレーダー（裁量・EA開発者）。日本語/英語バイリンガル対応。
 
 ## アーキテクチャ
+
 - **フロントエンド**: React 19 + TypeScript + Vite + Tailwind CSS 4 + shadcn/ui
 - **バックエンド**: Express.js（開発用）/ Cloudflare Pages + Workers Functions（本番）
 - **データ保存**: Cloudflare KV（購入者アカウント管理）
@@ -39,6 +41,7 @@ shared/             # フロント・バックエンド共有定数
 ## 重要な設計判断
 
 ### 分析エンジン（analysis.ts）
+
 - **35個の分析パターン**を実装済み。各パターンにデータの深刻度（軽度/中度/重度）に応じたアドバイス分岐がある
 - パターンは以下のカテゴリに分類:
   - リスク管理（PF, DD, 最大損失, デイリーストップロス, ロットトレンド）
@@ -51,16 +54,19 @@ shared/             # フロント・バックエンド共有定数
 - **リスク診断**: 5項目の3段階（低/中/高）評価
 
 ### UIデザイン
+
 - Bloomberg Terminal / TradingView風のダークUI
 - 配色: ダークネイビー(#0A0E1A) + エメラルドグリーン(#00D4AA) + コーラルレッド(#FF4757)
 - データ密度を重視したグリッドレイアウト
 
 ### 認証
+
 - 管理者: 環境変数 `ADMIN_PASSWORD` で認証
 - 購入者: Cloudflare KVに保存されたアカウントで認証
 - クライアント側はLocalStorageでセッション管理
 
 ### i18n
+
 - `LanguageContext`で日本語/英語を切り替え
 - 分析パターンのアドバイスも全て日英対応
 
@@ -77,11 +83,13 @@ npm run format       # Prettierでフォーマット
 ```
 
 ## デプロイ
+
 - **本番環境**: Cloudflare Pages + Workers Functions
 - **設定ファイル**: `wrangler.toml`（プロジェクト名: `fx-strategy-doctor`）
 - **KVバインディング**: `BUYERS_KV`（購入者アカウント管理用）
 
 ## コーディング規約
+
 - TypeScript strict mode
 - Prettierによる自動フォーマット
 - shadcn/uiコンポーネントは `client/src/components/ui/` に配置

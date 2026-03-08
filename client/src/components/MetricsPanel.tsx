@@ -6,8 +6,14 @@ import { motion } from "framer-motion";
 import type { PerformanceMetrics } from "@/lib/analysis";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
-  TrendingUp, TrendingDown, Target, BarChart3,
-  Activity, Percent, DollarSign, AlertTriangle,
+  TrendingUp,
+  TrendingDown,
+  Target,
+  BarChart3,
+  Activity,
+  Percent,
+  DollarSign,
+  AlertTriangle,
 } from "lucide-react";
 
 interface Props {
@@ -46,42 +52,58 @@ export default function MetricsPanel({ metrics }: Props) {
       label: t("metric.winRate"),
       value: `${safe(metrics.winRate).toFixed(1)}%`,
       icon: Percent,
-      color: metrics.winRate >= 50 ? "oklch(0.82 0.18 165)" : "oklch(0.65 0.2 20)",
+      color:
+        metrics.winRate >= 50 ? "oklch(0.82 0.18 165)" : "oklch(0.65 0.2 20)",
       sub: `${metrics.winCount}W / ${metrics.lossCount}L`,
     },
     {
       label: t("metric.pf"),
       value: formatNumber(metrics.profitFactor),
       icon: TrendingUp,
-      color: metrics.profitFactor >= 1.5 ? "oklch(0.82 0.18 165)" : metrics.profitFactor >= 1 ? "oklch(0.78 0.15 75)" : "oklch(0.65 0.2 20)",
+      color:
+        metrics.profitFactor >= 1.5
+          ? "oklch(0.82 0.18 165)"
+          : metrics.profitFactor >= 1
+            ? "oklch(0.78 0.15 75)"
+            : "oklch(0.65 0.2 20)",
       sub: t("metric.grossProfit"),
     },
     {
       label: t("metric.rr"),
       value: formatNumber(metrics.riskReward),
       icon: Target,
-      color: metrics.riskReward >= 1.5 ? "oklch(0.82 0.18 165)" : metrics.riskReward >= 1 ? "oklch(0.78 0.15 75)" : "oklch(0.65 0.2 20)",
+      color:
+        metrics.riskReward >= 1.5
+          ? "oklch(0.82 0.18 165)"
+          : metrics.riskReward >= 1
+            ? "oklch(0.78 0.15 75)"
+            : "oklch(0.65 0.2 20)",
       sub: t("metric.avgProfit"),
     },
     {
       label: t("metric.expectancy"),
       value: formatCurrency(metrics.expectancy),
       icon: DollarSign,
-      color: metrics.expectancy > 0 ? "oklch(0.82 0.18 165)" : "oklch(0.65 0.2 20)",
+      color:
+        metrics.expectancy > 0 ? "oklch(0.82 0.18 165)" : "oklch(0.65 0.2 20)",
       sub: t("metric.perTrade"),
     },
     {
       label: t("metric.netProfit"),
       value: formatCurrency(metrics.netProfit),
       icon: metrics.netProfit >= 0 ? TrendingUp : TrendingDown,
-      color: metrics.netProfit >= 0 ? "oklch(0.82 0.18 165)" : "oklch(0.65 0.2 20)",
+      color:
+        metrics.netProfit >= 0 ? "oklch(0.82 0.18 165)" : "oklch(0.65 0.2 20)",
       sub: `${t("metric.profit")}: ${safe(metrics.totalProfit).toFixed(2)} / ${t("metric.loss")}: ${safe(metrics.totalLoss).toFixed(2)}`,
     },
     {
       label: t("metric.maxDD"),
       value: `${safe(metrics.maxDrawdown).toFixed(2)}`,
       icon: AlertTriangle,
-      color: metrics.maxDrawdownPercent > 20 ? "oklch(0.65 0.2 20)" : "oklch(0.78 0.15 75)",
+      color:
+        metrics.maxDrawdownPercent > 20
+          ? "oklch(0.65 0.2 20)"
+          : "oklch(0.78 0.15 75)",
       sub: `${safe(metrics.maxDrawdownPercent).toFixed(1)}%`,
     },
     {

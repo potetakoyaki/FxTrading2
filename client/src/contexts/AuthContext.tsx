@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 
 export interface BuyerAccount {
   id: string;
@@ -19,7 +25,11 @@ interface AuthContextType {
   buyers: BuyerAccount[];
   buyersLoading: boolean;
   fetchBuyers: () => Promise<void>;
-  addBuyer: (username: string, password: string, note: string) => Promise<boolean>;
+  addBuyer: (
+    username: string,
+    password: string,
+    note: string
+  ) => Promise<boolean>;
   removeBuyer: (id: string) => Promise<void>;
   updateBuyer: (id: string, updates: Partial<BuyerAccount>) => Promise<void>;
   toggleBuyerActive: (id: string) => Promise<void>;
@@ -27,8 +37,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'fx-doctor-auth';
-const CREDENTIALS_KEY = 'fx-doctor-admin-creds';
+const STORAGE_KEY = "fx-doctor-auth";
+const CREDENTIALS_KEY = "fx-doctor-admin-creds";
 
 function getAuthHeaders(): HeadersInit {
   const creds = sessionStorage.getItem(CREDENTIALS_KEY);
@@ -36,7 +46,9 @@ function getAuthHeaders(): HeadersInit {
   return { Authorization: `Basic ${btoa(creds)}` };
 }
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
@@ -48,7 +60,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const storedAuth = localStorage.getItem(STORAGE_KEY);
     if (storedAuth) {
       try {
-        const { username: storedUsername, isAdmin: storedIsAdmin } = JSON.parse(storedAuth);
+        const { username: storedUsername, isAdmin: storedIsAdmin } =
+          JSON.parse(storedAuth);
         setUsername(storedUsername);
         setIsAuthenticated(true);
         setIsAdmin(!!storedIsAdmin);
@@ -82,12 +95,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [isAdmin, fetchBuyers]);
 
-  const login = async (inputUsername: string, inputPassword: string): Promise<boolean> => {
+  const login = async (
+    inputUsername: string,
+    inputPassword: string
+  ): Promise<boolean> => {
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: inputUsername, password: inputPassword }),
+        body: JSON.stringify({
+          username: inputUsername,
+          password: inputPassword,
+        }),
       });
 
       if (response.ok) {
@@ -96,14 +115,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUsername(inputUsername);
           setIsAuthenticated(true);
           setIsAdmin(!!data.isAdmin);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify({
-            username: inputUsername,
-            isAdmin: !!data.isAdmin,
-          }));
+          localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify({
+              username: inputUsername,
+              isAdmin: !!data.isAdmin,
+            })
+          );
 
           // 管理者の場合、認証情報をセッションに保存（API呼び出し用）
           if (data.isAdmin) {
-            sessionStorage.setItem(CREDENTIALS_KEY, `${inputUsername}:${inputPassword}`);
+            sessionStorage.setItem(
+              CREDENTIALS_KEY,
+              `${inputUsername}:${inputPassword}`
+            );
           }
 
           return true;
@@ -126,7 +151,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // 購入者追加
-  const addBuyer = async (username: string, password: string, note: string): Promise<boolean> => {
+  const addBuyer = async (
+    username: string,
+    password: string,
+    note: string
+  ): Promise<boolean> => {
     try {
       const res = await fetch("/api/buyers", {
         method: "POST",
@@ -209,7 +238,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+    throw new Error("useAuth must be used within AuthProvider");
   }
   return context;
 };

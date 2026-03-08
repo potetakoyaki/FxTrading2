@@ -8,15 +8,23 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
-import Terms from './pages/Terms';
-import Admin from './pages/Admin';
+import Terms from "./pages/Terms";
+import Admin from "./pages/Admin";
 
-function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+function ProtectedRoute({
+  component: Component,
+}: {
+  component: React.ComponentType;
+}) {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? <Component /> : <Login />;
 }
 
-function AdminRoute({ component: Component }: { component: React.ComponentType }) {
+function AdminRoute({
+  component: Component,
+}: {
+  component: React.ComponentType;
+}) {
   const { isAuthenticated, isAdmin } = useAuth();
   if (!isAuthenticated) return <Login />;
   if (!isAdmin) return <Login />;

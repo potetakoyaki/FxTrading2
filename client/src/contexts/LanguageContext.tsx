@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  type ReactNode,
+} from "react";
 
 export type Language = "ja" | "en";
 
@@ -20,33 +26,75 @@ const translations = {
 
   // Feature cards
   "feat.score.title": { ja: "戦略スコア", en: "Strategy Score" },
-  "feat.score.desc": { ja: "PF・RR・期待値・DDから100点満点で評価", en: "Scored out of 100 based on PF, RR, Expectancy & DD" },
+  "feat.score.desc": {
+    ja: "PF・RR・期待値・DDから100点満点で評価",
+    en: "Scored out of 100 based on PF, RR, Expectancy & DD",
+  },
   "feat.weakness.title": { ja: "弱点分析", en: "Weakness Analysis" },
-  "feat.weakness.desc": { ja: "通貨ペア別・時間帯別の弱点をランキング", en: "Ranked weaknesses by currency pair & time slot" },
-  "feat.simulation.title": { ja: "資金シミュレーション", en: "Capital Simulation" },
-  "feat.simulation.desc": { ja: "1,000回のモンテカルロで将来を予測", en: "1,000 Monte Carlo trials for future projection" },
+  "feat.weakness.desc": {
+    ja: "通貨ペア別・時間帯別の弱点をランキング",
+    en: "Ranked weaknesses by currency pair & time slot",
+  },
+  "feat.simulation.title": {
+    ja: "資金シミュレーション",
+    en: "Capital Simulation",
+  },
+  "feat.simulation.desc": {
+    ja: "1,000回のモンテカルロで将来を予測",
+    en: "1,000 Monte Carlo trials for future projection",
+  },
 
   // How it works
   "howto.title": { ja: "使い方", en: "How It Works" },
   "howto.step1.title": { ja: "履歴をエクスポート", en: "Export History" },
-  "howto.step1.desc": { ja: "MT4/MT5からトレード履歴をダウンロード（CSV/Excel/HTML）", en: "Download trade history from MT4/MT5 (CSV/Excel/HTML)" },
+  "howto.step1.desc": {
+    ja: "MT4/MT5からトレード履歴をダウンロード（CSV/Excel/HTML）",
+    en: "Download trade history from MT4/MT5 (CSV/Excel/HTML)",
+  },
   "howto.step2.title": { ja: "アップロード", en: "Upload" },
-  "howto.step2.desc": { ja: "ファイルをドラッグ&ドロップ（CSV変換不要）", en: "Drag & drop the file (no CSV conversion needed)" },
+  "howto.step2.desc": {
+    ja: "ファイルをドラッグ&ドロップ（CSV変換不要）",
+    en: "Drag & drop the file (no CSV conversion needed)",
+  },
   "howto.step3.title": { ja: "分析結果を確認", en: "Review Results" },
-  "howto.step3.desc": { ja: "戦略スコア・弱点・改善提案を即座に表示", en: "Instantly view strategy score, weaknesses & suggestions" },
+  "howto.step3.desc": {
+    ja: "戦略スコア・弱点・改善提案を即座に表示",
+    en: "Instantly view strategy score, weaknesses & suggestions",
+  },
   "howto.step4.title": { ja: "レポートをダウンロード", en: "Download Report" },
-  "howto.step4.desc": { ja: "HTML/CSVレポートとして保存可能", en: "Save as HTML/CSV report" },
+  "howto.step4.desc": {
+    ja: "HTML/CSVレポートとして保存可能",
+    en: "Save as HTML/CSV report",
+  },
 
   // Uploader
-  "upload.dropzone": { ja: "MT4 / MT5 トレード履歴ファイルをドロップ", en: "Drop MT4 / MT5 Trade History File" },
-  "upload.click": { ja: "またはクリックしてファイルを選択", en: "or click to select a file" },
-  "upload.format": { ja: "対応形式: CSV / Excel / HTML", en: "Format: CSV / Excel / HTML" },
+  "upload.dropzone": {
+    ja: "MT4 / MT5 トレード履歴ファイルをドロップ",
+    en: "Drop MT4 / MT5 Trade History File",
+  },
+  "upload.click": {
+    ja: "またはクリックしてファイルを選択",
+    en: "or click to select a file",
+  },
+  "upload.format": {
+    ja: "対応形式: CSV / Excel / HTML",
+    en: "Format: CSV / Excel / HTML",
+  },
   "upload.maxSize": { ja: "最大: 50MB", en: "Max: 50MB" },
   "upload.analyze": { ja: "分析する", en: "Analyze" },
   "upload.analyzing": { ja: "分析中...", en: "Analyzing..." },
-  "upload.csvOnly": { ja: "CSVファイルのみアップロード可能です。", en: "Only CSV files are supported." },
-  "upload.unsupported": { ja: "対応していないファイル形式です。CSV、Excel（.xlsx/.xls）、HTML（.htm）ファイルをアップロードしてください。", en: "Unsupported file format. Please upload CSV, Excel (.xlsx/.xls), or HTML (.htm) files." },
-  "upload.tooLarge": { ja: "ファイルサイズが大きすぎます（最大50MB）。", en: "File is too large (max 50MB)." },
+  "upload.csvOnly": {
+    ja: "CSVファイルのみアップロード可能です。",
+    en: "Only CSV files are supported.",
+  },
+  "upload.unsupported": {
+    ja: "対応していないファイル形式です。CSV、Excel（.xlsx/.xls）、HTML（.htm）ファイルをアップロードしてください。",
+    en: "Unsupported file format. Please upload CSV, Excel (.xlsx/.xls), or HTML (.htm) files.",
+  },
+  "upload.tooLarge": {
+    ja: "ファイルサイズが大きすぎます（最大50MB）。",
+    en: "File is too large (max 50MB).",
+  },
   "upload.sample": { ja: "サンプルデータで試す", en: "Try Sample Data" },
 
   // Dashboard
@@ -63,47 +111,62 @@ const translations = {
   "metric.maxDD": { ja: "最大ドローダウン", en: "Max Drawdown" },
   "metric.maxConsLoss": { ja: "最大連敗", en: "Max Consec. Losses" },
   "metric.largestWinLoss": { ja: "最大勝ち/最大負け", en: "Largest Win/Loss" },
-  "metric.largestWinLossSub": { ja: "最良/最悪トレード", en: "Best / Worst Trade" },
+  "metric.largestWinLossSub": {
+    ja: "最良/最悪トレード",
+    en: "Best / Worst Trade",
+  },
   "metric.winCount": { ja: "勝ち", en: "Wins" },
   "metric.lossCount": { ja: "負け", en: "Losses" },
   "metric.grossProfit": { ja: "総利益 / 総損失", en: "Gross Profit / Loss" },
-  "metric.avgProfit": { ja: "平均利益 / 平均損失", en: "Avg Profit / Avg Loss" },
+  "metric.avgProfit": {
+    ja: "平均利益 / 平均損失",
+    en: "Avg Profit / Avg Loss",
+  },
   "metric.perTrade": { ja: "1トレードあたり", en: "Per Trade" },
   "metric.profit": { ja: "利益", en: "Profit" },
   "metric.loss": { ja: "損失", en: "Loss" },
-  "metric.consecutiveLossTrades": { ja: "連続負けトレード", en: "Consecutive losing trades" },
+  "metric.consecutiveLossTrades": {
+    ja: "連続負けトレード",
+    en: "Consecutive losing trades",
+  },
 
   // Charts
   "chart.equityCurve": { ja: "EQUITY CURVE", en: "EQUITY CURVE" },
   "chart.equity": { ja: "資産", en: "Equity" },
-  "chart.monteCarlo": { ja: "MONTE CARLO SIMULATION (1,000 TRIALS)", en: "MONTE CARLO SIMULATION (1,000 TRIALS)" },
-  "chart.drawdownDist": { ja: "DRAWDOWN DISTRIBUTION", en: "DRAWDOWN DISTRIBUTION" },
+  "chart.monteCarlo": {
+    ja: "MONTE CARLO SIMULATION (1,000 TRIALS)",
+    en: "MONTE CARLO SIMULATION (1,000 TRIALS)",
+  },
+  "chart.drawdownDist": {
+    ja: "DRAWDOWN DISTRIBUTION",
+    en: "DRAWDOWN DISTRIBUTION",
+  },
   "chart.median": { ja: "中央値", en: "Median" },
   "chart.count": { ja: "回数", en: "Count" },
   "chart.medianFinal": { ja: "中央値リターン", en: "Median Return" },
   "chart.medianFinal.desc": {
     ja: "1,000回のシミュレーション結果の中央値（50パーセンタイル）。同じトレード成績を繰り返した場合の「典型的な最終損益」を示します。",
-    en: "The median (50th percentile) of 1,000 simulation outcomes. Represents the 'typical' final P&L if you repeated the same trading performance."
+    en: "The median (50th percentile) of 1,000 simulation outcomes. Represents the 'typical' final P&L if you repeated the same trading performance.",
   },
   "chart.worstDD95": { ja: "95% 最大DD", en: "95% Worst DD" },
   "chart.worstDD95.desc": {
     ja: "95パーセンタイルの最大ドローダウン。1,000回中950回はこの範囲内に収まる「ほぼ最悪ケース」の資金減少幅です。100%を超える場合は元本を全て失うリスクがあります。",
-    en: "The 95th percentile of maximum drawdown. 950 out of 1,000 simulations stay within this range. Values above 100% indicate risk of losing the entire account."
+    en: "The 95th percentile of maximum drawdown. 950 out of 1,000 simulations stay within this range. Values above 100% indicate risk of losing the entire account.",
   },
   "chart.profitProb": { ja: "利益確率", en: "Profit Prob." },
   "chart.profitProb.desc": {
     ja: "元データの2倍のトレード数でシミュレーションした終了時に初期資金を上回っているパスの割合。50%以上なら優位性があると判断できます。",
-    en: "Percentage of paths ending above starting capital after simulating 2x the original trade count. Above 50% indicates a statistical edge."
+    en: "Percentage of paths ending above starting capital after simulating 2x the original trade count. Above 50% indicates a statistical edge.",
   },
   "chart.bankruptcyRate": { ja: "破綻確率", en: "Bankruptcy Rate" },
   "chart.bankruptcyRate.desc": {
     ja: "元データの2倍のトレード数でシミュレーションした際に口座残高が0以下になったパスの割合。初期資金が設定されていない場合は算出できません。",
-    en: "Percentage of paths where account balance dropped to zero during a simulation of 2x the original trade count. Requires initial balance."
+    en: "Percentage of paths where account balance dropped to zero during a simulation of 2x the original trade count. Requires initial balance.",
   },
   "chart.na": { ja: "N/A", en: "N/A" },
   "chart.noInitialBalance": {
     ja: "初期資金が設定されていないため算出できません",
-    en: "Cannot calculate without initial balance"
+    en: "Cannot calculate without initial balance",
   },
   "chart.showMore": { ja: "他 {count} 件を表示", en: "Show {count} more" },
   "chart.showLess": { ja: "折りたたむ", en: "Show less" },
@@ -112,13 +175,28 @@ const translations = {
 
   // Analysis panels
   "panel.symbolAnalysis": { ja: "通貨ペア別分析", en: "Symbol Analysis" },
-  "panel.timeSlotAnalysis": { ja: "時間帯別分析（3時間単位）", en: "Time Slot Analysis (3h)" },
+  "panel.timeSlotAnalysis": {
+    ja: "時間帯別分析（3時間単位）",
+    en: "Time Slot Analysis (3h)",
+  },
   "panel.weaknessRanking": { ja: "弱点ランキング", en: "Weakness Ranking" },
-  "panel.noWeakness": { ja: "重大な弱点は検出されませんでした。", en: "No significant weaknesses detected." },
+  "panel.noWeakness": {
+    ja: "重大な弱点は検出されませんでした。",
+    en: "No significant weaknesses detected.",
+  },
   "panel.riskDiagnosis": { ja: "リスク診断", en: "Risk Diagnosis" },
-  "panel.riskLow": { ja: "リスクは管理可能な範囲内です", en: "Risk is within manageable range" },
-  "panel.riskMedium": { ja: "いくつかのリスク要因に注意が必要です", en: "Some risk factors require attention" },
-  "panel.riskHigh": { ja: "重大なリスク要因が検出されました", en: "Critical risk factors detected" },
+  "panel.riskLow": {
+    ja: "リスクは管理可能な範囲内です",
+    en: "Risk is within manageable range",
+  },
+  "panel.riskMedium": {
+    ja: "いくつかのリスク要因に注意が必要です",
+    en: "Some risk factors require attention",
+  },
+  "panel.riskHigh": {
+    ja: "重大なリスク要因が検出されました",
+    en: "Critical risk factors detected",
+  },
   "panel.suggestions": { ja: "改善提案", en: "Improvement Suggestions" },
 
   // Trade list
@@ -147,15 +225,24 @@ const translations = {
 
   // Error
   "error.title": { ja: "エラーが発生しました", en: "An error occurred" },
-  "error.checkFormat": { ja: "CSVファイルの形式を確認してください。", en: "Please check the CSV file format." },
-  "error.analysis": { ja: "分析中にエラーが発生しました", en: "An error occurred during analysis" },
+  "error.checkFormat": {
+    ja: "CSVファイルの形式を確認してください。",
+    en: "Please check the CSV file format.",
+  },
+  "error.analysis": {
+    ja: "分析中にエラーが発生しました",
+    en: "An error occurred during analysis",
+  },
 
   // Header actions
   "header.admin": { ja: "管理者", en: "Admin" },
   "header.logout": { ja: "ログアウト", en: "Logout" },
 
   // Footer
-  "footer.text": { ja: "FX Strategy Doctor - トレード戦略評価ツール", en: "FX Strategy Doctor - Trade Strategy Evaluator" },
+  "footer.text": {
+    ja: "FX Strategy Doctor - トレード戦略評価ツール",
+    en: "FX Strategy Doctor - Trade Strategy Evaluator",
+  },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
@@ -172,7 +259,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>("ja");
 
   const toggleLanguage = useCallback(() => {
-    setLanguage((prev) => (prev === "ja" ? "en" : "ja"));
+    setLanguage(prev => (prev === "ja" ? "en" : "ja"));
   }, []);
 
   const t = useCallback(

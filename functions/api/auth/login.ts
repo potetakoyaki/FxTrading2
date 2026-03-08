@@ -13,7 +13,7 @@ interface Env {
   BUYERS_KV: KVNamespace;
 }
 
-export const onRequestPost: PagesFunction<Env> = async (context) => {
+export const onRequestPost: PagesFunction<Env> = async context => {
   const { request, env } = context;
   const headers = { "Content-Type": "application/json" };
 
@@ -31,7 +31,10 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
   if (!username || !password) {
     return new Response(
-      JSON.stringify({ success: false, message: "Username and password are required" }),
+      JSON.stringify({
+        success: false,
+        message: "Username and password are required",
+      }),
       { status: 400, headers }
     );
   }
@@ -40,7 +43,11 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   const adminUsername = env.ADMIN_USERNAME || "admin";
   const adminPassword = env.ADMIN_PASSWORD;
 
-  if (adminPassword && username === adminUsername && password === adminPassword) {
+  if (
+    adminPassword &&
+    username === adminUsername &&
+    password === adminPassword
+  ) {
     return new Response(
       JSON.stringify({ success: true, isAdmin: true, username }),
       { status: 200, headers }

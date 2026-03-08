@@ -10,11 +10,21 @@
 
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Sliders, TrendingUp, TrendingDown, Minus, RotateCcw } from "lucide-react";
+import {
+  Sliders,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  RotateCcw,
+} from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { runImprovementSimulation, type PerformanceMetrics, type SimulationResult } from "@/lib/analysis";
+import {
+  runImprovementSimulation,
+  type PerformanceMetrics,
+  type SimulationResult,
+} from "@/lib/analysis";
 import type { TradeRecord } from "@/lib/csvParser";
 
 interface Props {
@@ -38,7 +48,8 @@ export function ImprovementSimulator({ metrics, trades }: Props) {
     });
   }, [trades, metrics, winRateDelta, stopLossDelta, takeProfitDelta]);
 
-  const hasChanges = winRateDelta !== 0 || stopLossDelta !== 0 || takeProfitDelta !== 0;
+  const hasChanges =
+    winRateDelta !== 0 || stopLossDelta !== 0 || takeProfitDelta !== 0;
 
   const reset = () => {
     setWinRateDelta(0);
@@ -47,7 +58,11 @@ export function ImprovementSimulator({ metrics, trades }: Props) {
   };
 
   const deltaColor = (val: number) =>
-    val > 0 ? "text-[oklch(0.72_0.18_145)]" : val < 0 ? "text-[oklch(0.65_0.2_20)]" : "text-muted-foreground";
+    val > 0
+      ? "text-[oklch(0.72_0.18_145)]"
+      : val < 0
+        ? "text-[oklch(0.65_0.2_20)]"
+        : "text-muted-foreground";
 
   const formatDelta = (val: number, suffix = "") => {
     if (val > 0) return `+${val.toFixed(2)}${suffix}`;
@@ -56,8 +71,10 @@ export function ImprovementSimulator({ metrics, trades }: Props) {
   };
 
   const DeltaIcon = ({ val }: { val: number }) => {
-    if (val > 0) return <TrendingUp className="w-3.5 h-3.5 text-[oklch(0.72_0.18_145)]" />;
-    if (val < 0) return <TrendingDown className="w-3.5 h-3.5 text-[oklch(0.65_0.2_20)]" />;
+    if (val > 0)
+      return <TrendingUp className="w-3.5 h-3.5 text-[oklch(0.72_0.18_145)]" />;
+    if (val < 0)
+      return <TrendingDown className="w-3.5 h-3.5 text-[oklch(0.65_0.2_20)]" />;
     return <Minus className="w-3.5 h-3.5 text-muted-foreground" />;
   };
 
@@ -101,10 +118,13 @@ export function ImprovementSimulator({ metrics, trades }: Props) {
             <span className="text-xs font-medium text-foreground">
               {ja ? "勝率の変化" : "Win Rate Change"}
             </span>
-            <span className={`text-xs font-mono font-semibold ${winRateDelta === 0 ? "text-muted-foreground" : winRateDelta > 0 ? "text-[oklch(0.72_0.18_145)]" : "text-[oklch(0.65_0.2_20)]"}`}>
+            <span
+              className={`text-xs font-mono font-semibold ${winRateDelta === 0 ? "text-muted-foreground" : winRateDelta > 0 ? "text-[oklch(0.72_0.18_145)]" : "text-[oklch(0.65_0.2_20)]"}`}
+            >
               {formatDelta(winRateDelta, "%")}
               <span className="text-muted-foreground ml-1">
-                ({ja ? "現在" : "now"}: {metrics.winRate.toFixed(1)}% → {result.newWinRate.toFixed(1)}%)
+                ({ja ? "現在" : "now"}: {metrics.winRate.toFixed(1)}% →{" "}
+                {result.newWinRate.toFixed(1)}%)
               </span>
             </span>
           </div>
@@ -129,7 +149,9 @@ export function ImprovementSimulator({ metrics, trades }: Props) {
             <span className="text-xs font-medium text-foreground">
               {ja ? "損切り幅の変化" : "Stop Loss Change"}
             </span>
-            <span className={`text-xs font-mono font-semibold ${stopLossDelta === 0 ? "text-muted-foreground" : stopLossDelta < 0 ? "text-[oklch(0.72_0.18_145)]" : "text-[oklch(0.65_0.2_20)]"}`}>
+            <span
+              className={`text-xs font-mono font-semibold ${stopLossDelta === 0 ? "text-muted-foreground" : stopLossDelta < 0 ? "text-[oklch(0.72_0.18_145)]" : "text-[oklch(0.65_0.2_20)]"}`}
+            >
               {formatDelta(stopLossDelta, "%")}
             </span>
           </div>
@@ -154,7 +176,9 @@ export function ImprovementSimulator({ metrics, trades }: Props) {
             <span className="text-xs font-medium text-foreground">
               {ja ? "利確幅の変化" : "Take Profit Change"}
             </span>
-            <span className={`text-xs font-mono font-semibold ${takeProfitDelta === 0 ? "text-muted-foreground" : takeProfitDelta > 0 ? "text-[oklch(0.72_0.18_145)]" : "text-[oklch(0.65_0.2_20)]"}`}>
+            <span
+              className={`text-xs font-mono font-semibold ${takeProfitDelta === 0 ? "text-muted-foreground" : takeProfitDelta > 0 ? "text-[oklch(0.72_0.18_145)]" : "text-[oklch(0.65_0.2_20)]"}`}
+            >
               {formatDelta(takeProfitDelta, "%")}
             </span>
           </div>
@@ -188,15 +212,22 @@ export function ImprovementSimulator({ metrics, trades }: Props) {
             </p>
             <div className="flex items-center gap-1.5">
               <span className="text-lg font-mono font-bold text-foreground">
-                {result.newProfitFactor >= 999 ? "999+" : result.newProfitFactor.toFixed(2)}
+                {result.newProfitFactor >= 999
+                  ? "999+"
+                  : result.newProfitFactor.toFixed(2)}
               </span>
               <DeltaIcon val={result.newProfitFactor - metrics.profitFactor} />
-              <span className={`text-xs font-mono ${deltaColor(result.newProfitFactor - metrics.profitFactor)}`}>
+              <span
+                className={`text-xs font-mono ${deltaColor(result.newProfitFactor - metrics.profitFactor)}`}
+              >
                 {formatDelta(result.newProfitFactor - metrics.profitFactor)}
               </span>
             </div>
             <p className="text-[10px] text-muted-foreground mt-0.5">
-              {ja ? "現在" : "Now"}: {metrics.profitFactor >= 999 ? "999+" : metrics.profitFactor.toFixed(2)}
+              {ja ? "現在" : "Now"}:{" "}
+              {metrics.profitFactor >= 999
+                ? "999+"
+                : metrics.profitFactor.toFixed(2)}
             </p>
           </div>
 
@@ -207,10 +238,14 @@ export function ImprovementSimulator({ metrics, trades }: Props) {
             </p>
             <div className="flex items-center gap-1.5">
               <span className="text-lg font-mono font-bold text-foreground">
-                {result.newRiskReward >= 999 ? "999+" : result.newRiskReward.toFixed(2)}
+                {result.newRiskReward >= 999
+                  ? "999+"
+                  : result.newRiskReward.toFixed(2)}
               </span>
               <DeltaIcon val={result.newRiskReward - metrics.riskReward} />
-              <span className={`text-xs font-mono ${deltaColor(result.newRiskReward - metrics.riskReward)}`}>
+              <span
+                className={`text-xs font-mono ${deltaColor(result.newRiskReward - metrics.riskReward)}`}
+              >
                 {formatDelta(result.newRiskReward - metrics.riskReward)}
               </span>
             </div>
@@ -229,7 +264,9 @@ export function ImprovementSimulator({ metrics, trades }: Props) {
                 {result.newExpectancy.toFixed(2)}
               </span>
               <DeltaIcon val={result.newExpectancy - metrics.expectancy} />
-              <span className={`text-xs font-mono ${deltaColor(result.newExpectancy - metrics.expectancy)}`}>
+              <span
+                className={`text-xs font-mono ${deltaColor(result.newExpectancy - metrics.expectancy)}`}
+              >
                 {formatDelta(result.newExpectancy - metrics.expectancy)}
               </span>
             </div>
@@ -239,17 +276,22 @@ export function ImprovementSimulator({ metrics, trades }: Props) {
           </div>
 
           {/* Net Profit Delta */}
-          <div className={`rounded-lg p-3 ${result.netProfitDelta >= 0 ? "bg-[oklch(0.15_0.04_145)]" : "bg-[oklch(0.15_0.04_20)]"}`}>
+          <div
+            className={`rounded-lg p-3 ${result.netProfitDelta >= 0 ? "bg-[oklch(0.15_0.04_145)]" : "bg-[oklch(0.15_0.04_20)]"}`}
+          >
             <p className="text-[10px] text-muted-foreground mb-1">
               {ja ? "損益の変化（推定）" : "Net Profit Change"}
             </p>
             <div className="flex items-center gap-1.5">
-              <span className={`text-lg font-mono font-bold ${result.netProfitDelta >= 0 ? "text-[oklch(0.72_0.18_145)]" : "text-[oklch(0.65_0.2_20)]"}`}>
+              <span
+                className={`text-lg font-mono font-bold ${result.netProfitDelta >= 0 ? "text-[oklch(0.72_0.18_145)]" : "text-[oklch(0.65_0.2_20)]"}`}
+              >
                 {formatDelta(result.netProfitDelta)}
               </span>
             </div>
             <p className="text-[10px] text-muted-foreground mt-0.5">
-              {result.netProfitDeltaPercent >= 0 ? "+" : ""}{result.netProfitDeltaPercent.toFixed(1)}%
+              {result.netProfitDeltaPercent >= 0 ? "+" : ""}
+              {result.netProfitDeltaPercent.toFixed(1)}%
             </p>
           </div>
         </div>
@@ -265,15 +307,13 @@ export function ImprovementSimulator({ metrics, trades }: Props) {
                 : "border-[oklch(0.65_0.2_20/0.3)] bg-[oklch(0.15_0.04_20)] text-[oklch(0.65_0.2_20)]"
             }`}
           >
-            {result.netProfitDelta >= 0 ? (
-              ja
+            {result.netProfitDelta >= 0
+              ? ja
                 ? `この改善により、同じ${trades.length}トレードで約 ${result.netProfitDelta.toFixed(2)} の増益が見込まれます（+${result.netProfitDeltaPercent.toFixed(1)}%）。`
                 : `With these improvements, an estimated +${result.netProfitDelta.toFixed(2)} additional profit is expected over ${trades.length} trades (+${result.netProfitDeltaPercent.toFixed(1)}%).`
-            ) : (
-              ja
+              : ja
                 ? `この変更により、同じ${trades.length}トレードで約 ${Math.abs(result.netProfitDelta).toFixed(2)} の減益が予測されます（${result.netProfitDeltaPercent.toFixed(1)}%）。`
-                : `These changes would result in approximately ${Math.abs(result.netProfitDelta).toFixed(2)} less profit over ${trades.length} trades (${result.netProfitDeltaPercent.toFixed(1)}%).`
-            )}
+                : `These changes would result in approximately ${Math.abs(result.netProfitDelta).toFixed(2)} less profit over ${trades.length} trades (${result.netProfitDeltaPercent.toFixed(1)}%).`}
           </motion.div>
         )}
       </div>

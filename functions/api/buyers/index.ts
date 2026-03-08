@@ -19,7 +19,10 @@ async function getBuyers(kv: KVNamespace): Promise<BuyerAccount[]> {
   return json ? JSON.parse(json) : [];
 }
 
-async function saveBuyers(kv: KVNamespace, buyers: BuyerAccount[]): Promise<void> {
+async function saveBuyers(
+  kv: KVNamespace,
+  buyers: BuyerAccount[]
+): Promise<void> {
   await kv.put(KV_KEY, JSON.stringify(buyers));
 }
 
@@ -44,7 +47,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const { username, password, note } = body;
   if (!username?.trim() || !password?.trim()) {
     return new Response(
-      JSON.stringify({ success: false, message: "Username and password are required" }),
+      JSON.stringify({
+        success: false,
+        message: "Username and password are required",
+      }),
       { status: 400, headers }
     );
   }
@@ -70,12 +76,20 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   buyers.push(newBuyer);
   await saveBuyers(env.BUYERS_KV, buyers);
 
-  return new Response(JSON.stringify({ success: true, buyer: newBuyer }), { headers });
+  return new Response(JSON.stringify({ success: true, buyer: newBuyer }), {
+    headers,
+  });
 };
 
 // PUT /api/buyers — 購入者更新
 export const onRequestPut: PagesFunction<Env> = async ({ request, env }) => {
-  let body: { id?: string; username?: string; password?: string; note?: string; isActive?: boolean };
+  let body: {
+    id?: string;
+    username?: string;
+    password?: string;
+    note?: string;
+    isActive?: boolean;
+  };
   try {
     body = await request.json();
   } catch {
@@ -110,7 +124,9 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, env }) => {
 
   await saveBuyers(env.BUYERS_KV, buyers);
 
-  return new Response(JSON.stringify({ success: true, buyer: buyers[index] }), { headers });
+  return new Response(JSON.stringify({ success: true, buyer: buyers[index] }), {
+    headers,
+  });
 };
 
 // DELETE /api/buyers — 購入者削除

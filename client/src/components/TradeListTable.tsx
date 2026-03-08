@@ -4,7 +4,13 @@
  */
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { List, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  List,
+  ChevronUp,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { TradeRecord } from "@/lib/csvParser";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -27,7 +33,7 @@ export default function TradeListTable({ trades }: Props) {
   // Calculate cumulative profit
   const tradesWithCum = useMemo(() => {
     let cum = 0;
-    return trades.map((tr) => {
+    return trades.map(tr => {
       cum += tr.profit;
       return { ...tr, cumProfit: cum };
     });
@@ -68,7 +74,7 @@ export default function TradeListTable({ trades }: Props) {
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+      setSortDir(d => (d === "asc" ? "desc" : "asc"));
     } else {
       setSortField(field);
       setSortDir("asc");
@@ -77,7 +83,8 @@ export default function TradeListTable({ trades }: Props) {
   };
 
   const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return <ChevronUp className="w-3 h-3 opacity-20" />;
+    if (sortField !== field)
+      return <ChevronUp className="w-3 h-3 opacity-20" />;
     return sortDir === "asc" ? (
       <ChevronUp className="w-3 h-3 text-[oklch(0.82_0.18_165)]" />
     ) : (
@@ -112,8 +119,9 @@ export default function TradeListTable({ trades }: Props) {
           {t("tradeList.title")}
         </h3>
         <span className="text-xs text-muted-foreground">
-          {page * PAGE_SIZE + 1}-{Math.min((page + 1) * PAGE_SIZE, sorted.length)}
-          {" "}{t("tradeList.of")}{" "}{sorted.length}{" "}{t("tradeList.showing")}
+          {page * PAGE_SIZE + 1}-
+          {Math.min((page + 1) * PAGE_SIZE, sorted.length)} {t("tradeList.of")}{" "}
+          {sorted.length} {t("tradeList.showing")}
         </span>
       </div>
 
@@ -127,13 +135,20 @@ export default function TradeListTable({ trades }: Props) {
                 { field: "type" as SortField, label: t("tradeList.type") },
                 { field: "volume" as SortField, label: t("tradeList.volume") },
                 { field: "profit" as SortField, label: t("tradeList.profit") },
-                { field: "cumProfit" as SortField, label: t("tradeList.cumProfit") },
-              ].map((col) => (
+                {
+                  field: "cumProfit" as SortField,
+                  label: t("tradeList.cumProfit"),
+                },
+              ].map(col => (
                 <th
                   key={col.field}
                   onClick={() => handleSort(col.field)}
                   className={`py-2 px-2 text-xs text-muted-foreground font-medium cursor-pointer hover:text-foreground transition-colors select-none ${
-                    col.field === "time" || col.field === "symbol" || col.field === "type" ? "text-left" : "text-right"
+                    col.field === "time" ||
+                    col.field === "symbol" ||
+                    col.field === "type"
+                      ? "text-left"
+                      : "text-right"
                   }`}
                 >
                   <span className="inline-flex items-center gap-1">
@@ -159,7 +174,8 @@ export default function TradeListTable({ trades }: Props) {
                 <td className="py-2 px-2">
                   <span
                     className={`text-xs font-semibold px-1.5 py-0.5 rounded ${
-                      trade.type.toLowerCase().includes("buy") || trade.type.toLowerCase().includes("long")
+                      trade.type.toLowerCase().includes("buy") ||
+                      trade.type.toLowerCase().includes("long")
                         ? "bg-[oklch(0.82_0.18_165_/_0.12)] text-[oklch(0.82_0.18_165)]"
                         : "bg-[oklch(0.65_0.2_20_/_0.12)] text-[oklch(0.65_0.2_20)]"
                     }`}
@@ -171,13 +187,21 @@ export default function TradeListTable({ trades }: Props) {
                   {trade.volume.toFixed(2)}
                 </td>
                 <td className="py-2 px-2 text-right font-mono">
-                  <span className={trade.profit >= 0 ? "text-profit" : "text-loss"}>
-                    {trade.profit >= 0 ? "+" : ""}{trade.profit.toFixed(2)}
+                  <span
+                    className={trade.profit >= 0 ? "text-profit" : "text-loss"}
+                  >
+                    {trade.profit >= 0 ? "+" : ""}
+                    {trade.profit.toFixed(2)}
                   </span>
                 </td>
                 <td className="py-2 px-2 text-right font-mono">
-                  <span className={trade.cumProfit >= 0 ? "text-profit" : "text-loss"}>
-                    {trade.cumProfit >= 0 ? "+" : ""}{trade.cumProfit.toFixed(2)}
+                  <span
+                    className={
+                      trade.cumProfit >= 0 ? "text-profit" : "text-loss"
+                    }
+                  >
+                    {trade.cumProfit >= 0 ? "+" : ""}
+                    {trade.cumProfit.toFixed(2)}
                   </span>
                 </td>
               </tr>
@@ -193,7 +217,7 @@ export default function TradeListTable({ trades }: Props) {
             variant="outline"
             size="sm"
             disabled={page === 0}
-            onClick={() => setPage((p) => p - 1)}
+            onClick={() => setPage(p => p - 1)}
             className="text-xs gap-1 border-border"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
@@ -230,7 +254,7 @@ export default function TradeListTable({ trades }: Props) {
             variant="outline"
             size="sm"
             disabled={page >= totalPages - 1}
-            onClick={() => setPage((p) => p + 1)}
+            onClick={() => setPage(p => p + 1)}
             className="text-xs gap-1 border-border"
           >
             {t("tradeList.next")}

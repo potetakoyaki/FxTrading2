@@ -1,4 +1,12 @@
-import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  type ReactNode,
+} from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { parseCSV, type TradeRecord } from "@/lib/csvParser";
 import {
@@ -73,86 +81,128 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
   const [score, setScore] = useState<StrategyScore | null>(null);
   const [symbolAnalysis, setSymbolAnalysis] = useState<SymbolAnalysis[]>([]);
-  const [timeSlotAnalysis, setTimeSlotAnalysis] = useState<TimeSlotAnalysis[]>([]);
-  const [dayOfWeekAnalysis, setDayOfWeekAnalysis] = useState<DayOfWeekAnalysis[]>([]);
+  const [timeSlotAnalysis, setTimeSlotAnalysis] = useState<TimeSlotAnalysis[]>(
+    []
+  );
+  const [dayOfWeekAnalysis, setDayOfWeekAnalysis] = useState<
+    DayOfWeekAnalysis[]
+  >([]);
   const [lotSizeAnalysis, setLotSizeAnalysis] = useState<LotSizeGroup[]>([]);
-  const [tradeQuality, setTradeQuality] = useState<TradeQualityAnalysis | null>(null);
-  const [winLossDistribution, setWinLossDistribution] = useState<WinLossDistribution | null>(null);
-  const [lowQualityImpact, setLowQualityImpact] = useState<LowQualityTradeImpact[]>([]);
+  const [tradeQuality, setTradeQuality] = useState<TradeQualityAnalysis | null>(
+    null
+  );
+  const [winLossDistribution, setWinLossDistribution] =
+    useState<WinLossDistribution | null>(null);
+  const [lowQualityImpact, setLowQualityImpact] = useState<
+    LowQualityTradeImpact[]
+  >([]);
   const [weaknesses, setWeaknesses] = useState<WeaknessItem[]>([]);
   const [suggestions, setSuggestions] = useState<ImprovementSuggestion[]>([]);
   const [equityCurve, setEquityCurve] = useState<EquityCurvePoint[]>([]);
-  const [monteCarloResult, setMonteCarloResult] = useState<MonteCarloResult | null>(null);
-  const [drawdownDist, setDrawdownDist] = useState<DrawdownDistribution | null>(null);
-  const [riskDiagnosis, setRiskDiagnosis] = useState<RiskDiagnosis | null>(null);
+  const [monteCarloResult, setMonteCarloResult] =
+    useState<MonteCarloResult | null>(null);
+  const [drawdownDist, setDrawdownDist] = useState<DrawdownDistribution | null>(
+    null
+  );
+  const [riskDiagnosis, setRiskDiagnosis] = useState<RiskDiagnosis | null>(
+    null
+  );
   const [errors, setErrors] = useState<string[]>([]);
   const [fileName, setFileName] = useState("");
   const [rawCsvText, setRawCsvText] = useState("");
   const [initialBal, setInitialBal] = useState(0);
 
-  const runAnalysis = useCallback((csvText: string, name: string, lang: typeof language) => {
-    setState("loading");
-    setFileName(name);
-    setRawCsvText(csvText);
+  const runAnalysis = useCallback(
+    (csvText: string, name: string, lang: typeof language) => {
+      setState("loading");
+      setFileName(name);
+      setRawCsvText(csvText);
 
-    setTimeout(() => {
-      try {
-        const { trades: parsedTrades, errors: parseErrors, initialBalance } = parseCSV(csvText);
+      setTimeout(() => {
+        try {
+          const {
+            trades: parsedTrades,
+            errors: parseErrors,
+            initialBalance,
+          } = parseCSV(csvText);
 
-        if (parseErrors.length > 0 && parsedTrades.length === 0) {
+          if (parseErrors.length > 0 && parsedTrades.length === 0) {
+            setErrors(parseErrors);
+            setState("error");
+            return;
+          }
+
+          const m = calculateMetrics(parsedTrades, initialBalance);
+          const s = calculateStrategyScore(m);
+          const sa = analyzeBySymbol(parsedTrades);
+          const ta = analyzeByTimeSlot(parsedTrades);
+          const dw = analyzeByDayOfWeek(parsedTrades, lang);
+          const ls = analyzeLotSizeCorrelation(parsedTrades, lang);
+          const tq = analyzeTradeQuality(parsedTrades);
+          const wld = calculateWinLossDistribution(parsedTrades);
+          const w = findWeaknesses(sa, ta, lang);
+          const lqi = analyzeLowQualityTradeImpact(parsedTrades, m);
+          const sug = generateSuggestions(
+            m,
+            w,
+            lang,
+            tq,
+            ls,
+            dw,
+            ta,
+            lqi,
+            parsedTrades
+          );
+          const ec = calculateEquityCurve(parsedTrades, initialBalance);
+          const mc = runMonteCarloSimulation(
+            parsedTrades,
+            1000,
+            initialBalance
+          );
+          const dd = calculateDrawdownDistribution(
+            parsedTrades,
+            initialBalance
+          );
+          const rd = diagnoseRisk(m, lang);
+
+          setTrades(parsedTrades);
+          setInitialBal(initialBalance);
+          setMetrics(m);
+          setScore(s);
+          setSymbolAnalysis(sa);
+          setTimeSlotAnalysis(ta);
+          setDayOfWeekAnalysis(dw);
+          setLotSizeAnalysis(ls);
+          setTradeQuality(tq);
+          setWinLossDistribution(wld);
+          setLowQualityImpact(lqi);
+          setWeaknesses(w);
+          setSuggestions(sug);
+          setEquityCurve(ec);
+          setMonteCarloResult(mc);
+          setDrawdownDist(dd);
+          setRiskDiagnosis(rd);
           setErrors(parseErrors);
+          setState("done");
+        } catch (err) {
+          const errMsg =
+            lang === "ja"
+              ? `分析中にエラーが発生しました: ${err instanceof Error ? err.message : String(err)}`
+              : `Error during analysis: ${err instanceof Error ? err.message : String(err)}`;
+          setErrors([errMsg]);
           setState("error");
-          return;
         }
+      }, 100);
+    },
+    []
+  );
 
-        const m = calculateMetrics(parsedTrades, initialBalance);
-        const s = calculateStrategyScore(m);
-        const sa = analyzeBySymbol(parsedTrades);
-        const ta = analyzeByTimeSlot(parsedTrades);
-        const dw = analyzeByDayOfWeek(parsedTrades, lang);
-        const ls = analyzeLotSizeCorrelation(parsedTrades, lang);
-        const tq = analyzeTradeQuality(parsedTrades);
-        const wld = calculateWinLossDistribution(parsedTrades);
-        const w = findWeaknesses(sa, ta, lang);
-        const lqi = analyzeLowQualityTradeImpact(parsedTrades, m);
-        const sug = generateSuggestions(m, w, lang, tq, ls, dw, ta, lqi, parsedTrades);
-        const ec = calculateEquityCurve(parsedTrades, initialBalance);
-        const mc = runMonteCarloSimulation(parsedTrades, 1000, initialBalance);
-        const dd = calculateDrawdownDistribution(parsedTrades, initialBalance);
-        const rd = diagnoseRisk(m, lang);
-
-        setTrades(parsedTrades);
-        setInitialBal(initialBalance);
-        setMetrics(m);
-        setScore(s);
-        setSymbolAnalysis(sa);
-        setTimeSlotAnalysis(ta);
-        setDayOfWeekAnalysis(dw);
-        setLotSizeAnalysis(ls);
-        setTradeQuality(tq);
-        setWinLossDistribution(wld);
-        setLowQualityImpact(lqi);
-        setWeaknesses(w);
-        setSuggestions(sug);
-        setEquityCurve(ec);
-        setMonteCarloResult(mc);
-        setDrawdownDist(dd);
-        setRiskDiagnosis(rd);
-        setErrors(parseErrors);
-        setState("done");
-      } catch (err) {
-        const errMsg = lang === "ja"
-          ? `分析中にエラーが発生しました: ${err instanceof Error ? err.message : String(err)}`
-          : `Error during analysis: ${err instanceof Error ? err.message : String(err)}`;
-        setErrors([errMsg]);
-        setState("error");
-      }
-    }, 100);
-  }, []);
-
-  const analyzeCSV = useCallback((csvText: string, name: string) => {
-    runAnalysis(csvText, name, language);
-  }, [language, runAnalysis]);
+  const analyzeCSV = useCallback(
+    (csvText: string, name: string) => {
+      runAnalysis(csvText, name, language);
+    },
+    [language, runAnalysis]
+  );
 
   const reanalyze = useCallback(() => {
     if (rawCsvText && fileName && state === "done") {
@@ -195,12 +245,29 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   return (
     <AnalysisContext.Provider
       value={{
-        state, trades, metrics, score, symbolAnalysis, timeSlotAnalysis,
-        dayOfWeekAnalysis, lotSizeAnalysis,
-        tradeQuality, winLossDistribution, lowQualityImpact,
-        weaknesses, suggestions, equityCurve, monteCarloResult, drawdownDist,
-        riskDiagnosis, errors, fileName, initialBalance: initialBal,
-        analyzeCSV, reanalyze, reset,
+        state,
+        trades,
+        metrics,
+        score,
+        symbolAnalysis,
+        timeSlotAnalysis,
+        dayOfWeekAnalysis,
+        lotSizeAnalysis,
+        tradeQuality,
+        winLossDistribution,
+        lowQualityImpact,
+        weaknesses,
+        suggestions,
+        equityCurve,
+        monteCarloResult,
+        drawdownDist,
+        riskDiagnosis,
+        errors,
+        fileName,
+        initialBalance: initialBal,
+        analyzeCSV,
+        reanalyze,
+        reset,
       }}
     >
       {children}

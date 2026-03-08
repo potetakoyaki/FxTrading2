@@ -30,7 +30,8 @@ export default function StrategyScoreGauge({ score }: Props) {
 
   const radius = 80;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (animatedValue / 100) * circumference;
+  const strokeDashoffset =
+    circumference - (animatedValue / 100) * circumference;
 
   return (
     <motion.div
@@ -43,14 +44,18 @@ export default function StrategyScoreGauge({ score }: Props) {
         <svg viewBox="0 0 200 200" className="w-full h-full -rotate-90">
           {/* Background circle */}
           <circle
-            cx="100" cy="100" r={radius}
+            cx="100"
+            cy="100"
+            r={radius}
             fill="none"
             stroke="oklch(0.2 0.02 260)"
             strokeWidth="12"
           />
           {/* Score arc */}
           <circle
-            cx="100" cy="100" r={radius}
+            cx="100"
+            cy="100"
+            r={radius}
             fill="none"
             stroke={score.gradeColor}
             strokeWidth="12"
@@ -92,11 +97,21 @@ export default function StrategyScoreGauge({ score }: Props) {
         {[
           { label: "Profit Factor", value: score.pfScore, max: 25 },
           { label: "Risk Reward", value: score.rrScore, max: 25 },
-          { label: language === "ja" ? "期待値" : "Expectancy", value: score.expectancyScore, max: 25 },
-          { label: language === "ja" ? "ドローダウン" : "Drawdown", value: score.ddScore, max: 25 },
-        ].map((item) => (
+          {
+            label: language === "ja" ? "期待値" : "Expectancy",
+            value: score.expectancyScore,
+            max: 25,
+          },
+          {
+            label: language === "ja" ? "ドローダウン" : "Drawdown",
+            value: score.ddScore,
+            max: 25,
+          },
+        ].map(item => (
           <div key={item.label} className="text-center">
-            <div className="text-xs text-muted-foreground mb-1">{item.label}</div>
+            <div className="text-xs text-muted-foreground mb-1">
+              {item.label}
+            </div>
             <div className="h-1.5 bg-[oklch(0.2_0.02_260)] rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
