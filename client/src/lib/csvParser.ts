@@ -160,11 +160,9 @@ function preprocessCSV(csvText: string): string {
   const deduplicatedHeader = deduplicateHeaders(trimmedHeaderLine);
   const numCols = lastMeaningfulIdx + 1;
 
+  // Patterns for rows to skip (individual summary lines)
   const summaryPatterns = [
     /^closed\s*p\/l/i,
-    /^open\s*trades/i,
-    /^working\s*orders/i,
-    /^cancelled\s*orders/i,
     /^balance/i,
     /^credit/i,
     /^floating\s*p\/l/i,
@@ -177,11 +175,25 @@ function preprocessCSV(csvText: string): string {
     /^残高/,
   ];
 
+  // Section boundary patterns — stop processing entirely when encountered.
+  // These mark the start of non-closed-trade sections in MT4 HTML-to-CSV output.
+  const sectionBreakPatterns = [
+    /^open\s*trades?/i,
+    /^working\s*orders?/i,
+    /^cancelled?\s*orders?/i,
+    /^deleted?\s*orders?/i,
+    /^未決済/,
+    /^ワーキング/,
+  ];
+
   const dataLines: string[] = [deduplicatedHeader];
 
   for (let i = headerLineIndex + 1; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
+
+    // Stop at section boundaries (e.g., "Open Trades" section in MT4 reports)
+    if (sectionBreakPatterns.some((p) => p.test(line))) break;
 
     const isSummary = summaryPatterns.some((p) => p.test(line));
     if (isSummary) continue;

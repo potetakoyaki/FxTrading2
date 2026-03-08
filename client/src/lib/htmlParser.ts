@@ -226,11 +226,49 @@ function extractBestTable(doc: Document): string {
     throw new Error('取引履歴テーブルが見つかりません。');
   }
 
-  const rows = (bestTable as Element).querySelectorAll('tr');
+  // MT4 HTML reports have section headers as single-cell rows (with colspan).
+  // We need to find the "Closed Transactions" section and stop before
+  // "Open Trades", "Working Orders", etc. to avoid mixing unrealized P/L data.
+  const sectionStopPatterns = [
+    /^open\s*trades?$/i,
+    /^working\s*orders?$/i,
+    /^cancelled?\s*orders?$/i,
+    /^deleted?\s*orders?$/i,
+    /^未決済/,
+    /^ワーキング/,
+  ];
+
+  const rows = Array.from((bestTable as Element).querySelectorAll('tr'));
   const csvRows: string[] = [];
 
-  rows.forEach(row => {
+  // First pass: find "Closed Transactions" header row if present
+  let startIdx = 0;
+  let foundClosedSection = false;
+  for (let i = 0; i < rows.length; i++) {
+    const cells = rows[i].querySelectorAll('td, th');
+    if (cells.length === 1) {
+      const text = (cells[0].textContent || '').trim();
+      if (/^closed\s*transactions?$/i.test(text) || /^決済済み/i.test(text)) {
+        startIdx = i + 1; // skip the section header itself
+        foundClosedSection = true;
+        break;
+      }
+    }
+  }
+
+  // Second pass: extract rows, stopping at the next section boundary
+  for (let i = startIdx; i < rows.length; i++) {
+    const row = rows[i];
     const cells = row.querySelectorAll('td, th');
+
+    // Check for section boundary (single-cell row acting as a section header)
+    if (cells.length === 1 && foundClosedSection) {
+      const text = (cells[0].textContent || '').trim();
+      if (text && sectionStopPatterns.some(p => p.test(text))) {
+        break; // Stop — we've reached a non-closed-trades section
+      }
+    }
+
     const values: string[] = [];
     cells.forEach(cell => {
       let text = normalizeCellText(cell.textContent || '');
@@ -242,7 +280,7 @@ function extractBestTable(doc: Document): string {
     if (values.length > 0 && values.some(v => v.trim() !== '')) {
       csvRows.push(values.join(','));
     }
-  });
+  }
 
   if (csvRows.length < 2) {
     throw new Error('HTMLテーブルに十分なデータが含まれていません。');
