@@ -88,9 +88,51 @@ npm run format       # Prettierでフォーマット
 - **設定ファイル**: `wrangler.toml`（プロジェクト名: `fx-strategy-doctor`）
 - **KVバインディング**: `BUYERS_KV`（購入者アカウント管理用）
 
+## パーサーのセクション境界処理（重要）
+
+MT4/MT5のレポートファイルには複数のセクションが含まれる（例: Closed Transactions → Open Trades → Working Orders → Summary）。**未決済ポジション（Open Trades）のデータが決済済みトレードに混入しないよう、3層の防御**を実装している。
+
+### 防御レイヤー
+
+1. **htmlParser.ts (`extractBestTable`)** — "Closed Transactions"セクションを検出して開始、"Open Trades"/"Working Orders"/"Summary"で抽出停止
+2. **csvParser.ts (`preprocessCSV`)** — セクション境界行（"Open Trades"等）で`break`して処理を完全停止
+3. **excelParser.ts (`extractFromHeaderRow`)** — 同様にセクション境界で`break`
+
+### MT4 HTMLセクションヘッダーの仕様
+
+- **セクション名は言語設定に関わらず常に英語**（"Closed Transactions", "Open Trades", "Working Orders", "Summary"）
+- HTMLではcolspan付き単一セル行として出力される
+- 日本語パターン（"未決済", "ワーキング"）は念のための防御として残存
+
+## モンテカルロシミュレーション
+
+- **決定論的**: シード付き疑似乱数（mulberry32）使用。同じデータ → 同じ結果
+- **シード生成**: トレード損益配列からハッシュ値を導出（`deriveSeed()`）
+- **シミュレーション長**: トレード数 × 2（最低200回）で長期破綻リスクを検出
+- **破産判定**: equity < 0 で即座にシミュレーション停止（現実的な動作）
+
+## 詳細分析パネル（AdvancedAnalysisPanels.tsx）
+
+- 全5パネル（曜日別、ロット相関、トレード品質、損益分布、低品質トレード影響度）
+- **デフォルト閉じた状態** — `useState(false)` で折りたたみ
+- AnimatePresenceで開閉アニメーション
+- 各パネルは閉じた状態でもサマリー情報を表示
+
+## ドキュメント
+
+- `docs/manual.html` — 操作マニュアル（ブラウザで開いてCtrl+P → PDF保存）
+  - 全11章: 概要、対応形式、基本操作、分析結果の見方、詳細パネル、モンテカルロ、レポート出力、MT4/MT5エクスポート手順、FAQ、トラブルシューティング
+
 ## コーディング規約
 
 - TypeScript strict mode
 - Prettierによる自動フォーマット
 - shadcn/uiコンポーネントは `client/src/components/ui/` に配置
 - パス別名: `@/*` → `client/src/*`, `@shared/*` → `shared/*`
+- **Map/Setのイテレーション**: `for...of` は使わず `Array.from(map.entries()).forEach()` を使用（TypeScript downlevelIteration設定なし）
+
+## 既知の制約・注意点
+
+- `Math.max(...array)` はスプレッド演算子のスタックサイズ制限あり。現在はnumSimulations=1000で安全だが、大幅に増やす場合は`Math.max`ループに変更が必要
+- Profit Factor が999の場合は「損失ゼロ（全勝）」を意味するマジックナンバー
+- Excel日付変換のヒューリスティック（`formatExcelCell`）は2009〜2036年の範囲で動作。それ以外の年は手動調整が必要になる可能性あり
