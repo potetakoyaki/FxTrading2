@@ -5,7 +5,7 @@ export interface TradeRecord {
   symbol: string;
   profit: number;
   volume: number;
-  lots: number;  // alias for volume, for readability
+  lots: number; // alias for volume, for readability
   type: string;
   price: number;
 }
@@ -14,56 +14,96 @@ export interface TradeRecord {
 // Includes Japanese MT5 headers: 時間, 銘柄, タイプ, 新規・決済, 数量, 価格, 注文, スワップ, 損益
 const COLUMN_MAPPINGS: Record<string, string[]> = {
   time: [
-    "close time", "closetime", "close_time",
-    "open time", "opentime", "open_time",
-    "time", "date", "datetime",
-    "時間",                          // MT5 Japanese
+    "close time",
+    "closetime",
+    "close_time",
+    "open time",
+    "opentime",
+    "open_time",
+    "time",
+    "date",
+    "datetime",
+    "時間", // MT5 Japanese
   ],
   symbol: [
-    "symbol", "item", "pair", "instrument", "currency", "currency pair",
-    "通貨ペア", "銘柄",
+    "symbol",
+    "item",
+    "pair",
+    "instrument",
+    "currency",
+    "currency pair",
+    "通貨ペア",
+    "銘柄",
   ],
   profit: [
-    "profit", "pnl", "net profit", "netprofit", "net_profit",
-    "p/l", "pl", "gain", "損益", "利益",
+    "profit",
+    "pnl",
+    "net profit",
+    "netprofit",
+    "net_profit",
+    "p/l",
+    "pl",
+    "gain",
+    "損益",
+    "利益",
   ],
   volume: [
-    "size", "volume", "lot", "lots", "lot size", "lotsize", "quantity",
-    "ロット", "数量",                 // MT5 Japanese
+    "size",
+    "volume",
+    "lot",
+    "lots",
+    "lot size",
+    "lotsize",
+    "quantity",
+    "ロット",
+    "数量", // MT5 Japanese
   ],
   type: [
-    "type", "side", "action", "order type", "ordertype",
-    "売買", "タイプ",                 // MT5 Japanese
+    "type",
+    "side",
+    "action",
+    "order type",
+    "ordertype",
+    "売買",
+    "タイプ", // MT5 Japanese
   ],
   price: [
-    "price", "open price", "openprice", "open_price", "entry", "entry price",
-    "始値", "価格",                   // MT5 Japanese
+    "price",
+    "open price",
+    "openprice",
+    "open_price",
+    "entry",
+    "entry price",
+    "始値",
+    "価格", // MT5 Japanese
   ],
-  commission: [
-    "commission", "手数料",
-  ],
-  swap: [
-    "swap", "スワップ",
-  ],
-  taxes: [
-    "taxes", "tax", "税金",
-  ],
+  commission: ["commission", "手数料"],
+  swap: ["swap", "スワップ"],
+  taxes: ["taxes", "tax", "税金"],
   fee: [
-    "fee", "fees", "費用",           // MT5 Japanese
+    "fee",
+    "fees",
+    "費用", // MT5 Japanese
   ],
   balance: [
-    "balance", "残高",               // MT5 Japanese
+    "balance",
+    "残高", // MT5 Japanese
   ],
   direction: [
-    "direction", "新規・決済",        // MT5 Japanese in/out
+    "direction",
+    "新規・決済", // MT5 Japanese in/out
   ],
   order: [
-    "order", "注文",                 // MT5 Japanese
+    "order",
+    "注文", // MT5 Japanese
   ],
 };
 
 function normalizeColumnName(name: string): string {
-  return name.trim().toLowerCase().replace(/[_\s]+/g, " ");
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[_\s]+/g, " ");
 }
 
 /**
@@ -123,7 +163,7 @@ function preprocessCSV(csvText: string): string {
     const line = lines[i].trim();
     if (!line) continue;
 
-    const matchCount = headerPatterns.filter((p) => p.test(line)).length;
+    const matchCount = headerPatterns.filter(p => p.test(line)).length;
     if (matchCount >= 2) {
       headerLineIndex = i;
       break;
@@ -156,15 +196,15 @@ function preprocessCSV(csvText: string): string {
     if (col && !col.match(/^_\d+$/) && col !== "__EMPTY") break;
     lastMeaningfulIdx--;
   }
-  const trimmedHeaderLine = headerCols.slice(0, lastMeaningfulIdx + 1).join(",");
+  const trimmedHeaderLine = headerCols
+    .slice(0, lastMeaningfulIdx + 1)
+    .join(",");
   const deduplicatedHeader = deduplicateHeaders(trimmedHeaderLine);
   const numCols = lastMeaningfulIdx + 1;
 
+  // Patterns for rows to skip (individual summary lines)
   const summaryPatterns = [
     /^closed\s*p\/l/i,
-    /^open\s*trades/i,
-    /^working\s*orders/i,
-    /^cancelled\s*orders/i,
     /^balance/i,
     /^credit/i,
     /^floating\s*p\/l/i,
@@ -177,16 +217,31 @@ function preprocessCSV(csvText: string): string {
     /^残高/,
   ];
 
+  // Section boundary patterns — stop processing entirely when encountered.
+  // These mark the start of non-closed-trade sections in MT4 HTML-to-CSV output.
+  const sectionBreakPatterns = [
+    /^open\s*trades?/i,
+    /^working\s*orders?/i,
+    /^cancelled?\s*orders?/i,
+    /^deleted?\s*orders?/i,
+    /^summary$/i,
+    /^未決済/,
+    /^ワーキング/,
+  ];
+
   const dataLines: string[] = [deduplicatedHeader];
 
   for (let i = headerLineIndex + 1; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
 
-    const isSummary = summaryPatterns.some((p) => p.test(line));
+    // Stop at section boundaries (e.g., "Open Trades" section in MT4 reports)
+    if (sectionBreakPatterns.some(p => p.test(line))) break;
+
+    const isSummary = summaryPatterns.some(p => p.test(line));
     if (isSummary) continue;
 
-    const nonEmptyFields = line.split(",").filter((f) => f.trim() !== "");
+    const nonEmptyFields = line.split(",").filter(f => f.trim() !== "");
     if (nonEmptyFields.length < 3) continue;
 
     // Trim data rows to match header column count (remove trailing empty Excel cells)
@@ -212,7 +267,7 @@ function mapColumns(headers: string[]): Record<string, string> {
     }
   }
 
-  const closeIdx = normalizedHeaders.findIndex((h) => h === "close price");
+  const closeIdx = normalizedHeaders.findIndex(h => h === "close price");
   if (closeIdx !== -1 && !mapping.closePrice) {
     mapping.closePrice = headers[closeIdx];
   }
@@ -262,7 +317,10 @@ function parseDate(value: string): Date {
  * Only "out" rows contain the actual P/L.
  * Supports both English (Direction, Deal) and Japanese (新規・決済, 約定) headers.
  */
-function isMT5Format(headers: string[], columnMap: Record<string, string>): boolean {
+function isMT5Format(
+  headers: string[],
+  columnMap: Record<string, string>
+): boolean {
   const normalizedHeaders = headers.map(normalizeColumnName);
   const hasDirection =
     normalizedHeaders.includes("direction") ||
@@ -284,14 +342,16 @@ function isMT5Format(headers: string[], columnMap: Record<string, string>): bool
  */
 function processMT5Data(
   data: Record<string, string>[],
-  columnMap: Record<string, string>,
+  columnMap: Record<string, string>
 ): { trades: TradeRecord[]; skippedRows: number; unmatchedInRows: number } {
   const trades: TradeRecord[] = [];
   let skippedRows = 0;
 
   // Classify rows by direction
   const getDirection = (row: Record<string, string>): string =>
-    columnMap.direction ? (row[columnMap.direction] || "").trim().toLowerCase() : "";
+    columnMap.direction
+      ? (row[columnMap.direction] || "").trim().toLowerCase()
+      : "";
 
   const inRows: Record<string, string>[] = [];
   const outRows: Record<string, string>[] = [];
@@ -334,9 +394,7 @@ function processMT5Data(
         inRow = inByOrder.get(orderNum)!;
       } else {
         // Fallback: find an unconsumed "in" row with the same symbol
-        inRow = inRows.find(r =>
-          !consumedIn.has(r) && getSymbol(r) === symbol
-        );
+        inRow = inRows.find(r => !consumedIn.has(r) && getSymbol(r) === symbol);
       }
       if (inRow) consumedIn.add(inRow);
 
@@ -465,7 +523,7 @@ function processMT5Data(
  */
 function processMT4Data(
   data: Record<string, string>[],
-  columnMap: Record<string, string>,
+  columnMap: Record<string, string>
 ): { trades: TradeRecord[]; skippedRows: number } {
   const trades: TradeRecord[] = [];
   let skippedRows = 0;
@@ -537,7 +595,11 @@ function processMT4Data(
   return { trades, skippedRows };
 }
 
-export function parseCSV(csvText: string): { trades: TradeRecord[]; errors: string[]; initialBalance: number } {
+export function parseCSV(csvText: string): {
+  trades: TradeRecord[];
+  errors: string[];
+  initialBalance: number;
+} {
   const errors: string[] = [];
 
   const processedCSV = preprocessCSV(csvText);
@@ -550,12 +612,10 @@ export function parseCSV(csvText: string): { trades: TradeRecord[]; errors: stri
 
   if (result.errors.length > 0) {
     const criticalErrors = result.errors.filter(
-      (e) => e.type !== "FieldMismatch"
+      e => e.type !== "FieldMismatch"
     );
     if (criticalErrors.length > 0) {
-      errors.push(
-        ...criticalErrors.map((e) => `行 ${e.row}: ${e.message}`)
-      );
+      errors.push(...criticalErrors.map(e => `行 ${e.row}: ${e.message}`));
     }
   }
 
@@ -570,7 +630,7 @@ export function parseCSV(csvText: string): { trades: TradeRecord[]; errors: stri
 
   // Check required columns
   const requiredCols = ["time", "symbol", "profit"];
-  const missingCols = requiredCols.filter((col) => !columnMap[col]);
+  const missingCols = requiredCols.filter(col => !columnMap[col]);
   if (missingCols.length > 0) {
     errors.push(
       `必須列が見つかりません: ${missingCols.join(", ")}。\n検出されたヘッダー: ${headers.join(", ")}`
@@ -587,7 +647,9 @@ export function parseCSV(csvText: string): { trades: TradeRecord[]; errors: stri
     trades = mt5Result.trades;
     skippedRows = mt5Result.skippedRows;
     if (mt5Result.unmatchedInRows > 0) {
-      errors.push(`${mt5Result.unmatchedInRows}件の未決済ポジション（"in"行）が検出されました。`);
+      errors.push(
+        `${mt5Result.unmatchedInRows}件の未決済ポジション（"in"行）が検出されました。`
+      );
     }
   } else {
     const mt4Result = processMT4Data(data, columnMap);
@@ -600,7 +662,9 @@ export function parseCSV(csvText: string): { trades: TradeRecord[]; errors: stri
   }
 
   if (trades.length === 0 && errors.length === 0) {
-    errors.push("有効なトレードデータが見つかりませんでした。CSVの形式を確認してください。");
+    errors.push(
+      "有効なトレードデータが見つかりませんでした。CSVの形式を確認してください。"
+    );
   }
 
   // Sort by time
@@ -655,9 +719,10 @@ export function parseCSV(csvText: string): { trades: TradeRecord[]; errors: stri
   return { trades, errors, initialBalance };
 }
 
-export function getDetectedColumns(
-  csvText: string
-): { headers: string[]; mapping: Record<string, string> } {
+export function getDetectedColumns(csvText: string): {
+  headers: string[];
+  mapping: Record<string, string>;
+} {
   const processedCSV = preprocessCSV(csvText);
   const result = Papa.parse(processedCSV, { header: true, preview: 1 });
   const headers = result.meta.fields || [];

@@ -4,7 +4,15 @@
  */
 import { useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, FileText, RotateCcw, FileSpreadsheet, Languages, LogOut, ShieldCheck } from "lucide-react";
+import {
+  Activity,
+  FileText,
+  RotateCcw,
+  FileSpreadsheet,
+  Languages,
+  LogOut,
+  ShieldCheck,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnalysisProvider, useAnalysis } from "@/contexts/AnalysisContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -14,30 +22,61 @@ import CsvUploader from "@/components/CsvUploader";
 import StrategyScoreGauge from "@/components/StrategyScoreGauge";
 import MetricsPanel from "@/components/MetricsPanel";
 import TradeListTable from "@/components/TradeListTable";
-import { EquityCurveChart, MonteCarloChart, DrawdownDistChart } from "@/components/Charts";
 import {
-  WeaknessPanel, RiskPanel, SuggestionsPanel,
-  SymbolAnalysisTable, TimeSlotAnalysisTable,
+  EquityCurveChart,
+  MonteCarloChart,
+  DrawdownDistChart,
+} from "@/components/Charts";
+import {
+  WeaknessPanel,
+  RiskPanel,
+  SuggestionsPanel,
+  SymbolAnalysisTable,
+  TimeSlotAnalysisTable,
 } from "@/components/AnalysisPanels";
 import {
-  DayOfWeekPanel, LotSizeCorrelationPanel, TradeQualityPanel,
-  WinLossDistributionPanel, LowQualityTradeImpactPanel,
+  DayOfWeekPanel,
+  LotSizeCorrelationPanel,
+  TradeQualityPanel,
+  WinLossDistributionPanel,
+  LowQualityTradeImpactPanel,
 } from "@/components/AdvancedAnalysisPanels";
 import { ImprovementSimulator } from "@/components/ImprovementSimulator";
 import {
-  generateHTMLReport, generateMetricsCSV, generateSummaryCSV, downloadFile,
+  generateHTMLReport,
+  generateMetricsCSV,
+  generateSummaryCSV,
+  downloadFile,
 } from "@/lib/reportGenerator";
 
-const HERO_BG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663253742335/9THwtzJWhtqjLgwWgCKo96/hero-bg-TRem3RfKQMgVnHNfKT9dUd.webp";
-const UPLOAD_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663253742335/9THwtzJWhtqjLgwWgCKo96/upload-illustration-VQkoys9SeZFwMPTop6Kb23.webp";
+const HERO_BG =
+  "https://d2xsxph8kpxj0f.cloudfront.net/310519663253742335/9THwtzJWhtqjLgwWgCKo96/hero-bg-TRem3RfKQMgVnHNfKT9dUd.webp";
+const UPLOAD_IMG =
+  "https://d2xsxph8kpxj0f.cloudfront.net/310519663253742335/9THwtzJWhtqjLgwWgCKo96/upload-illustration-VQkoys9SeZFwMPTop6Kb23.webp";
 
 function HomeContent() {
   const {
-    state, trades, metrics, score, symbolAnalysis, timeSlotAnalysis,
-    dayOfWeekAnalysis, lotSizeAnalysis,
-    tradeQuality, winLossDistribution, lowQualityImpact,
-    weaknesses, suggestions, equityCurve, monteCarloResult,
-    drawdownDist, riskDiagnosis, errors, fileName, initialBalance, reset,
+    state,
+    trades,
+    metrics,
+    score,
+    symbolAnalysis,
+    timeSlotAnalysis,
+    dayOfWeekAnalysis,
+    lotSizeAnalysis,
+    tradeQuality,
+    winLossDistribution,
+    lowQualityImpact,
+    weaknesses,
+    suggestions,
+    equityCurve,
+    monteCarloResult,
+    drawdownDist,
+    riskDiagnosis,
+    errors,
+    fileName,
+    initialBalance,
+    reset,
   } = useAnalysis();
   const { t, language, toggleLanguage } = useLanguage();
   const { logout, username, isAdmin } = useAuth();
@@ -56,7 +95,17 @@ function HomeContent() {
       riskDiagnosis,
     });
     downloadFile(html, "fx_strategy_report.html", "text/html");
-  }, [metrics, score, symbolAnalysis, timeSlotAnalysis, weaknesses, suggestions, monteCarloResult, riskDiagnosis, fileName]);
+  }, [
+    metrics,
+    score,
+    symbolAnalysis,
+    timeSlotAnalysis,
+    weaknesses,
+    suggestions,
+    monteCarloResult,
+    riskDiagnosis,
+    fileName,
+  ]);
 
   const handleDownloadCSV = useCallback(() => {
     if (!metrics) return;
@@ -66,7 +115,13 @@ function HomeContent() {
 
   const handleDownloadSummary = useCallback(() => {
     if (!metrics || !score || !monteCarloResult || !riskDiagnosis) return;
-    const csv = generateSummaryCSV(metrics, score, symbolAnalysis, monteCarloResult, riskDiagnosis);
+    const csv = generateSummaryCSV(
+      metrics,
+      score,
+      symbolAnalysis,
+      monteCarloResult,
+      riskDiagnosis
+    );
     downloadFile(csv, "summary.csv", "text/csv");
   }, [metrics, score, symbolAnalysis, monteCarloResult, riskDiagnosis]);
 
@@ -159,7 +214,9 @@ function HomeContent() {
                   className="text-xs gap-1.5 border-border hover:bg-accent"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">{t("header.newAnalysis")}</span>
+                  <span className="hidden sm:inline">
+                    {t("header.newAnalysis")}
+                  </span>
                 </Button>
               </>
             )}
@@ -197,7 +254,9 @@ function HomeContent() {
                     <h1 className="text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-4">
                       {t("hero.title1")}
                       <br />
-                      <span className="text-[oklch(0.82_0.18_165)]">{t("hero.title2")}</span>
+                      <span className="text-[oklch(0.82_0.18_165)]">
+                        {t("hero.title2")}
+                      </span>
                     </h1>
                     <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed">
                       {t("hero.desc")}
@@ -234,17 +293,36 @@ function HomeContent() {
                   className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto"
                 >
                   {[
-                    { title: t("feat.score.title"), desc: t("feat.score.desc"), color: "oklch(0.82 0.18 165)" },
-                    { title: t("feat.weakness.title"), desc: t("feat.weakness.desc"), color: "oklch(0.65 0.18 250)" },
-                    { title: t("feat.simulation.title"), desc: t("feat.simulation.desc"), color: "oklch(0.78 0.15 75)" },
-                  ].map((feat) => (
+                    {
+                      title: t("feat.score.title"),
+                      desc: t("feat.score.desc"),
+                      color: "oklch(0.82 0.18 165)",
+                    },
+                    {
+                      title: t("feat.weakness.title"),
+                      desc: t("feat.weakness.desc"),
+                      color: "oklch(0.65 0.18 250)",
+                    },
+                    {
+                      title: t("feat.simulation.title"),
+                      desc: t("feat.simulation.desc"),
+                      color: "oklch(0.78 0.15 75)",
+                    },
+                  ].map(feat => (
                     <div
                       key={feat.title}
                       className="bg-card/60 backdrop-blur border border-border rounded-lg p-4 text-left"
                     >
-                      <div className="w-2 h-2 rounded-full mb-3" style={{ backgroundColor: feat.color }} />
-                      <h3 className="text-sm font-semibold text-foreground mb-1">{feat.title}</h3>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{feat.desc}</p>
+                      <div
+                        className="w-2 h-2 rounded-full mb-3"
+                        style={{ backgroundColor: feat.color }}
+                      />
+                      <h3 className="text-sm font-semibold text-foreground mb-1">
+                        {feat.title}
+                      </h3>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {feat.desc}
+                      </p>
                     </div>
                   ))}
                 </motion.div>
@@ -255,21 +333,43 @@ function HomeContent() {
             <section className="container py-16">
               <div className="grid lg:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
                 <div>
-                  <h2 className="text-2xl font-bold text-foreground mb-6">{t("howto.title")}</h2>
+                  <h2 className="text-2xl font-bold text-foreground mb-6">
+                    {t("howto.title")}
+                  </h2>
                   <div className="space-y-5">
                     {[
-                      { step: "01", title: t("howto.step1.title"), desc: t("howto.step1.desc") },
-                      { step: "02", title: t("howto.step2.title"), desc: t("howto.step2.desc") },
-                      { step: "03", title: t("howto.step3.title"), desc: t("howto.step3.desc") },
-                      { step: "04", title: t("howto.step4.title"), desc: t("howto.step4.desc") },
-                    ].map((item) => (
+                      {
+                        step: "01",
+                        title: t("howto.step1.title"),
+                        desc: t("howto.step1.desc"),
+                      },
+                      {
+                        step: "02",
+                        title: t("howto.step2.title"),
+                        desc: t("howto.step2.desc"),
+                      },
+                      {
+                        step: "03",
+                        title: t("howto.step3.title"),
+                        desc: t("howto.step3.desc"),
+                      },
+                      {
+                        step: "04",
+                        title: t("howto.step4.title"),
+                        desc: t("howto.step4.desc"),
+                      },
+                    ].map(item => (
                       <div key={item.step} className="flex gap-4">
                         <div className="metric-value text-2xl font-bold text-[oklch(0.65_0.18_250_/_0.3)] w-10 shrink-0">
                           {item.step}
                         </div>
                         <div>
-                          <h3 className="text-sm font-semibold text-foreground">{item.title}</h3>
-                          <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
+                          <h3 className="text-sm font-semibold text-foreground">
+                            {item.title}
+                          </h3>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {item.desc}
+                          </p>
                         </div>
                       </div>
                     ))}
@@ -296,7 +396,9 @@ function HomeContent() {
             {/* Dashboard Header */}
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-xl font-bold text-foreground">{t("dash.title")}</h2>
+                <h2 className="text-xl font-bold text-foreground">
+                  {t("dash.title")}
+                </h2>
                 <p className="text-sm text-muted-foreground mt-0.5">
                   {fileName} | {metrics?.totalTrades} {t("dash.tradesAnalyzed")}
                 </p>
@@ -319,15 +421,23 @@ function HomeContent() {
               <div className="bg-card border border-border rounded-lg p-6 flex items-center justify-center">
                 {score && <StrategyScoreGauge score={score} />}
               </div>
-              <div>
-                {metrics && <MetricsPanel metrics={metrics} />}
-              </div>
+              <div>{metrics && <MetricsPanel metrics={metrics} />}</div>
             </div>
 
             {/* Charts */}
             <div className="grid lg:grid-cols-2 gap-6 mb-6">
-              {equityCurve.length > 0 && <EquityCurveChart data={equityCurve} initialBalance={initialBalance} />}
-              {monteCarloResult && <MonteCarloChart result={monteCarloResult} initialBalance={initialBalance} />}
+              {equityCurve.length > 0 && (
+                <EquityCurveChart
+                  data={equityCurve}
+                  initialBalance={initialBalance}
+                />
+              )}
+              {monteCarloResult && (
+                <MonteCarloChart
+                  result={monteCarloResult}
+                  initialBalance={initialBalance}
+                />
+              )}
             </div>
 
             {drawdownDist && (
@@ -338,8 +448,12 @@ function HomeContent() {
 
             {/* Analysis Tables */}
             <div className="grid lg:grid-cols-2 gap-6 mb-6">
-              {symbolAnalysis.length > 0 && <SymbolAnalysisTable data={symbolAnalysis} />}
-              {timeSlotAnalysis.length > 0 && <TimeSlotAnalysisTable data={timeSlotAnalysis} />}
+              {symbolAnalysis.length > 0 && (
+                <SymbolAnalysisTable data={symbolAnalysis} />
+              )}
+              {timeSlotAnalysis.length > 0 && (
+                <TimeSlotAnalysisTable data={timeSlotAnalysis} />
+              )}
             </div>
 
             {/* Weakness + Risk + Suggestions */}
@@ -356,15 +470,18 @@ function HomeContent() {
 
             {/* Advanced Analysis: Day of Week + Trade Quality */}
             <div className="grid lg:grid-cols-2 gap-6 mb-6">
-              {dayOfWeekAnalysis.length > 0 && <DayOfWeekPanel data={dayOfWeekAnalysis} />}
+              {dayOfWeekAnalysis.length > 0 && (
+                <DayOfWeekPanel data={dayOfWeekAnalysis} />
+              )}
               {tradeQuality && <TradeQualityPanel data={tradeQuality} />}
             </div>
 
             {/* Win/Loss Distribution + Low Quality Trade Impact */}
             <div className="grid lg:grid-cols-2 gap-6 mb-6">
-              {winLossDistribution && winLossDistribution.buckets.length > 0 && (
-                <WinLossDistributionPanel data={winLossDistribution} />
-              )}
+              {winLossDistribution &&
+                winLossDistribution.buckets.length > 0 && (
+                  <WinLossDistributionPanel data={winLossDistribution} />
+                )}
               {lowQualityImpact.length > 0 && (
                 <LowQualityTradeImpactPanel data={lowQualityImpact} />
               )}
@@ -401,7 +518,9 @@ function HomeContent() {
               <div className="w-5 h-5 rounded bg-[oklch(0.82_0.18_165_/_0.15)] flex items-center justify-center">
                 <Activity className="w-3 h-3 text-[oklch(0.82_0.18_165)]" />
               </div>
-              <span className="font-semibold text-foreground/70">FX Strategy Doctor</span>
+              <span className="font-semibold text-foreground/70">
+                FX Strategy Doctor
+              </span>
               <span className="text-muted-foreground/50">by Dr. Trading</span>
             </div>
             <div className="flex items-center gap-4">

@@ -1,4 +1,12 @@
-import type { PerformanceMetrics, StrategyScore, SymbolAnalysis, TimeSlotAnalysis, WeaknessItem, ImprovementSuggestion, RiskDiagnosis } from "./analysis";
+import type {
+  PerformanceMetrics,
+  StrategyScore,
+  SymbolAnalysis,
+  TimeSlotAnalysis,
+  WeaknessItem,
+  ImprovementSuggestion,
+  RiskDiagnosis,
+} from "./analysis";
 import type { MonteCarloResult } from "./simulation";
 
 interface ReportData {
@@ -14,7 +22,16 @@ interface ReportData {
 }
 
 export function generateHTMLReport(data: ReportData): string {
-  const { metrics, score, symbolAnalysis, timeSlotAnalysis, weaknesses, suggestions, monteCarloResult, riskDiagnosis } = data;
+  const {
+    metrics,
+    score,
+    symbolAnalysis,
+    timeSlotAnalysis,
+    weaknesses,
+    suggestions,
+    monteCarloResult,
+    riskDiagnosis,
+  } = data;
 
   return `<!DOCTYPE html>
 <html lang="ja">
@@ -83,7 +100,13 @@ export function generateHTMLReport(data: ReportData): string {
   </div>
 
   <h2>Weakness Ranking</h2>
-  ${weaknesses.length === 0 ? "<p>重大な弱点は検出されませんでした。</p>" : weaknesses.slice(0, 5).map((w, i) => `
+  ${
+    weaknesses.length === 0
+      ? "<p>重大な弱点は検出されませんでした。</p>"
+      : weaknesses
+          .slice(0, 5)
+          .map(
+            (w, i) => `
   <div class="weakness-item">
     <span style="color:#64748B;font-family:monospace;font-size:0.8rem;">#${i + 1}</span>
     <span class="severity sev-${w.severity}">${w.severity.toUpperCase()}</span>
@@ -91,19 +114,26 @@ export function generateHTMLReport(data: ReportData): string {
       <div style="font-weight:600;">${w.category}: ${w.target}</div>
       <div style="font-size:0.8rem;color:#64748B;">${w.issue}</div>
     </div>
-  </div>`).join("")}
+  </div>`
+          )
+          .join("")
+  }
 
   <h2>通貨ペア別分析</h2>
   <table>
     <thead><tr><th>Symbol</th><th style="text-align:right">Trades</th><th style="text-align:right">勝率</th><th style="text-align:right">PF</th><th style="text-align:right">損益</th></tr></thead>
     <tbody>
-    ${symbolAnalysis.map((s) => `<tr>
+    ${symbolAnalysis
+      .map(
+        s => `<tr>
       <td style="font-family:monospace;font-weight:600;">${s.symbol}</td>
       <td style="text-align:right">${s.trades}</td>
       <td style="text-align:right" class="${s.winRate >= 50 ? "profit" : "loss"}">${s.winRate.toFixed(1)}%</td>
       <td style="text-align:right" class="${s.profitFactor >= 1 ? "profit" : "loss"}">${s.profitFactor >= 999 ? "999+" : s.profitFactor.toFixed(2)}</td>
       <td style="text-align:right;font-family:monospace" class="${s.netProfit >= 0 ? "profit" : "loss"}">${s.netProfit >= 0 ? "+" : ""}${s.netProfit.toFixed(2)}</td>
-    </tr>`).join("")}
+    </tr>`
+      )
+      .join("")}
     </tbody>
   </table>
 
@@ -111,13 +141,17 @@ export function generateHTMLReport(data: ReportData): string {
   <table>
     <thead><tr><th>時間帯</th><th style="text-align:right">Trades</th><th style="text-align:right">勝率</th><th style="text-align:right">PF</th><th style="text-align:right">損益</th></tr></thead>
     <tbody>
-    ${timeSlotAnalysis.map((t) => `<tr>
+    ${timeSlotAnalysis
+      .map(
+        t => `<tr>
       <td style="font-family:monospace">${t.slot}</td>
       <td style="text-align:right">${t.trades}</td>
       <td style="text-align:right" class="${t.winRate >= 50 ? "profit" : "loss"}">${t.trades > 0 ? t.winRate.toFixed(1) + "%" : "-"}</td>
       <td style="text-align:right" class="${t.profitFactor >= 1 ? "profit" : "loss"}">${t.trades > 0 ? (t.profitFactor >= 999 ? "999+" : t.profitFactor.toFixed(2)) : "-"}</td>
-      <td style="text-align:right;font-family:monospace" class="${t.netProfit >= 0 ? "profit" : "loss"}">${t.trades > 0 ? ((t.netProfit >= 0 ? "+" : "") + t.netProfit.toFixed(2)) : "-"}</td>
-    </tr>`).join("")}
+      <td style="text-align:right;font-family:monospace" class="${t.netProfit >= 0 ? "profit" : "loss"}">${t.trades > 0 ? (t.netProfit >= 0 ? "+" : "") + t.netProfit.toFixed(2) : "-"}</td>
+    </tr>`
+      )
+      .join("")}
     </tbody>
   </table>
 
@@ -133,19 +167,30 @@ export function generateHTMLReport(data: ReportData): string {
   <div style="margin-bottom:1rem;">
     <span class="risk-badge" style="background:${riskDiagnosis.color}20;color:${riskDiagnosis.color};">${riskDiagnosis.level}</span>
   </div>
-  ${riskDiagnosis.factors.map((f) => `<div style="padding:0.6rem 0;font-size:0.9rem;color:#94A3B8;">
-    <div style="font-weight:600;color:#E2E8F0;">${f.label}: <span class="${f.status === 'danger' ? 'loss' : f.status === 'caution' ? 'warning' : 'profit'}">${f.value}</span> <span style="font-size:0.75rem;padding:0.15rem 0.4rem;border-radius:3px;background:${f.status === 'danger' ? '#FF475720' : f.status === 'caution' ? '#F59E0B20' : '#00D4AA20'};color:${f.status === 'danger' ? '#FF4757' : f.status === 'caution' ? '#F59E0B' : '#00D4AA'};">${f.statusLabel}</span></div>
+  ${riskDiagnosis.factors
+    .map(
+      f => `<div style="padding:0.6rem 0;font-size:0.9rem;color:#94A3B8;">
+    <div style="font-weight:600;color:#E2E8F0;">${f.label}: <span class="${f.status === "danger" ? "loss" : f.status === "caution" ? "warning" : "profit"}">${f.value}</span> <span style="font-size:0.75rem;padding:0.15rem 0.4rem;border-radius:3px;background:${f.status === "danger" ? "#FF475720" : f.status === "caution" ? "#F59E0B20" : "#00D4AA20"};color:${f.status === "danger" ? "#FF4757" : f.status === "caution" ? "#F59E0B" : "#00D4AA"};">${f.statusLabel}</span></div>
     <div style="font-size:0.85rem;margin-top:0.2rem;">${f.description}</div>
-  </div>`).join("")}
+  </div>`
+    )
+    .join("")}
 
   <h2>Improvement Suggestions</h2>
-  ${suggestions.map((s) => {
-    const color = s.priority === "high" ? "#FF4757" : s.priority === "medium" ? "#F59E0B" : "#3B82F6";
-    return `<div class="suggestion" style="border-color:${color}">
+  ${suggestions
+    .map(s => {
+      const color =
+        s.priority === "high"
+          ? "#FF4757"
+          : s.priority === "medium"
+            ? "#F59E0B"
+            : "#3B82F6";
+      return `<div class="suggestion" style="border-color:${color}">
       <div style="font-weight:600;margin-bottom:0.3rem;">${s.title} <span style="font-size:0.7rem;color:#64748B;background:#1E293B;padding:0.1rem 0.4rem;border-radius:3px;">${s.category}</span></div>
       <div style="font-size:0.85rem;color:#94A3B8;">${s.description}</div>
     </div>`;
-  }).join("")}
+    })
+    .join("")}
 
   <div class="footer">Generated by FX Strategy Doctor | ${new Date().toLocaleDateString("ja-JP")}</div>
 </div>
@@ -174,7 +219,7 @@ export function generateMetricsCSV(metrics: PerformanceMetrics): string {
     ["Largest Win", metrics.largestWin.toFixed(2)],
     ["Largest Loss", metrics.largestLoss.toFixed(2)],
   ];
-  return rows.map((r) => r.join(",")).join("\n");
+  return rows.map(r => r.join(",")).join("\n");
 }
 
 export function generateSummaryCSV(
@@ -210,7 +255,7 @@ export function generateSummaryCSV(
     ["", ""],
     ["=== Symbol Analysis ===", ""],
     ["Symbol", "Trades", "Win Rate", "PF", "RR", "Net Profit"],
-    ...symbolAnalysis.map((s) => [
+    ...symbolAnalysis.map(s => [
       s.symbol,
       s.trades.toString(),
       `${s.winRate.toFixed(2)}%`,
@@ -219,7 +264,7 @@ export function generateSummaryCSV(
       s.netProfit.toFixed(2),
     ]),
   ];
-  return rows.map((r) => r.join(",")).join("\n");
+  return rows.map(r => r.join(",")).join("\n");
 }
 
 export function downloadFile(content: string, filename: string, type: string) {

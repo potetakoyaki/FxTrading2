@@ -56,10 +56,24 @@ export function excelToCSV(buffer: ArrayBuffer): string {
 }
 
 /** Section header keywords that indicate the deals/trades section */
-const DEALS_SECTION_KEYWORDS = ['約定', 'deals', 'trades', '取引履歴', 'trade history'];
+const DEALS_SECTION_KEYWORDS = [
+  "約定",
+  "deals",
+  "trades",
+  "取引履歴",
+  "trade history",
+];
 
 /** Section header keywords that indicate non-trade sections to stop at */
-const STOP_SECTION_KEYWORDS = ['結果', 'result', '残高', 'balance', '有効証拠金', 'equity', 'summary'];
+const STOP_SECTION_KEYWORDS = [
+  "結果",
+  "result",
+  "残高",
+  "balance",
+  "有効証拠金",
+  "equity",
+  "summary",
+];
 
 function tryExtractMT5DealsSection(data: unknown[][]): string | null {
   let dealsHeaderRowIndex = -1;
@@ -83,24 +97,24 @@ function tryExtractMT5DealsSection(data: unknown[][]): string | null {
   const columnHeaderRow = data[dealsHeaderRowIndex + 1];
   if (!columnHeaderRow) return null;
 
-  const headers = columnHeaderRow.map(v => String(v ?? '').trim());
+  const headers = columnHeaderRow.map(v => String(v ?? "").trim());
 
   // Translate Japanese MT5 headers to English for csvParser compatibility
   const JP_TO_EN: Record<string, string> = {
-    '時間': 'Time',
-    '約定': 'Deal',
-    '銘柄': 'Symbol',
-    'タイプ': 'Type',
-    '新規・決済': 'Direction',
-    '数量': 'Volume',
-    '価格': 'Price',
-    '注文': 'Order',
-    '費用': 'Fee',
-    '手数料': 'Commission',
-    'スワップ': 'Swap',
-    '損益': 'Profit',
-    '残高': 'Balance',
-    'コメント': 'Comment',
+    時間: "Time",
+    約定: "Deal",
+    銘柄: "Symbol",
+    タイプ: "Type",
+    "新規・決済": "Direction",
+    数量: "Volume",
+    価格: "Price",
+    注文: "Order",
+    費用: "Fee",
+    手数料: "Commission",
+    スワップ: "Swap",
+    損益: "Profit",
+    残高: "Balance",
+    コメント: "Comment",
   };
   // Translate headers, handling duplicate column names.
   // MT5 reports often have column 8 = 費用 (Fee) and column 9 = 手数料 (Commission),
@@ -113,10 +127,10 @@ function tryExtractMT5DealsSection(data: unknown[][]): string | null {
     if (!h) continue;
     if (seenCols.has(h)) {
       // Duplicate "Commission" → the first was actually Fee in MT5 layout
-      if (h === 'Commission') {
+      if (h === "Commission") {
         const firstIdx = translatedHeaders.indexOf(h);
         if (firstIdx >= 0 && firstIdx < i) {
-          translatedHeaders[firstIdx] = 'Fee';
+          translatedHeaders[firstIdx] = "Fee";
         }
       }
     }
@@ -132,9 +146,9 @@ function tryExtractMT5DealsSection(data: unknown[][]): string | null {
   const trimmedHeaders = translatedHeaders.slice(0, numCols);
 
   // Build CSV from deals section (use translated English headers)
-  const csvRows: string[] = [trimmedHeaders.join(',')];
+  const csvRows: string[] = [trimmedHeaders.join(",")];
 
-  const symbolIdx = findColIndex(headers, ['銘柄', 'symbol', 'item']);
+  const symbolIdx = findColIndex(headers, ["銘柄", "symbol", "item"]);
 
   for (let i = dealsHeaderRowIndex + 2; i < data.length; i++) {
     const row = data[i];
@@ -142,8 +156,13 @@ function tryExtractMT5DealsSection(data: unknown[][]): string | null {
 
     // Stop at next section header
     if (nonNull.length <= 2) {
-      const firstVal = String(row[0] ?? '').trim().toLowerCase();
-      if (firstVal && STOP_SECTION_KEYWORDS.some(kw => firstVal.includes(kw.toLowerCase()))) {
+      const firstVal = String(row[0] ?? "")
+        .trim()
+        .toLowerCase();
+      if (
+        firstVal &&
+        STOP_SECTION_KEYWORDS.some(kw => firstVal.includes(kw.toLowerCase()))
+      ) {
         break;
       }
       if (nonNull.length === 1 && firstVal && !firstVal.match(/^\d/)) {
@@ -158,36 +177,63 @@ function tryExtractMT5DealsSection(data: unknown[][]): string | null {
     // Skip rows with no symbol (balance/deposit rows)
     if (symbolIdx >= 0 && !cells[symbolIdx]) continue;
 
-    const line = cells.map(v => {
-      if (v.includes(',') || v.includes('"') || v.includes('\n')) {
-        return `"${v.replace(/"/g, '""')}"`;
-      }
-      return v;
-    }).join(',');
+    const line = cells
+      .map(v => {
+        if (v.includes(",") || v.includes('"') || v.includes("\n")) {
+          return `"${v.replace(/"/g, '""')}"`;
+        }
+        return v;
+      })
+      .join(",");
 
     csvRows.push(line);
   }
 
   if (csvRows.length < 3) return null;
 
-  return csvRows.join('\n');
+  return csvRows.join("\n");
 }
+
+/** Section boundary keywords — stop extracting when encountered (MT4 Excel fallback) */
+const SECTION_BREAK_KEYWORDS = [
+  "open trades",
+  "working orders",
+  "cancelled orders",
+  "deleted orders",
+  "summary",
+  "未決済",
+  "ワーキング",
+];
 
 function extractFromHeaderRow(data: unknown[][]): string {
   const headerRowIndex = findHeaderRow(data);
 
-  const dataSlice = data.slice(headerRowIndex);
-  const csvLines = dataSlice.map(row =>
-    row.map(cell => {
-      const v = formatExcelCell(cell);
-      if (v.includes(',') || v.includes('"') || v.includes('\n')) {
-        return `"${v.replace(/"/g, '""')}"`;
-      }
-      return v;
-    }).join(',')
-  );
+  const csvLines: string[] = [];
+  for (let i = headerRowIndex; i < data.length; i++) {
+    const row = data[i];
+    const nonNull = row.filter(v => v !== null && v !== undefined);
 
-  return csvLines.join('\n');
+    // Stop at section boundaries (e.g., "Open Trades" in MT4 Excel reports)
+    if (i > headerRowIndex && nonNull.length === 1) {
+      const val = String(nonNull[0]).trim().toLowerCase();
+      if (val && SECTION_BREAK_KEYWORDS.some(kw => val === kw)) {
+        break;
+      }
+    }
+
+    const line = row
+      .map(cell => {
+        const v = formatExcelCell(cell);
+        if (v.includes(",") || v.includes('"') || v.includes("\n")) {
+          return `"${v.replace(/"/g, '""')}"`;
+        }
+        return v;
+      })
+      .join(",");
+    csvLines.push(line);
+  }
+
+  return csvLines.join("\n");
 }
 
 /**
@@ -195,9 +241,9 @@ function extractFromHeaderRow(data: unknown[][]): string {
  * Handles numbers (including Excel serial date numbers), strings, etc.
  */
 function formatExcelCell(value: unknown): string {
-  if (value === null || value === undefined) return '';
+  if (value === null || value === undefined) return "";
 
-  if (typeof value === 'number') {
+  if (typeof value === "number") {
     // Check if it looks like an Excel date serial number
     // Excel dates are typically between 1 (Jan 1, 1900) and ~50000 (year ~2036)
     // But trade IDs can also be large numbers, so we use a heuristic:
@@ -216,16 +262,19 @@ function formatExcelCell(value: unknown): string {
     // We restrict to >= 25569 (1970-01-01) to avoid false positives on small floats
     // like lot sizes (1.5) or FX prices (1.12345).
     // Integer dates (midnight) are limited to the 40000-50000 range (~2009-2036).
-    if ((value >= 25569 && value <= 73050 && !Number.isInteger(value)) || (value >= 40000 && value <= 50000 && Number.isInteger(value))) {
+    if (
+      (value >= 25569 && value <= 73050 && !Number.isInteger(value)) ||
+      (value >= 40000 && value <= 50000 && Number.isInteger(value))
+    ) {
       // Convert Excel serial date to string
       const date = XLSX.SSF.parse_date_code(value);
       if (date) {
         const y = date.y;
-        const m = String(date.m).padStart(2, '0');
-        const d = String(date.d).padStart(2, '0');
-        const H = String(date.H).padStart(2, '0');
-        const M = String(date.M).padStart(2, '0');
-        const S = String(date.S).padStart(2, '0');
+        const m = String(date.m).padStart(2, "0");
+        const d = String(date.d).padStart(2, "0");
+        const H = String(date.H).padStart(2, "0");
+        const M = String(date.M).padStart(2, "0");
+        const S = String(date.S).padStart(2, "0");
         return `${y}.${m}.${d} ${H}:${M}:${S}`;
       }
     }
@@ -233,9 +282,9 @@ function formatExcelCell(value: unknown): string {
     return String(value);
   }
 
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     // Remove non-breaking spaces and normalize
-    return value.replace(/\u00a0/g, '').trim();
+    return value.replace(/\u00a0/g, "").trim();
   }
 
   return String(value);
@@ -243,8 +292,16 @@ function formatExcelCell(value: unknown): string {
 
 /** Known sheet name keywords (case-insensitive) */
 const SHEET_KEYWORDS = [
-  'positions', 'deals', 'orders', 'history', 'trades',
-  '口座履歴', 'ポジション', '約定', '注文', '取引',
+  "positions",
+  "deals",
+  "orders",
+  "history",
+  "trades",
+  "口座履歴",
+  "ポジション",
+  "約定",
+  "注文",
+  "取引",
 ];
 
 function pickBestSheetName(workbook: XLSX.WorkBook): string {
@@ -259,11 +316,26 @@ function pickBestSheetName(workbook: XLSX.WorkBook): string {
 
 /** Header detection patterns */
 const HEADER_PATTERNS = [
-  /ticket/i, /open\s*time/i, /close\s*time/i, /symbol/i,
-  /item/i, /profit/i, /pnl/i, /p\/l/i, /deal/i,
-  /direction/i, /balance/i, /time/i, /order/i,
-  /通貨/i, /銘柄/i, /損益/i, /利益/i,
-  /約定/i, /タイプ/i, /新規/i,
+  /ticket/i,
+  /open\s*time/i,
+  /close\s*time/i,
+  /symbol/i,
+  /item/i,
+  /profit/i,
+  /pnl/i,
+  /p\/l/i,
+  /deal/i,
+  /direction/i,
+  /balance/i,
+  /time/i,
+  /order/i,
+  /通貨/i,
+  /銘柄/i,
+  /損益/i,
+  /利益/i,
+  /約定/i,
+  /タイプ/i,
+  /新規/i,
 ];
 
 function findHeaderRow(data: unknown[][]): number {
@@ -273,7 +345,7 @@ function findHeaderRow(data: unknown[][]): number {
     const row = data[i];
     if (!row || row.length < 3) continue;
 
-    const rowText = row.map(c => String(c ?? '')).join(' ');
+    const rowText = row.map(c => String(c ?? "")).join(" ");
     const matchCount = HEADER_PATTERNS.filter(p => p.test(rowText)).length;
 
     if (matchCount >= 2) return i;
@@ -282,7 +354,11 @@ function findHeaderRow(data: unknown[][]): number {
   // Fallback: first non-empty row with enough columns
   for (let i = 0; i < Math.min(data.length, 10); i++) {
     const row = data[i];
-    if (row && row.filter(c => c !== null && c !== undefined && String(c).trim() !== '').length >= 3) {
+    if (
+      row &&
+      row.filter(c => c !== null && c !== undefined && String(c).trim() !== "")
+        .length >= 3
+    ) {
       return i;
     }
   }
@@ -292,9 +368,10 @@ function findHeaderRow(data: unknown[][]): number {
 
 function findColIndex(headers: string[], candidates: string[]): number {
   for (const candidate of candidates) {
-    const idx = headers.findIndex(h =>
-      h.toLowerCase().trim() === candidate.toLowerCase() ||
-      h.toLowerCase().includes(candidate.toLowerCase())
+    const idx = headers.findIndex(
+      h =>
+        h.toLowerCase().trim() === candidate.toLowerCase() ||
+        h.toLowerCase().includes(candidate.toLowerCase())
     );
     if (idx !== -1) return idx;
   }
@@ -306,13 +383,22 @@ function findColIndex(headers: string[], candidates: string[]): number {
  */
 export function isExcelFile(fileName: string): boolean {
   const lower = fileName.toLowerCase();
-  return lower.endsWith('.xlsx') || lower.endsWith('.xls') || lower.endsWith('.xml');
+  return (
+    lower.endsWith(".xlsx") || lower.endsWith(".xls") || lower.endsWith(".xml")
+  );
 }
 
 /**
  * Supported file extensions for upload.
  */
-export const SUPPORTED_EXTENSIONS = ['.csv', '.xlsx', '.xls', '.xml', '.htm', '.html'];
+export const SUPPORTED_EXTENSIONS = [
+  ".csv",
+  ".xlsx",
+  ".xls",
+  ".xml",
+  ".htm",
+  ".html",
+];
 
 export function isSupportedFile(fileName: string): boolean {
   const lower = fileName.toLowerCase();

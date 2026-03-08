@@ -5,15 +5,27 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  AlertTriangle, Shield, Lightbulb,
-  Clock, Coins, ChevronRight, ChevronDown,
-  CheckCircle2, AlertCircle, XCircle,
+  AlertTriangle,
+  Shield,
+  Lightbulb,
+  Clock,
+  Coins,
+  ChevronRight,
+  ChevronDown,
+  CheckCircle2,
+  AlertCircle,
+  XCircle,
   ArrowRight,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type {
-  WeaknessItem, ImprovementSuggestion, RiskDiagnosis,
-  SymbolAnalysis, TimeSlotAnalysis, RiskFactor, FactorStatus,
+  WeaknessItem,
+  ImprovementSuggestion,
+  RiskDiagnosis,
+  SymbolAnalysis,
+  TimeSlotAnalysis,
+  RiskFactor,
+  FactorStatus,
 } from "@/lib/analysis";
 
 // ==================== Status Config ====================
@@ -49,7 +61,13 @@ function getStatusConfig(status: FactorStatus) {
 
 // ==================== Risk Factor Card ====================
 
-function RiskFactorCard({ factor, index }: { factor: RiskFactor; index: number }) {
+function RiskFactorCard({
+  factor,
+  index,
+}: {
+  factor: RiskFactor;
+  index: number;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const config = getStatusConfig(factor.status);
   const Icon = config.icon;
@@ -75,7 +93,9 @@ function RiskFactorCard({ factor, index }: { factor: RiskFactor; index: number }
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-foreground">{factor.label}</span>
+            <span className="text-sm font-semibold text-foreground">
+              {factor.label}
+            </span>
             <span
               className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
               style={{ backgroundColor: config.labelBg, color: config.color }}
@@ -108,7 +128,10 @@ function RiskFactorCard({ factor, index }: { factor: RiskFactor; index: number }
           >
             <div className="px-4 pb-4 space-y-3">
               {/* Divider */}
-              <div className="border-t" style={{ borderColor: config.borderColor }} />
+              <div
+                className="border-t"
+                style={{ borderColor: config.borderColor }}
+              />
 
               {/* Description */}
               <div>
@@ -129,8 +152,14 @@ function RiskFactorCard({ factor, index }: { factor: RiskFactor; index: number }
                 }}
               >
                 <div className="flex items-center gap-1.5 mb-1">
-                  <ArrowRight className="w-3.5 h-3.5" style={{ color: config.color }} />
-                  <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: config.color }}>
+                  <ArrowRight
+                    className="w-3.5 h-3.5"
+                    style={{ color: config.color }}
+                  />
+                  <span
+                    className="text-[10px] uppercase tracking-wider font-semibold"
+                    style={{ color: config.color }}
+                  >
                     {lang === "ja" ? "今後のアクション" : "Recommended Action"}
                   </span>
                 </div>
@@ -164,9 +193,21 @@ export function WeaknessPanel({ weaknesses }: { weaknesses: WeaknessItem[] }) {
   }
 
   const severityConfig = {
-    high: { bg: "bg-[oklch(0.65_0.2_20_/_0.12)]", text: "text-[oklch(0.65_0.2_20)]", label: "HIGH" },
-    medium: { bg: "bg-[oklch(0.78_0.15_75_/_0.12)]", text: "text-[oklch(0.78_0.15_75)]", label: "MED" },
-    low: { bg: "bg-[oklch(0.65_0.18_250_/_0.12)]", text: "text-[oklch(0.65_0.18_250)]", label: "LOW" },
+    high: {
+      bg: "bg-[oklch(0.65_0.2_20_/_0.12)]",
+      text: "text-[oklch(0.65_0.2_20)]",
+      label: "HIGH",
+    },
+    medium: {
+      bg: "bg-[oklch(0.78_0.15_75_/_0.12)]",
+      text: "text-[oklch(0.78_0.15_75)]",
+      label: "MED",
+    },
+    low: {
+      bg: "bg-[oklch(0.65_0.18_250_/_0.12)]",
+      text: "text-[oklch(0.65_0.18_250)]",
+      label: "LOW",
+    },
   };
 
   return (
@@ -191,16 +232,26 @@ export function WeaknessPanel({ weaknesses }: { weaknesses: WeaknessItem[] }) {
               transition={{ delay: i * 0.08 }}
               className="flex items-center gap-3 py-2.5 px-3 rounded-md bg-[oklch(0.14_0.02_260)] border border-[oklch(0.22_0.02_260)]"
             >
-              <span className="text-muted-foreground font-mono text-xs w-5">#{i + 1}</span>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${config.bg} ${config.text}`}>
+              <span className="text-muted-foreground font-mono text-xs w-5">
+                #{i + 1}
+              </span>
+              <span
+                className={`text-[10px] font-bold px-2 py-0.5 rounded ${config.bg} ${config.text}`}
+              >
                 {config.label}
               </span>
               <div className="flex-1 min-w-0">
                 <div className="text-sm text-foreground flex items-center gap-1.5">
-                  {w.category === "通貨ペア" || w.category === "Symbol" ? <Coins className="w-3.5 h-3.5 text-muted-foreground" /> : <Clock className="w-3.5 h-3.5 text-muted-foreground" />}
+                  {w.category === "通貨ペア" || w.category === "Symbol" ? (
+                    <Coins className="w-3.5 h-3.5 text-muted-foreground" />
+                  ) : (
+                    <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                  )}
                   <span className="font-medium">{w.target}</span>
                 </div>
-                <div className="text-xs text-muted-foreground mt-0.5">{w.issue}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {w.issue}
+                </div>
               </div>
             </motion.div>
           );
@@ -219,8 +270,12 @@ export function RiskPanel({ diagnosis }: { diagnosis: RiskDiagnosis }) {
 
   // Count statuses for summary
   const okCount = diagnosis.factors.filter(f => f.status === "ok").length;
-  const cautionCount = diagnosis.factors.filter(f => f.status === "caution").length;
-  const dangerCount = diagnosis.factors.filter(f => f.status === "danger").length;
+  const cautionCount = diagnosis.factors.filter(
+    f => f.status === "caution"
+  ).length;
+  const dangerCount = diagnosis.factors.filter(
+    f => f.status === "danger"
+  ).length;
 
   return (
     <motion.div
@@ -278,7 +333,11 @@ export function RiskPanel({ diagnosis }: { diagnosis: RiskDiagnosis }) {
       {/* Factor Cards */}
       <div className="space-y-2">
         {diagnosis.factors.map((factor, i) => (
-          <RiskFactorCard key={`${factor.label}-${i}`} factor={factor} index={i} />
+          <RiskFactorCard
+            key={`${factor.label}-${i}`}
+            factor={factor}
+            index={i}
+          />
         ))}
       </div>
     </motion.div>
@@ -287,23 +346,38 @@ export function RiskPanel({ diagnosis }: { diagnosis: RiskDiagnosis }) {
 
 // ==================== Improvement Suggestions ====================
 
-export function SuggestionsPanel({ suggestions }: { suggestions: ImprovementSuggestion[] }) {
+export function SuggestionsPanel({
+  suggestions,
+}: {
+  suggestions: ImprovementSuggestion[];
+}) {
   const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
 
   if (suggestions.length === 0) return null;
 
   const priorityOrder = { high: 0, medium: 1, low: 2 } as const;
-  const sorted = [...suggestions].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+  const sorted = [...suggestions].sort(
+    (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]
+  );
 
   const DEFAULT_VISIBLE = 3;
   const hasMore = sorted.length > DEFAULT_VISIBLE;
   const visible = expanded ? sorted : sorted.slice(0, DEFAULT_VISIBLE);
 
   const priorityConfig = {
-    high: { border: "border-l-[oklch(0.65_0.2_20)]", icon: "text-[oklch(0.65_0.2_20)]" },
-    medium: { border: "border-l-[oklch(0.78_0.15_75)]", icon: "text-[oklch(0.78_0.15_75)]" },
-    low: { border: "border-l-[oklch(0.65_0.18_250)]", icon: "text-[oklch(0.65_0.18_250)]" },
+    high: {
+      border: "border-l-[oklch(0.65_0.2_20)]",
+      icon: "text-[oklch(0.65_0.2_20)]",
+    },
+    medium: {
+      border: "border-l-[oklch(0.78_0.15_75)]",
+      icon: "text-[oklch(0.78_0.15_75)]",
+    },
+    low: {
+      border: "border-l-[oklch(0.65_0.18_250)]",
+      icon: "text-[oklch(0.65_0.18_250)]",
+    },
   };
 
   return (
@@ -327,16 +401,25 @@ export function SuggestionsPanel({ suggestions }: { suggestions: ImprovementSugg
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, height: 0, overflow: "hidden" }}
-                transition={{ delay: i < DEFAULT_VISIBLE ? i * 0.1 : (i - DEFAULT_VISIBLE) * 0.05 }}
+                transition={{
+                  delay:
+                    i < DEFAULT_VISIBLE
+                      ? i * 0.1
+                      : (i - DEFAULT_VISIBLE) * 0.05,
+                }}
                 className={`border-l-2 ${config.border} pl-4 py-2`}
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-semibold text-foreground">{s.title}</span>
+                  <span className="text-sm font-semibold text-foreground">
+                    {s.title}
+                  </span>
                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
                     {s.category}
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">{s.description}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {s.description}
+                </p>
               </motion.div>
             );
           })}
@@ -354,7 +437,10 @@ export function SuggestionsPanel({ suggestions }: { suggestions: ImprovementSugg
             ) : (
               <>
                 <ChevronRight className="w-3.5 h-3.5" />
-                {t("chart.showMore").replace("{count}", String(sorted.length - DEFAULT_VISIBLE))}
+                {t("chart.showMore").replace(
+                  "{count}",
+                  String(sorted.length - DEFAULT_VISIBLE)
+                )}
               </>
             )}
           </button>
@@ -384,37 +470,71 @@ export function SymbolAnalysisTable({ data }: { data: SymbolAnalysis[] }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border">
-              <th className="text-left py-2 px-2 text-xs text-muted-foreground font-medium">{t("table.symbol")}</th>
-              <th className="text-right py-2 px-2 text-xs text-muted-foreground font-medium">{t("table.trades")}</th>
-              <th className="text-right py-2 px-2 text-xs text-muted-foreground font-medium">{t("table.winRate")}</th>
-              <th className="text-right py-2 px-2 text-xs text-muted-foreground font-medium">{t("table.pf")}</th>
-              <th className="text-right py-2 px-2 text-xs text-muted-foreground font-medium">{t("table.rr")}</th>
-              <th className="text-right py-2 px-2 text-xs text-muted-foreground font-medium">{t("table.profit")}</th>
+              <th className="text-left py-2 px-2 text-xs text-muted-foreground font-medium">
+                {t("table.symbol")}
+              </th>
+              <th className="text-right py-2 px-2 text-xs text-muted-foreground font-medium">
+                {t("table.trades")}
+              </th>
+              <th className="text-right py-2 px-2 text-xs text-muted-foreground font-medium">
+                {t("table.winRate")}
+              </th>
+              <th className="text-right py-2 px-2 text-xs text-muted-foreground font-medium">
+                {t("table.pf")}
+              </th>
+              <th className="text-right py-2 px-2 text-xs text-muted-foreground font-medium">
+                {t("table.rr")}
+              </th>
+              <th className="text-right py-2 px-2 text-xs text-muted-foreground font-medium">
+                {t("table.profit")}
+              </th>
             </tr>
           </thead>
           <tbody>
-            {data.map((row) => (
-              <tr key={row.symbol} className="border-b border-[oklch(0.2_0.02_260)] hover:bg-[oklch(0.16_0.02_260)]">
-                <td className="py-2.5 px-2 font-mono font-medium text-foreground">{row.symbol}</td>
-                <td className="py-2.5 px-2 text-right text-muted-foreground">{row.trades}</td>
+            {data.map(row => (
+              <tr
+                key={row.symbol}
+                className="border-b border-[oklch(0.2_0.02_260)] hover:bg-[oklch(0.16_0.02_260)]"
+              >
+                <td className="py-2.5 px-2 font-mono font-medium text-foreground">
+                  {row.symbol}
+                </td>
+                <td className="py-2.5 px-2 text-right text-muted-foreground">
+                  {row.trades}
+                </td>
                 <td className="py-2.5 px-2 text-right">
-                  <span className={row.winRate >= 50 ? "text-profit" : "text-loss"}>
+                  <span
+                    className={row.winRate >= 50 ? "text-profit" : "text-loss"}
+                  >
                     {row.winRate.toFixed(1)}%
                   </span>
                 </td>
                 <td className="py-2.5 px-2 text-right">
-                  <span className={row.profitFactor >= 1 ? "text-profit" : "text-loss"}>
-                    {row.profitFactor >= 999 ? "999+" : row.profitFactor.toFixed(2)}
+                  <span
+                    className={
+                      row.profitFactor >= 1 ? "text-profit" : "text-loss"
+                    }
+                  >
+                    {row.profitFactor >= 999
+                      ? "999+"
+                      : row.profitFactor.toFixed(2)}
                   </span>
                 </td>
                 <td className="py-2.5 px-2 text-right">
-                  <span className={row.riskReward >= 1 ? "text-profit" : "text-loss"}>
+                  <span
+                    className={
+                      row.riskReward >= 1 ? "text-profit" : "text-loss"
+                    }
+                  >
                     {row.riskReward.toFixed(2)}
                   </span>
                 </td>
                 <td className="py-2.5 px-2 text-right font-mono">
-                  <span className={row.netProfit >= 0 ? "text-profit" : "text-loss"}>
-                    {row.netProfit >= 0 ? "+" : ""}{row.netProfit.toFixed(2)}
+                  <span
+                    className={row.netProfit >= 0 ? "text-profit" : "text-loss"}
+                  >
+                    {row.netProfit >= 0 ? "+" : ""}
+                    {row.netProfit.toFixed(2)}
                   </span>
                 </td>
               </tr>
@@ -446,21 +566,42 @@ export function TimeSlotAnalysisTable({ data }: { data: TimeSlotAnalysis[] }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border">
-              <th className="text-left py-2 px-2 text-xs text-muted-foreground font-medium">{t("table.timeSlot")}</th>
-              <th className="text-right py-2 px-2 text-xs text-muted-foreground font-medium">{t("table.trades")}</th>
-              <th className="text-right py-2 px-2 text-xs text-muted-foreground font-medium">{t("table.winRate")}</th>
-              <th className="text-right py-2 px-2 text-xs text-muted-foreground font-medium">{t("table.pf")}</th>
-              <th className="text-right py-2 px-2 text-xs text-muted-foreground font-medium">{t("table.profit")}</th>
+              <th className="text-left py-2 px-2 text-xs text-muted-foreground font-medium">
+                {t("table.timeSlot")}
+              </th>
+              <th className="text-right py-2 px-2 text-xs text-muted-foreground font-medium">
+                {t("table.trades")}
+              </th>
+              <th className="text-right py-2 px-2 text-xs text-muted-foreground font-medium">
+                {t("table.winRate")}
+              </th>
+              <th className="text-right py-2 px-2 text-xs text-muted-foreground font-medium">
+                {t("table.pf")}
+              </th>
+              <th className="text-right py-2 px-2 text-xs text-muted-foreground font-medium">
+                {t("table.profit")}
+              </th>
             </tr>
           </thead>
           <tbody>
-            {data.map((row) => (
-              <tr key={row.slot} className="border-b border-[oklch(0.2_0.02_260)] hover:bg-[oklch(0.16_0.02_260)]">
-                <td className="py-2.5 px-2 font-mono text-foreground">{row.slot}</td>
-                <td className="py-2.5 px-2 text-right text-muted-foreground">{row.trades}</td>
+            {data.map(row => (
+              <tr
+                key={row.slot}
+                className="border-b border-[oklch(0.2_0.02_260)] hover:bg-[oklch(0.16_0.02_260)]"
+              >
+                <td className="py-2.5 px-2 font-mono text-foreground">
+                  {row.slot}
+                </td>
+                <td className="py-2.5 px-2 text-right text-muted-foreground">
+                  {row.trades}
+                </td>
                 <td className="py-2.5 px-2 text-right">
                   {row.trades > 0 ? (
-                    <span className={row.winRate >= 50 ? "text-profit" : "text-loss"}>
+                    <span
+                      className={
+                        row.winRate >= 50 ? "text-profit" : "text-loss"
+                      }
+                    >
                       {row.winRate.toFixed(1)}%
                     </span>
                   ) : (
@@ -469,8 +610,14 @@ export function TimeSlotAnalysisTable({ data }: { data: TimeSlotAnalysis[] }) {
                 </td>
                 <td className="py-2.5 px-2 text-right">
                   {row.trades > 0 ? (
-                    <span className={row.profitFactor >= 1 ? "text-profit" : "text-loss"}>
-                      {row.profitFactor >= 999 ? "999+" : row.profitFactor.toFixed(2)}
+                    <span
+                      className={
+                        row.profitFactor >= 1 ? "text-profit" : "text-loss"
+                      }
+                    >
+                      {row.profitFactor >= 999
+                        ? "999+"
+                        : row.profitFactor.toFixed(2)}
                     </span>
                   ) : (
                     <span className="text-muted-foreground">-</span>
@@ -478,8 +625,13 @@ export function TimeSlotAnalysisTable({ data }: { data: TimeSlotAnalysis[] }) {
                 </td>
                 <td className="py-2.5 px-2 text-right font-mono">
                   {row.trades > 0 ? (
-                    <span className={row.netProfit >= 0 ? "text-profit" : "text-loss"}>
-                      {row.netProfit >= 0 ? "+" : ""}{row.netProfit.toFixed(2)}
+                    <span
+                      className={
+                        row.netProfit >= 0 ? "text-profit" : "text-loss"
+                      }
+                    >
+                      {row.netProfit >= 0 ? "+" : ""}
+                      {row.netProfit.toFixed(2)}
                     </span>
                   ) : (
                     <span className="text-muted-foreground">-</span>

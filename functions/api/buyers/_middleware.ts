@@ -5,7 +5,7 @@ interface Env {
   BUYERS_KV: KVNamespace;
 }
 
-export const onRequest: PagesFunction<Env> = async (context) => {
+export const onRequest: PagesFunction<Env> = async context => {
   const { request, env } = context;
   const headers = { "Content-Type": "application/json" };
 
@@ -33,7 +33,11 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const adminUsername = env.ADMIN_USERNAME || "admin";
   const adminPassword = env.ADMIN_PASSWORD;
 
-  if (!adminPassword || username !== adminUsername || password !== adminPassword) {
+  if (
+    !adminPassword ||
+    username !== adminUsername ||
+    password !== adminPassword
+  ) {
     return new Response(
       JSON.stringify({ success: false, message: "Unauthorized" }),
       { status: 401, headers }

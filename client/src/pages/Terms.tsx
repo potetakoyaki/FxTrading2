@@ -1,6 +1,6 @@
-import { useLocation } from 'wouter';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft } from 'lucide-react';
+import { useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft } from "lucide-react";
 
 export default function Terms() {
   const [, navigate] = useLocation();
@@ -13,7 +13,7 @@ export default function Terms() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="text-slate-400 hover:text-white"
           >
             <ChevronLeft className="w-4 h-4 mr-1" />
@@ -27,29 +27,37 @@ export default function Terms() {
       <div className="container py-12 max-w-3xl">
         <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-8 text-slate-300 space-y-6">
           <div>
-            <h2 className="text-2xl font-bold text-white mb-2">FX Strategy Doctor 利用規約</h2>
+            <h2 className="text-2xl font-bold text-white mb-2">
+              FX Strategy Doctor 利用規約
+            </h2>
             <p className="text-sm text-slate-400">最終更新日: 2026年3月5日</p>
           </div>
 
           <section>
-            <h3 className="text-lg font-semibold text-white mb-3">第1条 総則</h3>
+            <h3 className="text-lg font-semibold text-white mb-3">
+              第1条 総則
+            </h3>
             <p className="mb-3">
-              本利用規約は、Dr. Trading（以下「提供者」）が提供するFX Strategy Doctor（以下「本サービス」）の利用条件を定めるものです。ユーザーが本サービスにアクセスし利用することで、本規約に同意したものとみなします。
+              本利用規約は、Dr. Trading（以下「提供者」）が提供するFX Strategy
+              Doctor（以下「本サービス」）の利用条件を定めるものです。ユーザーが本サービスにアクセスし利用することで、本規約に同意したものとみなします。
             </p>
           </section>
 
           <section>
-            <h3 className="text-lg font-semibold text-white mb-3">第2条 著作権・知的財産権</h3>
+            <h3 className="text-lg font-semibold text-white mb-3">
+              第2条 著作権・知的財産権
+            </h3>
             <p className="mb-3">
-              本サービスのすべてのコンテンツ、デザイン、機能、データベース、ロジック、アルゴリズムは、Dr. Tradingまたはその提供者に帰属する著作物です。著作権法により保護されています。
+              本サービスのすべてのコンテンツ、デザイン、機能、データベース、ロジック、アルゴリズムは、Dr.
+              Tradingまたはその提供者に帰属する著作物です。著作権法により保護されています。
             </p>
-            <p>
-              © 2026 Dr. Trading. All rights reserved.
-            </p>
+            <p>© 2026 Dr. Trading. All rights reserved.</p>
           </section>
 
           <section>
-            <h3 className="text-lg font-semibold text-white mb-3">第3条 利用許諾</h3>
+            <h3 className="text-lg font-semibold text-white mb-3">
+              第3条 利用許諾
+            </h3>
             <p className="mb-3">
               提供者は、ユーザーに対し、本サービスを個人的、非商業的な目的で利用する権利のみを許諾します。以下の行為は禁止されています：
             </p>
@@ -65,7 +73,9 @@ export default function Terms() {
           </section>
 
           <section>
-            <h3 className="text-lg font-semibold text-white mb-3">第4条 アカウント管理</h3>
+            <h3 className="text-lg font-semibold text-white mb-3">
+              第4条 アカウント管理
+            </h3>
             <p className="mb-3">
               ユーザーは、自身のアカウント情報（ユーザーID、パスワード）を厳格に管理する責任があります。以下の行為は禁止されています：
             </p>
@@ -80,14 +90,18 @@ export default function Terms() {
           </section>
 
           <section>
-            <h3 className="text-lg font-semibold text-white mb-3">第5条 データプライバシー</h3>
+            <h3 className="text-lg font-semibold text-white mb-3">
+              第5条 データプライバシー
+            </h3>
             <p className="mb-3">
               本サービスはブラウザ内で完結し、ユーザーのトレード履歴データはサーバーに送信されません。ユーザーのプライバシーは保護されます。
             </p>
           </section>
 
           <section>
-            <h3 className="text-lg font-semibold text-white mb-3">第6条 免責事項</h3>
+            <h3 className="text-lg font-semibold text-white mb-3">
+              第6条 免責事項
+            </h3>
             <p className="mb-3">
               本サービスの分析結果は参考情報であり、投資判断の根拠として使用することはできません。以下の事項について、提供者は一切の責任を負いません：
             </p>
@@ -103,7 +117,9 @@ export default function Terms() {
           </section>
 
           <section>
-            <h3 className="text-lg font-semibold text-white mb-3">第7条 サービス停止</h3>
+            <h3 className="text-lg font-semibold text-white mb-3">
+              第7条 サービス停止
+            </h3>
             <p className="mb-3">
               提供者は、以下の場合、ユーザーへの事前通知なしにサービスを停止、中断、または終了する権利を有します：
             </p>
@@ -116,21 +132,27 @@ export default function Terms() {
           </section>
 
           <section>
-            <h3 className="text-lg font-semibold text-white mb-3">第8条 規約の変更</h3>
+            <h3 className="text-lg font-semibold text-white mb-3">
+              第8条 規約の変更
+            </h3>
             <p className="mb-3">
               提供者は、本規約を予告なく変更する権利を有します。変更後のサービス利用をもって、新規約に同意したものとみなします。
             </p>
           </section>
 
           <section>
-            <h3 className="text-lg font-semibold text-white mb-3">第9条 準拠法</h3>
+            <h3 className="text-lg font-semibold text-white mb-3">
+              第9条 準拠法
+            </h3>
             <p className="mb-3">
               本規約は日本国法に準拠し、日本国の裁判所の管轄に服するものとします。
             </p>
           </section>
 
           <section>
-            <h3 className="text-lg font-semibold text-white mb-3">第10条 お問い合わせ</h3>
+            <h3 className="text-lg font-semibold text-white mb-3">
+              第10条 お問い合わせ
+            </h3>
             <p className="mb-3">
               本規約に関するご質問やご不明な点がある場合は、お問い合わせください。
             </p>

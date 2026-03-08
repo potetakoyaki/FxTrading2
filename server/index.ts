@@ -23,13 +23,20 @@ async function startServer() {
     const { username, password } = _req.body;
 
     if (!username || !password) {
-      res.status(400).json({ success: false, message: "Username and password are required" });
+      res
+        .status(400)
+        .json({
+          success: false,
+          message: "Username and password are required",
+        });
       return;
     }
 
     if (!ADMIN_PASSWORD) {
       console.error("ADMIN_PASSWORD environment variable is not set");
-      res.status(500).json({ success: false, message: "Server configuration error" });
+      res
+        .status(500)
+        .json({ success: false, message: "Server configuration error" });
       return;
     }
 
@@ -39,7 +46,11 @@ async function startServer() {
     }
 
     // Not admin — client will fall back to buyer login (localStorage)
-    res.json({ success: false, isAdmin: false, message: "Invalid admin credentials" });
+    res.json({
+      success: false,
+      isAdmin: false,
+      message: "Invalid admin credentials",
+    });
   });
 
   // --- Static Files ---
@@ -62,7 +73,9 @@ async function startServer() {
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
     if (!ADMIN_PASSWORD) {
-      console.warn("⚠ ADMIN_PASSWORD is not set. Admin login will be unavailable.");
+      console.warn(
+        "⚠ ADMIN_PASSWORD is not set. Admin login will be unavailable."
+      );
     }
   });
 }
