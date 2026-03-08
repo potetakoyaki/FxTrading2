@@ -21,5 +21,5 @@ ADMIN_USERNAME = "admin"
 # 作成後、出力された ID を以下に貼り付けてください
 [[kv_namespaces]]
 binding = "BUYERS_KV"
-id = "PLACEHOLDER_KV_ID"
-preview_id = "PLACEHOLDER_PREVIEW_KV_ID"
+id = "4bfd355d77d94fa8b52334d0f61cee3c"
+preview_id = "0237590b7489429e948c3cf8466247de"
