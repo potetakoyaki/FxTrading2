@@ -16,6 +16,9 @@ async function startServer() {
   // Admin credentials from environment variables
   const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
   const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+  const DEV_BUYERS = [
+    { username: "takoyaki", password: "takoyaki", isActive: true },
+  ];
 
   // --- API Routes (must be before static files and catch-all) ---
 
@@ -32,25 +35,25 @@ async function startServer() {
       return;
     }
 
-    if (!ADMIN_PASSWORD) {
-      console.error("ADMIN_PASSWORD environment variable is not set");
-      res
-        .status(500)
-        .json({ success: false, message: "Server configuration error" });
-      return;
-    }
-
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+    if (
+      username === ADMIN_USERNAME &&
+      ADMIN_PASSWORD &&
+      password === ADMIN_PASSWORD
+    ) {
       res.json({ success: true, isAdmin: true, username });
       return;
     }
 
-    // Not admin — client will fall back to buyer login (localStorage)
-    res.json({
-      success: false,
-      isAdmin: false,
-      message: "Invalid admin credentials",
-    });
+    // Local development buyer auth fallback
+    const buyer = DEV_BUYERS.find(
+      b => b.isActive && b.username === username && b.password === password
+    );
+    if (buyer) {
+      res.json({ success: true, isAdmin: false, username });
+      return;
+    }
+
+    res.json({ success: false, isAdmin: false, message: "Invalid credentials" });
   });
 
   // --- Static Files ---
