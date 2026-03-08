@@ -21,6 +21,8 @@ import {
   AlertCircle,
   Loader2,
   RefreshCw,
+  Clock,
+  CalendarClock,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -42,6 +44,7 @@ export default function Admin() {
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newNote, setNewNote] = useState("");
+  const [newLicenseDays, setNewLicenseDays] = useState("90");
   const [addError, setAddError] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -51,6 +54,7 @@ export default function Admin() {
   const [editUsername, setEditUsername] = useState("");
   const [editPassword, setEditPassword] = useState("");
   const [editNote, setEditNote] = useState("");
+  const [editExpiresAt, setEditExpiresAt] = useState("");
 
   // パスワード表示状態
   const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(
@@ -77,10 +81,19 @@ export default function Admin() {
       return;
     }
     setAdding(true);
+    const days = parseInt(newLicenseDays, 10);
+    let expiresAt: string | null = null;
+    if (days > 0) {
+      const d = new Date();
+      d.setDate(d.getDate() + days);
+      d.setHours(23, 59, 59, 999);
+      expiresAt = d.toISOString();
+    }
     const success = await addBuyer(
       newUsername.trim(),
       newPassword.trim(),
-      newNote.trim()
+      newNote.trim(),
+      expiresAt
     );
     setAdding(false);
     if (!success) {
@@ -91,6 +104,7 @@ export default function Admin() {
     setNewUsername("");
     setNewPassword("");
     setNewNote("");
+    setNewLicenseDays("90");
     setShowAddForm(false);
   };
 
@@ -99,14 +113,23 @@ export default function Admin() {
     setEditUsername(buyer.username);
     setEditPassword(buyer.password);
     setEditNote(buyer.note);
+    setEditExpiresAt(
+      buyer.expiresAt
+        ? new Date(buyer.expiresAt).toISOString().slice(0, 10)
+        : ""
+    );
   };
 
   const handleEditSave = async (id: string) => {
     if (!editUsername.trim() || !editPassword.trim()) return;
+    const expiresAt = editExpiresAt
+      ? new Date(editExpiresAt + "T23:59:59.999Z").toISOString()
+      : null;
     await updateBuyer(id, {
       username: editUsername.trim(),
       password: editPassword.trim(),
       note: editNote.trim(),
+      expiresAt,
     });
     setEditingId(null);
     toast.success("購入者情報を更新しました");
@@ -140,6 +163,15 @@ export default function Admin() {
 
   const activeBuyers = buyers.filter(b => b.isActive);
   const inactiveBuyers = buyers.filter(b => !b.isActive);
+  const expiredBuyers = buyers.filter(
+    b => b.expiresAt && new Date(b.expiresAt) < new Date()
+  );
+  const expiringSoonBuyers = buyers.filter(
+    b =>
+      b.expiresAt &&
+      new Date(b.expiresAt) >= new Date() &&
+      new Date(b.expiresAt).getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -183,7 +215,7 @@ export default function Admin() {
 
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-6">
         {/* 統計サマリー */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <Card className="bg-slate-800/50 border-slate-700 p-4 text-center">
             <p className="text-2xl font-bold text-emerald-400">
               {buyers.length}
@@ -201,6 +233,19 @@ export default function Admin() {
               {inactiveBuyers.length}
             </p>
             <p className="text-xs text-slate-400 mt-1">無効アカウント</p>
+          </Card>
+          <Card className="bg-slate-800/50 border-slate-700 p-4 text-center">
+            <p
+              className={`text-2xl font-bold ${expiredBuyers.length > 0 ? "text-red-400" : expiringSoonBuyers.length > 0 ? "text-amber-400" : "text-slate-500"}`}
+            >
+              {expiredBuyers.length}
+              {expiringSoonBuyers.length > 0 && (
+                <span className="text-sm text-amber-400 ml-1">
+                  (+{expiringSoonBuyers.length})
+                </span>
+              )}
+            </p>
+            <p className="text-xs text-slate-400 mt-1">期限切れ</p>
           </Card>
         </div>
 
@@ -247,7 +292,7 @@ export default function Admin() {
                   {addError}
                 </div>
               )}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs text-slate-400 mb-1 block">
                     ユーザーID *
@@ -280,6 +325,23 @@ export default function Admin() {
                     onChange={e => setNewNote(e.target.value)}
                     className="bg-slate-700/50 border-slate-600 text-white placeholder-slate-500 text-sm h-8"
                   />
+                </div>
+                <div>
+                  <label className="text-xs text-slate-400 mb-1 block">
+                    <CalendarClock className="w-3 h-3 inline mr-1" />
+                    利用期間
+                  </label>
+                  <select
+                    value={newLicenseDays}
+                    onChange={e => setNewLicenseDays(e.target.value)}
+                    className="w-full bg-slate-700/50 border border-slate-600 text-white text-sm h-8 rounded-md px-2"
+                  >
+                    <option value="30">30日（ライト）</option>
+                    <option value="90">90日（スタンダード）</option>
+                    <option value="180">180日（プレミアム）</option>
+                    <option value="365">365日</option>
+                    <option value="0">無期限</option>
+                  </select>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -340,7 +402,7 @@ export default function Admin() {
                   {editingId === buyer.id ? (
                     // 編集モード
                     <div className="space-y-2">
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                         <Input
                           value={editUsername}
                           onChange={e => setEditUsername(e.target.value)}
@@ -359,6 +421,16 @@ export default function Admin() {
                           className="bg-slate-700/50 border-slate-600 text-white text-xs h-7"
                           placeholder="メモ"
                         />
+                        <div className="flex items-center gap-1">
+                          <CalendarClock className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                          <Input
+                            type="date"
+                            value={editExpiresAt}
+                            onChange={e => setEditExpiresAt(e.target.value)}
+                            className="bg-slate-700/50 border-slate-600 text-white text-xs h-7"
+                            placeholder="期限（空=無期限）"
+                          />
+                        </div>
                       </div>
                       <div className="flex gap-2">
                         <Button
@@ -450,10 +522,32 @@ export default function Admin() {
                         </div>
                       </div>
 
-                      {/* 登録日 */}
-                      <span className="text-xs text-slate-600 flex-shrink-0 hidden sm:block">
-                        {new Date(buyer.createdAt).toLocaleDateString("ja-JP")}
-                      </span>
+                      {/* 登録日・期限 */}
+                      <div className="flex-shrink-0 hidden sm:flex flex-col items-end gap-0.5">
+                        <span className="text-xs text-slate-600">
+                          {new Date(buyer.createdAt).toLocaleDateString("ja-JP")}
+                        </span>
+                        {buyer.expiresAt ? (
+                          <span
+                            className={`text-xs flex items-center gap-0.5 ${
+                              new Date(buyer.expiresAt) < new Date()
+                                ? "text-red-400"
+                                : new Date(buyer.expiresAt).getTime() -
+                                      Date.now() <
+                                    7 * 24 * 60 * 60 * 1000
+                                  ? "text-amber-400"
+                                  : "text-slate-500"
+                            }`}
+                          >
+                            <Clock className="w-2.5 h-2.5" />
+                            {new Date(buyer.expiresAt) < new Date()
+                              ? "期限切れ"
+                              : `〜${new Date(buyer.expiresAt).toLocaleDateString("ja-JP")}`}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-600">無期限</span>
+                        )}
+                      </div>
 
                       {/* アクションボタン */}
                       <div className="flex items-center gap-1 flex-shrink-0">
@@ -512,6 +606,10 @@ export default function Admin() {
             <p>
               • <span className="text-slate-400">有効/無効:</span>{" "}
               トグルボタンでアカウントを一時停止・再開できます（返金対応時などに使用）
+            </p>
+            <p>
+              • <span className="text-slate-400">利用期限:</span>{" "}
+              新規追加時にプラン（30/90/180/365日/無期限）を選択。期限切れアカウントは自動的にログイン不可になります。編集で期限日を変更可能
             </p>
             <p>
               • <span className="text-slate-400">管理者ログイン:</span>{" "}

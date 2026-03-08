@@ -20,9 +20,13 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const success = await login(username, password);
-      if (success) {
+      const result = await login(username, password);
+      if (result.success) {
         navigate("/");
+      } else if (result.expired) {
+        setError(
+          "ご利用期限が終了しています。\n引き続きご利用いただく場合は、販売ページのメッセージ機能より延長をお申し込みください。"
+        );
       } else {
         setError(
           "ユーザーIDまたはパスワードが正しくありません。\nご購入後に発行されたID/パスワードをご確認ください。"

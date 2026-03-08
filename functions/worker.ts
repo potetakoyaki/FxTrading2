@@ -15,6 +15,7 @@ interface BuyerAccount {
   note: string;
   createdAt: string;
   isActive: boolean;
+  expiresAt: string | null;
 }
 
 const KV_KEY = "buyers";
@@ -110,6 +111,17 @@ async function handleLogin(request: Request, env: Env): Promise<Response> {
       b => b.username === username && b.password === password && b.isActive
     );
     if (buyer) {
+      // 利用期限チェック
+      if (buyer.expiresAt && new Date(buyer.expiresAt) < new Date()) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            message: "Account expired",
+            expired: true,
+          }),
+          { status: 200, headers: JSON_HEADERS }
+        );
+      }
       return new Response(
         JSON.stringify({ success: true, isAdmin: false, username }),
         {
@@ -155,7 +167,12 @@ async function handleBuyers(request: Request, env: Env): Promise<Response> {
 
   // POST /api/buyers — 購入者追加
   if (method === "POST") {
-    let body: { username?: string; password?: string; note?: string };
+    let body: {
+      username?: string;
+      password?: string;
+      note?: string;
+      expiresAt?: string | null;
+    };
     try {
       body = await request.json();
     } catch {
@@ -198,6 +215,7 @@ async function handleBuyers(request: Request, env: Env): Promise<Response> {
       note: note?.trim() || "",
       createdAt: new Date().toISOString(),
       isActive: true,
+      expiresAt: body.expiresAt || null,
     };
 
     buyers.push(newBuyer);
@@ -216,6 +234,7 @@ async function handleBuyers(request: Request, env: Env): Promise<Response> {
       password?: string;
       note?: string;
       isActive?: boolean;
+      expiresAt?: string | null;
     };
     try {
       body = await request.json();
@@ -256,6 +275,7 @@ async function handleBuyers(request: Request, env: Env): Promise<Response> {
     if (body.password?.trim()) buyers[index].password = body.password.trim();
     if (body.note !== undefined) buyers[index].note = body.note.trim();
     if (body.isActive !== undefined) buyers[index].isActive = body.isActive;
+    if (body.expiresAt !== undefined) buyers[index].expiresAt = body.expiresAt;
 
     await saveBuyers(env.BUYERS_KV, buyers);
 

@@ -17,7 +17,12 @@ async function startServer() {
   const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
   const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
   const DEV_BUYERS = [
-    { username: "takoyaki", password: "takoyaki", isActive: true },
+    {
+      username: "takoyaki",
+      password: "takoyaki",
+      isActive: true,
+      expiresAt: null as string | null,
+    },
   ];
 
   // --- API Routes (must be before static files and catch-all) ---
@@ -49,6 +54,15 @@ async function startServer() {
       b => b.isActive && b.username === username && b.password === password
     );
     if (buyer) {
+      // 利用期限チェック
+      if (buyer.expiresAt && new Date(buyer.expiresAt) < new Date()) {
+        res.json({
+          success: false,
+          message: "Account expired",
+          expired: true,
+        });
+        return;
+      }
       res.json({ success: true, isAdmin: false, username });
       return;
     }

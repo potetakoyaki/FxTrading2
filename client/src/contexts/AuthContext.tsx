@@ -13,13 +13,17 @@ export interface BuyerAccount {
   note: string;
   createdAt: string;
   isActive: boolean;
+  expiresAt: string | null;
 }
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   username: string | null;
-  login: (username: string, password: string) => Promise<boolean>;
+  login: (
+    username: string,
+    password: string
+  ) => Promise<{ success: boolean; expired?: boolean }>;
   logout: () => void;
   // 管理者機能
   buyers: BuyerAccount[];
@@ -28,7 +32,8 @@ interface AuthContextType {
   addBuyer: (
     username: string,
     password: string,
-    note: string
+    note: string,
+    expiresAt: string | null
   ) => Promise<boolean>;
   removeBuyer: (id: string) => Promise<void>;
   updateBuyer: (id: string, updates: Partial<BuyerAccount>) => Promise<void>;
@@ -98,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const login = async (
     inputUsername: string,
     inputPassword: string
-  ): Promise<boolean> => {
+  ): Promise<{ success: boolean; expired?: boolean }> => {
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
@@ -111,6 +116,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (response.ok) {
         const data = await response.json();
+        if (data.expired) {
+          return { success: false, expired: true };
+        }
         if (data.success) {
           setUsername(inputUsername);
           setIsAuthenticated(true);
@@ -131,14 +139,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             );
           }
 
-          return true;
+          return { success: true };
         }
       }
     } catch {
       console.warn("Auth API unavailable");
     }
 
-    return false;
+    return { success: false };
   };
 
   const logout = () => {
@@ -154,13 +162,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const addBuyer = async (
     username: string,
     password: string,
-    note: string
+    note: string,
+    expiresAt: string | null
   ): Promise<boolean> => {
     try {
       const res = await fetch("/api/buyers", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({ username, password, note }),
+        body: JSON.stringify({ username, password, note, expiresAt }),
       });
       const data = await res.json();
       if (data.success) {
