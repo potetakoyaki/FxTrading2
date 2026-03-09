@@ -86,8 +86,11 @@ export default function Admin() {
     if (days > 0) {
       const d = new Date();
       d.setDate(d.getDate() + days);
-      d.setHours(23, 59, 59, 999);
-      expiresAt = d.toISOString();
+      // UTC末尾に統一（editと同じ基準）
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      expiresAt = new Date(`${yyyy}-${mm}-${dd}T23:59:59.999Z`).toISOString();
     }
     const success = await addBuyer(
       newUsername.trim(),
@@ -428,9 +431,17 @@ export default function Admin() {
                             type="date"
                             value={editExpiresAt}
                             onChange={e => setEditExpiresAt(e.target.value)}
-                            className="bg-slate-700/50 border-slate-600 text-white text-xs h-7"
-                            placeholder="期限（空=無期限）"
+                            className="bg-slate-700/50 border-slate-600 text-white text-xs h-7 flex-1"
                           />
+                          {editExpiresAt && (
+                            <button
+                              onClick={() => setEditExpiresAt("")}
+                              className="text-slate-500 hover:text-amber-400 flex-shrink-0"
+                              title="無期限に戻す"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
                         </div>
                       </div>
                       <div className="flex gap-2">

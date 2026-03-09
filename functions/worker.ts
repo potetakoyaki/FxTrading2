@@ -38,7 +38,10 @@ function checkAdmin(request: Request, env: Env): boolean {
   if (!authHeader?.startsWith("Basic ")) return false;
   try {
     const decoded = atob(authHeader.slice(6));
-    const [username, password] = decoded.split(":");
+    const colonIndex = decoded.indexOf(":");
+    if (colonIndex === -1) return false;
+    const username = decoded.slice(0, colonIndex);
+    const password = decoded.slice(colonIndex + 1);
     const adminUsername = env.ADMIN_USERNAME || "admin";
     return (
       !!env.ADMIN_PASSWORD &&

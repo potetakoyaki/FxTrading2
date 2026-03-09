@@ -95,24 +95,34 @@ function HomeContent() {
       const end = new Date(expiresAt).getTime();
       const diff = end - now;
       if (diff <= 0) {
-        setTrialRemaining("期限切れ");
-        setTrialUrgent(true);
+        // 期限切れ: 自動ログアウト
+        logout();
         return;
       }
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const hours = Math.floor(
+        (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+      );
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       if (days > 0) {
-        setTrialRemaining(`残り ${days}日 ${hours}時間`);
+        setTrialRemaining(
+          language === "ja"
+            ? `残り ${days}日 ${hours}時間`
+            : `${days}d ${hours}h remaining`
+        );
       } else {
-        setTrialRemaining(`残り ${hours}時間 ${minutes}分`);
+        setTrialRemaining(
+          language === "ja"
+            ? `残り ${hours}時間 ${minutes}分`
+            : `${hours}h ${minutes}m remaining`
+        );
       }
       setTrialUrgent(days < 2);
     };
     update();
     const timer = setInterval(update, 60000);
     return () => clearInterval(timer);
-  }, [expiresAt]);
+  }, [expiresAt, language, logout]);
 
   const handleDownloadReport = useCallback(() => {
     if (!metrics || !score || !monteCarloResult || !riskDiagnosis) return;
@@ -170,12 +180,9 @@ function HomeContent() {
           }`}
         >
           <Clock className="w-3 h-3" />
-          <span>お試し版: {trialRemaining}</span>
-          {trialRemaining === "期限切れ" && (
-            <span className="ml-1">
-              — 製品版をご購入いただくと引き続きご利用いただけます
-            </span>
-          )}
+          <span>
+            {language === "ja" ? "お試し版" : "Trial"}: {trialRemaining}
+          </span>
         </div>
       )}
 

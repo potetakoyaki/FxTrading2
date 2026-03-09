@@ -72,6 +72,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           isAdmin: storedIsAdmin,
           expiresAt: storedExpiresAt,
         } = JSON.parse(storedAuth);
+
+        // 期限切れチェック: 期限切れの場合はセッションを破棄
+        if (
+          storedExpiresAt &&
+          new Date(storedExpiresAt).getTime() < Date.now()
+        ) {
+          localStorage.removeItem(STORAGE_KEY);
+          sessionStorage.removeItem(CREDENTIALS_KEY);
+          return;
+        }
+
         setUsername(storedUsername);
         setIsAuthenticated(true);
         setIsAdmin(!!storedIsAdmin);
