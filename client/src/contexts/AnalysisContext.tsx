@@ -141,7 +141,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
           const tq = analyzeTradeQuality(parsedTrades);
           const wld = calculateWinLossDistribution(parsedTrades);
           const w = findWeaknesses(sa, ta, lang);
-          const lqi = analyzeLowQualityTradeImpact(parsedTrades, m);
+          const lqi = analyzeLowQualityTradeImpact(parsedTrades, m, lang);
           const sug = generateSuggestions(
             m,
             w,

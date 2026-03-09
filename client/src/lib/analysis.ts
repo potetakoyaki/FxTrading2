@@ -396,7 +396,8 @@ export function calculateWinLossDistribution(
 
 export function analyzeLowQualityTradeImpact(
   trades: TradeRecord[],
-  metrics: PerformanceMetrics
+  metrics: PerformanceMetrics,
+  lang: Language = "ja"
 ): LowQualityTradeImpact[] {
   if (trades.length < 5) return [];
 
@@ -408,7 +409,10 @@ export function analyzeLowQualityTradeImpact(
     n => n <= maxRemoval && n < trades.length
   );
 
-  const dayNames = ["日", "月", "火", "水", "木", "金", "土"];
+  const dayNames =
+    lang === "ja"
+      ? ["日", "月", "火", "水", "木", "金", "土"]
+      : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   return scenarios.map(n => {
     const worstN = sortedByProfit.slice(0, n);
