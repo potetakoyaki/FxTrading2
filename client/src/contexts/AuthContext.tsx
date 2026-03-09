@@ -20,6 +20,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   username: string | null;
+  expiresAt: string | null;
   login: (
     username: string,
     password: string
@@ -57,6 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [buyers, setBuyers] = useState<BuyerAccount[]>([]);
   const [buyersLoading, setBuyersLoading] = useState(false);
 
@@ -65,11 +67,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const storedAuth = localStorage.getItem(STORAGE_KEY);
     if (storedAuth) {
       try {
-        const { username: storedUsername, isAdmin: storedIsAdmin } =
-          JSON.parse(storedAuth);
+        const {
+          username: storedUsername,
+          isAdmin: storedIsAdmin,
+          expiresAt: storedExpiresAt,
+        } = JSON.parse(storedAuth);
         setUsername(storedUsername);
         setIsAuthenticated(true);
         setIsAdmin(!!storedIsAdmin);
+        setExpiresAt(storedExpiresAt || null);
       } catch {
         localStorage.removeItem(STORAGE_KEY);
       }
@@ -123,11 +129,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           setUsername(inputUsername);
           setIsAuthenticated(true);
           setIsAdmin(!!data.isAdmin);
+          setExpiresAt(data.expiresAt || null);
           localStorage.setItem(
             STORAGE_KEY,
             JSON.stringify({
               username: inputUsername,
               isAdmin: !!data.isAdmin,
+              expiresAt: data.expiresAt || null,
             })
           );
 
@@ -153,6 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setUsername(null);
     setIsAuthenticated(false);
     setIsAdmin(false);
+    setExpiresAt(null);
     setBuyers([]);
     localStorage.removeItem(STORAGE_KEY);
     sessionStorage.removeItem(CREDENTIALS_KEY);
@@ -228,6 +237,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         isAuthenticated,
         isAdmin,
         username,
+        expiresAt,
         login,
         logout,
         buyers,

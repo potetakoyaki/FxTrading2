@@ -123,7 +123,12 @@ async function handleLogin(request: Request, env: Env): Promise<Response> {
         );
       }
       return new Response(
-        JSON.stringify({ success: true, isAdmin: false, username }),
+        JSON.stringify({
+          success: true,
+          isAdmin: false,
+          username,
+          expiresAt: buyer.expiresAt,
+        }),
         {
           status: 200,
           headers: JSON_HEADERS,

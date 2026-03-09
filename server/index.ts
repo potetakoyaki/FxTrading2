@@ -63,7 +63,12 @@ async function startServer() {
         });
         return;
       }
-      res.json({ success: true, isAdmin: false, username });
+      res.json({
+        success: true,
+        isAdmin: false,
+        username,
+        expiresAt: buyer.expiresAt,
+      });
       return;
     }
 
