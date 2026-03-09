@@ -140,7 +140,7 @@ export function runMonteCarloSimulation(
       finalEquities.reduce((s, v) => s + v, 0) / finalEquities.length,
     worstFinalEquity: finalEquities[0],
     bestFinalEquity: finalEquities[finalEquities.length - 1],
-    maxDrawdown: Math.max(...maxDrawdowns),
+    maxDrawdown: maxDrawdowns.reduce((a, b) => Math.max(a, b), maxDrawdowns[0]),
     avgMaxDrawdown:
       maxDrawdowns.reduce((s, v) => s + v, 0) / maxDrawdowns.length,
     bankruptcyRate:

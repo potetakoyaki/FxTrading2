@@ -31,13 +31,21 @@ function AdminRoute({
   return <Component />;
 }
 
+function ProtectedHome() {
+  return <ProtectedRoute component={Home} />;
+}
+
+function ProtectedAdmin() {
+  return <AdminRoute component={Admin} />;
+}
+
 function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
       <Route path="/terms" component={Terms} />
-      <Route path="/admin" component={() => <AdminRoute component={Admin} />} />
-      <Route path="/" component={() => <ProtectedRoute component={Home} />} />
+      <Route path="/admin" component={ProtectedAdmin} />
+      <Route path="/" component={ProtectedHome} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

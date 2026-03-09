@@ -150,9 +150,10 @@ export default function Admin() {
   };
 
   const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text).then(() => {
-      toast.success(`${label}をコピーしました`);
-    });
+    navigator.clipboard.writeText(text).then(
+      () => toast.success(`${label}をコピーしました`),
+      () => toast.error("クリップボードへのコピーに失敗しました")
+    );
   };
 
   const togglePasswordVisibility = (id: string) => {

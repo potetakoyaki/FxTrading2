@@ -9,6 +9,15 @@ import type {
 } from "./analysis";
 import type { MonteCarloResult } from "./simulation";
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 interface ReportData {
   fileName: string;
   metrics: PerformanceMetrics;
@@ -72,7 +81,7 @@ export function generateHTMLReport(data: ReportData): string {
 <body>
 <div class="container">
   <h1>FX Strategy Doctor Report</h1>
-  <div class="subtitle">File: ${data.fileName} | Generated: ${new Date().toLocaleString("ja-JP")}</div>
+  <div class="subtitle">File: ${escapeHtml(data.fileName)} | Generated: ${new Date().toLocaleString("ja-JP")}</div>
 
   <h2>Strategy Score</h2>
   <div class="score-section">
@@ -111,8 +120,8 @@ export function generateHTMLReport(data: ReportData): string {
     <span style="color:#64748B;font-family:monospace;font-size:0.8rem;">#${i + 1}</span>
     <span class="severity sev-${w.severity}">${w.severity.toUpperCase()}</span>
     <div>
-      <div style="font-weight:600;">${w.category}: ${w.target}</div>
-      <div style="font-size:0.8rem;color:#64748B;">${w.issue}</div>
+      <div style="font-weight:600;">${escapeHtml(w.category)}: ${escapeHtml(w.target)}</div>
+      <div style="font-size:0.8rem;color:#64748B;">${escapeHtml(w.issue)}</div>
     </div>
   </div>`
           )
@@ -126,7 +135,7 @@ export function generateHTMLReport(data: ReportData): string {
     ${symbolAnalysis
       .map(
         s => `<tr>
-      <td style="font-family:monospace;font-weight:600;">${s.symbol}</td>
+      <td style="font-family:monospace;font-weight:600;">${escapeHtml(s.symbol)}</td>
       <td style="text-align:right">${s.trades}</td>
       <td style="text-align:right" class="${s.winRate >= 50 ? "profit" : "loss"}">${s.winRate.toFixed(1)}%</td>
       <td style="text-align:right" class="${s.profitFactor >= 1 ? "profit" : "loss"}">${s.profitFactor >= 999 ? "999+" : s.profitFactor.toFixed(2)}</td>
@@ -144,7 +153,7 @@ export function generateHTMLReport(data: ReportData): string {
     ${timeSlotAnalysis
       .map(
         t => `<tr>
-      <td style="font-family:monospace">${t.slot}</td>
+      <td style="font-family:monospace">${escapeHtml(t.slot)}</td>
       <td style="text-align:right">${t.trades}</td>
       <td style="text-align:right" class="${t.winRate >= 50 ? "profit" : "loss"}">${t.trades > 0 ? t.winRate.toFixed(1) + "%" : "-"}</td>
       <td style="text-align:right" class="${t.profitFactor >= 1 ? "profit" : "loss"}">${t.trades > 0 ? (t.profitFactor >= 999 ? "999+" : t.profitFactor.toFixed(2)) : "-"}</td>
@@ -170,8 +179,8 @@ export function generateHTMLReport(data: ReportData): string {
   ${riskDiagnosis.factors
     .map(
       f => `<div style="padding:0.6rem 0;font-size:0.9rem;color:#94A3B8;">
-    <div style="font-weight:600;color:#E2E8F0;">${f.label}: <span class="${f.status === "danger" ? "loss" : f.status === "caution" ? "warning" : "profit"}">${f.value}</span> <span style="font-size:0.75rem;padding:0.15rem 0.4rem;border-radius:3px;background:${f.status === "danger" ? "#FF475720" : f.status === "caution" ? "#F59E0B20" : "#00D4AA20"};color:${f.status === "danger" ? "#FF4757" : f.status === "caution" ? "#F59E0B" : "#00D4AA"};">${f.statusLabel}</span></div>
-    <div style="font-size:0.85rem;margin-top:0.2rem;">${f.description}</div>
+    <div style="font-weight:600;color:#E2E8F0;">${escapeHtml(f.label)}: <span class="${f.status === "danger" ? "loss" : f.status === "caution" ? "warning" : "profit"}">${escapeHtml(f.value)}</span> <span style="font-size:0.75rem;padding:0.15rem 0.4rem;border-radius:3px;background:${f.status === "danger" ? "#FF475720" : f.status === "caution" ? "#F59E0B20" : "#00D4AA20"};color:${f.status === "danger" ? "#FF4757" : f.status === "caution" ? "#F59E0B" : "#00D4AA"};">${escapeHtml(f.statusLabel)}</span></div>
+    <div style="font-size:0.85rem;margin-top:0.2rem;">${escapeHtml(f.description)}</div>
   </div>`
     )
     .join("")}
@@ -186,8 +195,8 @@ export function generateHTMLReport(data: ReportData): string {
             ? "#F59E0B"
             : "#3B82F6";
       return `<div class="suggestion" style="border-color:${color}">
-      <div style="font-weight:600;margin-bottom:0.3rem;">${s.title} <span style="font-size:0.7rem;color:#64748B;background:#1E293B;padding:0.1rem 0.4rem;border-radius:3px;">${s.category}</span></div>
-      <div style="font-size:0.85rem;color:#94A3B8;">${s.description}</div>
+      <div style="font-weight:600;margin-bottom:0.3rem;">${escapeHtml(s.title)} <span style="font-size:0.7rem;color:#64748B;background:#1E293B;padding:0.1rem 0.4rem;border-radius:3px;">${escapeHtml(s.category)}</span></div>
+      <div style="font-size:0.85rem;color:#94A3B8;">${escapeHtml(s.description)}</div>
     </div>`;
     })
     .join("")}

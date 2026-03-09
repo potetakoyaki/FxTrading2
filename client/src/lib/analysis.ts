@@ -76,8 +76,8 @@ export function analyzeLotSizeCorrelation(
   if (lotsWithProfit.length === 0) return [];
 
   const lots = lotsWithProfit.map(t => t.lots);
-  const minLot = Math.min(...lots);
-  const maxLot = Math.max(...lots);
+  const minLot = lots.reduce((a, b) => Math.min(a, b), lots[0]);
+  const maxLot = lots.reduce((a, b) => Math.max(a, b), lots[0]);
 
   if (minLot === maxLot) {
     // All same lot size
@@ -355,8 +355,8 @@ export function calculateWinLossDistribution(
   if (trades.length === 0) return { buckets: [], skewness: 0 };
 
   const profits = trades.map(t => t.profit);
-  const minP = Math.min(...profits);
-  const maxP = Math.max(...profits);
+  const minP = profits.reduce((a, b) => Math.min(a, b), profits[0]);
+  const maxP = profits.reduce((a, b) => Math.max(a, b), profits[0]);
   const range = maxP - minP;
   if (range <= 0) return { buckets: [], skewness: 0 };
 
@@ -706,9 +706,9 @@ export function calculateMetrics(
     }
   }
 
-  const largestWin = wins.length > 0 ? Math.max(...wins.map(t => t.profit)) : 0;
+  const largestWin = wins.length > 0 ? wins.reduce((m, t) => Math.max(m, t.profit), wins[0].profit) : 0;
   const largestLoss =
-    losses.length > 0 ? Math.min(...losses.map(t => t.profit)) : 0;
+    losses.length > 0 ? losses.reduce((m, t) => Math.min(m, t.profit), losses[0].profit) : 0;
 
   return {
     totalTrades: trades.length,
@@ -1746,7 +1746,7 @@ export function generateSuggestions(
       dailyPL.set(key, (dailyPL.get(key) || 0) + t.profit);
     }
     const dailyPLArr = Array.from(dailyPL.values());
-    const worstDay = Math.min(...dailyPLArr);
+    const worstDay = dailyPLArr.reduce((a, b) => Math.min(a, b), dailyPLArr[0]);
     const avgDailyPL =
       dailyPLArr.reduce((s, v) => s + v, 0) / dailyPLArr.length;
     const badDays = dailyPLArr.filter(v => v < avgDailyPL * 3 && v < 0);
@@ -2077,7 +2077,7 @@ export function generateSuggestions(
         ? winStreaks.reduce((s, st) => s + st.length, 0) / winStreaks.length
         : 0;
     const maxLossStreak =
-      lossStreaks.length > 0 ? Math.max(...lossStreaks.map(s => s.length)) : 0;
+      lossStreaks.length > 0 ? lossStreaks.reduce((m, s) => Math.max(m, s.length), 0) : 0;
 
     if (avgLossStreak > avgWinStreak * 1.5 && avgLossStreak > 2) {
       suggestions.push({

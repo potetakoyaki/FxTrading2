@@ -168,7 +168,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return { success: false };
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setUsername(null);
     setIsAuthenticated(false);
     setIsAdmin(false);
@@ -176,7 +176,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setBuyers([]);
     localStorage.removeItem(STORAGE_KEY);
     sessionStorage.removeItem(CREDENTIALS_KEY);
-  };
+  }, []);
 
   // 購入者追加
   const addBuyer = async (

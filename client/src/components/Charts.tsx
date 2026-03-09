@@ -53,7 +53,6 @@ export function EquityCurveChart({
   initialBalance?: number;
 }) {
   const { t } = useLanguage();
-  if (data.length === 0) return null;
   const chartData = useMemo(
     () =>
       data.map(p => ({
@@ -64,6 +63,7 @@ export function EquityCurveChart({
       })),
     [data]
   );
+  if (data.length === 0) return null;
 
   return (
     <motion.div
