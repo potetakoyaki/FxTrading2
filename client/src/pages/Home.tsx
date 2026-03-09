@@ -2,7 +2,7 @@
  * Design: Trading Terminal - Bloomberg-inspired dark fintech UI
  * Main page with hero section, CSV upload, and analysis dashboard
  */
-import { useCallback } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Activity,
@@ -12,6 +12,7 @@ import {
   Languages,
   LogOut,
   ShieldCheck,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnalysisProvider, useAnalysis } from "@/contexts/AnalysisContext";
@@ -79,7 +80,49 @@ function HomeContent() {
     reset,
   } = useAnalysis();
   const { t, language, toggleLanguage } = useLanguage();
-  const { logout, username, isAdmin } = useAuth();
+  const { logout, username, isAdmin, expiresAt } = useAuth();
+
+  // お試しアカウントのカウントダウン
+  const [trialRemaining, setTrialRemaining] = useState<string | null>(null);
+  const [trialUrgent, setTrialUrgent] = useState(false);
+  useEffect(() => {
+    if (!expiresAt) {
+      setTrialRemaining(null);
+      return;
+    }
+    const update = () => {
+      const now = Date.now();
+      const end = new Date(expiresAt).getTime();
+      const diff = end - now;
+      if (diff <= 0) {
+        // 期限切れ: 自動ログアウト
+        logout();
+        return;
+      }
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor(
+        (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+      );
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      if (days > 0) {
+        setTrialRemaining(
+          language === "ja"
+            ? `残り ${days}日 ${hours}時間`
+            : `${days}d ${hours}h remaining`
+        );
+      } else {
+        setTrialRemaining(
+          language === "ja"
+            ? `残り ${hours}時間 ${minutes}分`
+            : `${hours}h ${minutes}m remaining`
+        );
+      }
+      setTrialUrgent(days < 2);
+    };
+    update();
+    const timer = setInterval(update, 60000);
+    return () => clearInterval(timer);
+  }, [expiresAt, language, logout]);
 
   const handleDownloadReport = useCallback(() => {
     if (!metrics || !score || !monteCarloResult || !riskDiagnosis) return;
@@ -127,6 +170,22 @@ function HomeContent() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Trial countdown banner */}
+      {trialRemaining && (
+        <div
+          className={`text-center text-xs py-1.5 px-4 flex items-center justify-center gap-1.5 ${
+            trialUrgent
+              ? "bg-red-500/20 text-red-300 border-b border-red-500/30"
+              : "bg-amber-500/15 text-amber-300 border-b border-amber-500/30"
+          }`}
+        >
+          <Clock className="w-3 h-3" />
+          <span>
+            {language === "ja" ? "お試し版" : "Trial"}: {trialRemaining}
+          </span>
+        </div>
+      )}
+
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
         <div className="container flex items-center justify-between h-14">

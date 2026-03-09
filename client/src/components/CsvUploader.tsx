@@ -62,6 +62,7 @@ export default function CsvUploader() {
           );
         }
       };
+      reader.onerror = () => setFileError("ファイルの読み込みに失敗しました。");
       reader.readAsArrayBuffer(selectedFile);
     } else if (isHtmlFile(selectedFile.name)) {
       // Read as ArrayBuffer for HTML files (handles UTF-16 encoding)
@@ -79,6 +80,7 @@ export default function CsvUploader() {
           );
         }
       };
+      reader.onerror = () => setFileError("ファイルの読み込みに失敗しました。");
       reader.readAsArrayBuffer(selectedFile);
     } else {
       // Read as text for CSV files
@@ -87,6 +89,7 @@ export default function CsvUploader() {
         const text = e.target?.result as string;
         analyzeCSV(text, selectedFile.name);
       };
+      reader.onerror = () => setFileError("ファイルの読み込みに失敗しました。");
       reader.readAsText(selectedFile);
     }
   }, [selectedFile, analyzeCSV]);
@@ -166,6 +169,7 @@ export default function CsvUploader() {
             onChange={e => {
               const file = e.target.files?.[0];
               if (file) handleFile(file);
+              e.target.value = "";
             }}
           />
 

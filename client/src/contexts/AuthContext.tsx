@@ -13,13 +13,18 @@ export interface BuyerAccount {
   note: string;
   createdAt: string;
   isActive: boolean;
+  expiresAt: string | null;
 }
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   username: string | null;
-  login: (username: string, password: string) => Promise<boolean>;
+  expiresAt: string | null;
+  login: (
+    username: string,
+    password: string
+  ) => Promise<{ success: boolean; expired?: boolean }>;
   logout: () => void;
   // 管理者機能
   buyers: BuyerAccount[];
@@ -28,7 +33,8 @@ interface AuthContextType {
   addBuyer: (
     username: string,
     password: string,
-    note: string
+    note: string,
+    expiresAt: string | null
   ) => Promise<boolean>;
   removeBuyer: (id: string) => Promise<void>;
   updateBuyer: (id: string, updates: Partial<BuyerAccount>) => Promise<void>;
@@ -52,6 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [buyers, setBuyers] = useState<BuyerAccount[]>([]);
   const [buyersLoading, setBuyersLoading] = useState(false);
 
@@ -60,11 +67,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const storedAuth = localStorage.getItem(STORAGE_KEY);
     if (storedAuth) {
       try {
-        const { username: storedUsername, isAdmin: storedIsAdmin } =
-          JSON.parse(storedAuth);
+        const {
+          username: storedUsername,
+          isAdmin: storedIsAdmin,
+          expiresAt: storedExpiresAt,
+        } = JSON.parse(storedAuth);
+
+        // 期限切れチェック: 期限切れの場合はセッションを破棄
+        if (
+          storedExpiresAt &&
+          new Date(storedExpiresAt).getTime() < Date.now()
+        ) {
+          localStorage.removeItem(STORAGE_KEY);
+          sessionStorage.removeItem(CREDENTIALS_KEY);
+          return;
+        }
+
         setUsername(storedUsername);
         setIsAuthenticated(true);
         setIsAdmin(!!storedIsAdmin);
+        setExpiresAt(storedExpiresAt || null);
       } catch {
         localStorage.removeItem(STORAGE_KEY);
       }
@@ -98,7 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const login = async (
     inputUsername: string,
     inputPassword: string
-  ): Promise<boolean> => {
+  ): Promise<{ success: boolean; expired?: boolean }> => {
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
@@ -111,15 +133,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (response.ok) {
         const data = await response.json();
+        if (data.expired) {
+          return { success: false, expired: true };
+        }
         if (data.success) {
           setUsername(inputUsername);
           setIsAuthenticated(true);
           setIsAdmin(!!data.isAdmin);
+          setExpiresAt(data.expiresAt || null);
           localStorage.setItem(
             STORAGE_KEY,
             JSON.stringify({
               username: inputUsername,
               isAdmin: !!data.isAdmin,
+              expiresAt: data.expiresAt || null,
             })
           );
 
@@ -131,36 +158,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             );
           }
 
-          return true;
+          return { success: true };
         }
       }
     } catch {
       console.warn("Auth API unavailable");
     }
 
-    return false;
+    return { success: false };
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setUsername(null);
     setIsAuthenticated(false);
     setIsAdmin(false);
+    setExpiresAt(null);
     setBuyers([]);
     localStorage.removeItem(STORAGE_KEY);
     sessionStorage.removeItem(CREDENTIALS_KEY);
-  };
+  }, []);
 
   // 購入者追加
   const addBuyer = async (
     username: string,
     password: string,
-    note: string
+    note: string,
+    expiresAt: string | null
   ): Promise<boolean> => {
     try {
       const res = await fetch("/api/buyers", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({ username, password, note }),
+        body: JSON.stringify({ username, password, note, expiresAt }),
       });
       const data = await res.json();
       if (data.success) {
@@ -219,6 +248,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         isAuthenticated,
         isAdmin,
         username,
+        expiresAt,
         login,
         logout,
         buyers,
