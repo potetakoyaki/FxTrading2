@@ -111,12 +111,15 @@ function normalizeColumnName(name: string): string {
  * We handle this by renaming duplicates before parsing.
  */
 function deduplicateHeaders(headerLine: string): string {
-  const cols = headerLine.split(",");
+  // Use PapaParse to correctly split headers (handles quoted fields with commas)
+  const parsed = Papa.parse(headerLine, { header: false });
+  const cols: string[] =
+    parsed.data.length > 0 ? (parsed.data[0] as string[]) : [];
   const seen: Record<string, number> = {};
   const result: string[] = [];
 
   for (const col of cols) {
-    const trimmed = col.trim();
+    const trimmed = (col || "").trim();
     const key = trimmed.toLowerCase();
     if (seen[key] !== undefined) {
       seen[key]++;
@@ -258,11 +261,24 @@ function mapColumns(headers: string[]): Record<string, string> {
   const normalizedHeaders = headers.map(normalizeColumnName);
 
   for (const [targetCol, aliases] of Object.entries(COLUMN_MAPPINGS)) {
+    // First pass: try exact match
+    let found = false;
     for (const alias of aliases) {
       const idx = normalizedHeaders.indexOf(alias);
       if (idx !== -1) {
         mapping[targetCol] = headers[idx];
+        found = true;
         break;
+      }
+    }
+    // Second pass: try startsWith match for headers like "Profit (USD)", "Symbol (MT4)"
+    if (!found) {
+      for (const alias of aliases) {
+        const idx = normalizedHeaders.findIndex(h => h.startsWith(alias));
+        if (idx !== -1) {
+          mapping[targetCol] = headers[idx];
+          break;
+        }
       }
     }
   }
@@ -296,6 +312,30 @@ function parseDate(value: string): Date {
     );
   }
 
+  // Try "DD.MM.YYYY HH:MM:SS" or "DD/MM/YYYY HH:MM:SS" (European MT4 format)
+  const euMatch = trimmed.match(
+    /^(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{4})\s+(\d{1,2}):(\d{2}):?(\d{2})?$/
+  );
+  if (euMatch) {
+    const [, d2, m2, y2, h2, min2, sec2] = euMatch;
+    return new Date(
+      parseInt(y2),
+      parseInt(m2) - 1,
+      parseInt(d2),
+      parseInt(h2),
+      parseInt(min2),
+      parseInt(sec2 || "0")
+    );
+  }
+
+  // Try "DD.MM.YYYY" without time
+  const euDateOnly = trimmed.match(/^(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{4})$/);
+  if (euDateOnly) {
+    const [, d3, m3, y3] = euDateOnly;
+    return new Date(parseInt(y3), parseInt(m3) - 1, parseInt(d3));
+  }
+
+  // Generic fallback: replace separators and try native Date parsing
   const cleaned = trimmed.replace(/\./g, "-").replace(/\//g, "-");
   const d = new Date(cleaned);
   if (!isNaN(d.getTime())) return d;
@@ -569,6 +609,24 @@ function processMT4Data(
         continue;
       }
       if (!symbol) {
+        skippedRows++;
+        continue;
+      }
+      // Filter out balance/deposit/withdrawal/credit rows that have text in symbol column
+      const symbolLower = symbol.toLowerCase();
+      if (
+        symbolLower === "balance" ||
+        symbolLower === "credit" ||
+        symbolLower === "deposit" ||
+        symbolLower === "withdrawal" ||
+        symbolLower === "rebate" ||
+        symbolLower === "adjustment" ||
+        symbolLower === "transfer" ||
+        symbolLower === "残高" ||
+        symbolLower === "入金" ||
+        symbolLower === "出金" ||
+        symbolLower === "クレジット"
+      ) {
         skippedRows++;
         continue;
       }

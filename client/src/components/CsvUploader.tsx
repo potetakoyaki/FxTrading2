@@ -83,14 +83,46 @@ export default function CsvUploader() {
       reader.onerror = () => setFileError("ファイルの読み込みに失敗しました。");
       reader.readAsArrayBuffer(selectedFile);
     } else {
-      // Read as text for CSV files
+      // Read CSV as ArrayBuffer to detect encoding (Shift-JIS support for Japanese MT4)
       const reader = new FileReader();
       reader.onload = e => {
-        const text = e.target?.result as string;
-        analyzeCSV(text, selectedFile.name);
+        try {
+          const buffer = e.target?.result as ArrayBuffer;
+          const bytes = new Uint8Array(buffer);
+
+          // Try UTF-8 first
+          let text = new TextDecoder("utf-8").decode(buffer);
+
+          // If UTF-8 produces replacement characters, try Shift-JIS
+          if (text.includes("\uFFFD")) {
+            try {
+              const sjisText = new TextDecoder("shift-jis").decode(buffer);
+              if (!sjisText.includes("\uFFFD")) {
+                text = sjisText;
+              }
+            } catch {
+              // Shift-JIS decoder not available — keep UTF-8 result
+            }
+          }
+
+          // Also handle UTF-16 LE/BE BOM in CSV files (rare but possible)
+          if (bytes[0] === 0xff && bytes[1] === 0xfe) {
+            text = new TextDecoder("utf-16le").decode(buffer.slice(2));
+          } else if (bytes[0] === 0xfe && bytes[1] === 0xff) {
+            text = new TextDecoder("utf-16be").decode(buffer.slice(2));
+          }
+
+          analyzeCSV(text, selectedFile.name);
+        } catch (err) {
+          setFileError(
+            err instanceof Error
+              ? err.message
+              : "CSVファイルの読み込みに失敗しました。"
+          );
+        }
       };
       reader.onerror = () => setFileError("ファイルの読み込みに失敗しました。");
-      reader.readAsText(selectedFile);
+      reader.readAsArrayBuffer(selectedFile);
     }
   }, [selectedFile, analyzeCSV]);
 

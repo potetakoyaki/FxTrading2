@@ -36,9 +36,24 @@ export async function htmlToCSV(rawBuffer: ArrayBuffer): Promise<string> {
     const decoder = new TextDecoder("utf-16be");
     text = decoder.decode(rawBuffer.slice(2));
   } else {
-    // UTF-8 or ASCII (MT4)
+    // Try UTF-8 first (MT4 default for many locales)
     const decoder = new TextDecoder("utf-8");
     text = decoder.decode(rawBuffer);
+
+    // If UTF-8 produces replacement characters (U+FFFD), the file is likely
+    // Shift-JIS (Windows-31J / cp932) — common for Japanese MT4 installations.
+    if (text.includes("\uFFFD")) {
+      try {
+        const sjisDecoder = new TextDecoder("shift-jis");
+        const sjisText = sjisDecoder.decode(rawBuffer);
+        // Only use Shift-JIS result if it doesn't contain replacement chars
+        if (!sjisText.includes("\uFFFD")) {
+          text = sjisText;
+        }
+      } catch {
+        // Shift-JIS decoder not available — keep UTF-8 result
+      }
+    }
   }
 
   const parser = new DOMParser();
@@ -123,11 +138,16 @@ function tryExtractMT5Deals(doc: Document): string | null {
   // Commission: find first '手数料'/'commission'. MT5 may have duplicate commission columns.
   const commissionIdx = findColIndex(headers, ["手数料", "commission"]);
 
-  // Profit: use swap+1 heuristic (reliable for MT5), fallback to direct search
+  // Profit: first try direct header search; if not found, use swap+1 heuristic.
+  // The swap+1 heuristic is reliable for standard MT5 but can fail if a broker
+  // inserts extra columns between Swap and Profit.
+  const profitDirectIdx = findColIndex(headers, ["損益", "profit", "p/l"]);
   const profitIdx =
-    swapIdx >= 0
-      ? swapIdx + 1
-      : findColIndex(headers, ["損益", "profit", "p/l"]);
+    profitDirectIdx >= 0
+      ? profitDirectIdx
+      : swapIdx >= 0
+        ? swapIdx + 1
+        : -1;
 
   // Output CSV with standardized MT5 column names (compatible with csvParser)
   const csvHeaders = [

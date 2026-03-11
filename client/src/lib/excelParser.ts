@@ -214,9 +214,15 @@ function extractFromHeaderRow(data: unknown[][]): string {
     const nonNull = row.filter(v => v !== null && v !== undefined);
 
     // Stop at section boundaries (e.g., "Open Trades" in MT4 Excel reports)
-    if (i > headerRowIndex && nonNull.length === 1) {
-      const val = String(nonNull[0]).trim().toLowerCase();
-      if (val && SECTION_BREAK_KEYWORDS.some(kw => val === kw)) {
+    // Use includes() for partial match to handle "Open Trades:" or other variants
+    if (i > headerRowIndex && nonNull.length <= 2) {
+      const val = String(nonNull[0] ?? "")
+        .trim()
+        .toLowerCase();
+      if (
+        val &&
+        SECTION_BREAK_KEYWORDS.some(kw => val.includes(kw) || val === kw)
+      ) {
         break;
       }
     }
@@ -261,11 +267,10 @@ function formatExcelCell(value: unknown): string {
     // Non-integer values include a time component (e.g., 45678.75 = date + 18:00).
     // We restrict to >= 25569 (1970-01-01) to avoid false positives on small floats
     // like lot sizes (1.5) or FX prices (1.12345).
-    // Integer dates (midnight) are limited to the 40000-50000 range (~2009-2036).
-    if (
-      (value >= 25569 && value <= 73050 && !Number.isInteger(value)) ||
-      (value >= 40000 && value <= 50000 && Number.isInteger(value))
-    ) {
+    // Integer dates (midnight) are in the 25569-73050 range (~1970-2099).
+    // Values < 25569 are unlikely trade dates. Values like lot sizes (0.01-100)
+    // and FX prices (0.5-2000) are safely below this threshold.
+    if (value >= 25569 && value <= 73050) {
       // Convert Excel serial date to string
       const date = XLSX.SSF.parse_date_code(value);
       if (date) {
@@ -290,25 +295,31 @@ function formatExcelCell(value: unknown): string {
   return String(value);
 }
 
-/** Known sheet name keywords (case-insensitive) */
-const SHEET_KEYWORDS = [
-  "positions",
+/**
+ * Known sheet name keywords in priority order (case-insensitive).
+ * "deals"/"約定" (closed trades) must come before "orders"/"注文" (open orders)
+ * to ensure we pick the correct sheet when both exist.
+ */
+const SHEET_KEYWORDS_PRIORITY = [
   "deals",
-  "orders",
-  "history",
-  "trades",
-  "口座履歴",
-  "ポジション",
   "約定",
-  "注文",
+  "trades",
   "取引",
+  "history",
+  "口座履歴",
+  "positions",
+  "ポジション",
+  "orders",
+  "注文",
 ];
 
 function pickBestSheetName(workbook: XLSX.WorkBook): string {
-  for (const name of workbook.SheetNames) {
-    const lower = name.toLowerCase();
-    if (SHEET_KEYWORDS.some(kw => lower.includes(kw))) {
-      return name;
+  // Check keywords in priority order — first keyword match wins
+  for (const kw of SHEET_KEYWORDS_PRIORITY) {
+    for (const name of workbook.SheetNames) {
+      if (name.toLowerCase().includes(kw)) {
+        return name;
+      }
     }
   }
   return workbook.SheetNames[0];
