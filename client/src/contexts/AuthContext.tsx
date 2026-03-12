@@ -36,8 +36,8 @@ interface AuthContextType {
     note: string,
     expiresAt: string | null
   ) => Promise<boolean>;
-  removeBuyer: (id: string) => Promise<void>;
-  updateBuyer: (id: string, updates: Partial<BuyerAccount>) => Promise<void>;
+  removeBuyer: (id: string) => Promise<boolean>;
+  updateBuyer: (id: string, updates: Partial<BuyerAccount>) => Promise<boolean>;
   toggleBuyerActive: (id: string) => Promise<void>;
 }
 
@@ -203,35 +203,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   // 購入者削除
-  const removeBuyer = async (id: string) => {
+  const removeBuyer = async (id: string): Promise<boolean> => {
     try {
       const res = await fetch(`/api/buyers?id=${encodeURIComponent(id)}`, {
         method: "DELETE",
         headers: getAuthHeaders(),
       });
+      if (!res.ok) return false;
       const data = await res.json();
       if (data.success) {
         setBuyers(prev => prev.filter(b => b.id !== id));
+        return true;
       }
+      return false;
     } catch {
       console.error("Failed to remove buyer");
+      return false;
     }
   };
 
   // 購入者更新
-  const updateBuyer = async (id: string, updates: Partial<BuyerAccount>) => {
+  const updateBuyer = async (
+    id: string,
+    updates: Partial<BuyerAccount>
+  ): Promise<boolean> => {
     try {
       const res = await fetch("/api/buyers", {
         method: "PUT",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ id, ...updates }),
       });
+      if (!res.ok) return false;
       const data = await res.json();
       if (data.success) {
         setBuyers(prev => prev.map(b => (b.id === id ? data.buyer : b)));
+        return true;
       }
+      return false;
     } catch {
       console.error("Failed to update buyer");
+      return false;
     }
   };
 

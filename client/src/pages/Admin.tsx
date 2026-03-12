@@ -144,8 +144,12 @@ export default function Admin() {
         `"${buyer.username}" を削除しますか？この操作は元に戻せません。`
       )
     ) {
-      await removeBuyer(buyer.id);
-      toast.success(`"${buyer.username}" を削除しました`);
+      const success = await removeBuyer(buyer.id);
+      if (success) {
+        toast.success(`"${buyer.username}" を削除しました`);
+      } else {
+        toast.error(`"${buyer.username}" の削除に失敗しました`);
+      }
     }
   };
 

@@ -257,10 +257,6 @@ function extractFromHeaderRow(data: unknown[][]): string {
 
 /**
  * Format an Excel cell value to a string suitable for CSV.
- * Handles numbers (including Excel serial date numbers), strings, etc.
- */
-/**
- * Format an Excel cell value to a string suitable for CSV.
  * @param value - The raw cell value
  * @param isDateColumn - Whether this column is known to contain dates (e.g., Time column)
  */

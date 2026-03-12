@@ -18,14 +18,18 @@ export default function StrategyScoreGauge({ score }: Props) {
   useEffect(() => {
     const duration = 1500;
     const start = performance.now();
+    let rafId: number;
     const animate = (now: number) => {
       const elapsed = now - start;
       const progress = Math.min(elapsed / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
       setAnimatedValue(Math.round(eased * score.total));
-      if (progress < 1) requestAnimationFrame(animate);
+      if (progress < 1) {
+        rafId = requestAnimationFrame(animate);
+      }
     };
-    requestAnimationFrame(animate);
+    rafId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafId);
   }, [score.total]);
 
   const radius = 80;
