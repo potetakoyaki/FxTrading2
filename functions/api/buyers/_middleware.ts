@@ -29,7 +29,10 @@ export const onRequest: PagesFunction<Env> = async context => {
     );
   }
 
-  const [username, password] = decoded.split(":");
+  // Split on first colon only — passwords may contain colons
+  const colonIdx = decoded.indexOf(":");
+  const username = colonIdx >= 0 ? decoded.slice(0, colonIdx) : decoded;
+  const password = colonIdx >= 0 ? decoded.slice(colonIdx + 1) : "";
   const adminUsername = env.ADMIN_USERNAME || "admin";
   const adminPassword = env.ADMIN_PASSWORD;
 

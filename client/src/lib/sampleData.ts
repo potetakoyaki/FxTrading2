@@ -63,12 +63,10 @@ export function generateSampleCSV(): string {
     const day = 1 + Math.floor(i / 2);
     const dayStr = day.toString().padStart(2, "0");
     const hourStr = trade.hour.toString().padStart(2, "0");
-    const openMin = Math.floor(Math.random() * 50)
-      .toString()
-      .padStart(2, "0");
-    const closeMin = (parseInt(openMin) + 5 + Math.floor(Math.random() * 20))
-      .toString()
-      .padStart(2, "0");
+    const openMinNum = Math.floor(Math.random() * 45);
+    const openMin = openMinNum.toString().padStart(2, "0");
+    const closeMinNum = Math.min(openMinNum + 5 + Math.floor(Math.random() * 10), 59);
+    const closeMin = closeMinNum.toString().padStart(2, "0");
 
     const basePrice =
       trade.symbol === "USDJPY"

@@ -761,13 +761,17 @@ export function calculateStrategyScore(
   // Expectancy Score (0-25)
   let expectancyScore = 0;
   if (metrics.expectancy > 0) {
-    const expRatio =
-      metrics.avgLoss > 0 ? metrics.expectancy / metrics.avgLoss : 0;
-    if (expRatio >= 0.5) expectancyScore = 25;
-    else if (expRatio >= 0.3) expectancyScore = 20;
-    else if (expRatio >= 0.15) expectancyScore = 15;
-    else if (expRatio >= 0.05) expectancyScore = 10;
-    else expectancyScore = 5;
+    if (metrics.avgLoss === 0) {
+      // All wins (no losses) → maximum expectancy score
+      expectancyScore = 25;
+    } else {
+      const expRatio = metrics.expectancy / metrics.avgLoss;
+      if (expRatio >= 0.5) expectancyScore = 25;
+      else if (expRatio >= 0.3) expectancyScore = 20;
+      else if (expRatio >= 0.15) expectancyScore = 15;
+      else if (expRatio >= 0.05) expectancyScore = 10;
+      else expectancyScore = 5;
+    }
   }
 
   // DD Score (0-25) - lower DD = higher score
@@ -843,7 +847,9 @@ export function analyzeBySymbol(trades: TradeRecord[]): SymbolAnalysis[] {
         riskReward:
           losses.length > 0 && wins.length > 0
             ? totalProfit / wins.length / (totalLoss / losses.length)
-            : 0,
+            : wins.length > 0
+              ? 999
+              : 0,
         netProfit,
         avgProfit:
           symbolTrades.length > 0 ? netProfit / symbolTrades.length : 0,
@@ -881,7 +887,7 @@ export function analyzeByTimeSlot(trades: TradeRecord[]): TimeSlotAnalysis[] {
     const totalLoss = Math.abs(losses.reduce((s, t) => s + t.profit, 0));
 
     slots.push({
-      slot: `${String(h).padStart(2, "0")}:00-${String(h + 3).padStart(2, "0")}:00`,
+      slot: `${String(h).padStart(2, "0")}:00-${String((h + 3) % 24).padStart(2, "0")}:00`,
       hour: h,
       trades: slotTrades.length,
       winRate: (wins.length / slotTrades.length) * 100,
@@ -2056,9 +2062,14 @@ export function generateSuggestions(
   // ========== Pattern 34: Win/Loss Streak Distribution ==========
   if (trades && trades.length >= 20) {
     let currentStreak = 0;
-    let isWinStreak = trades[0].profit > 0;
+    // Skip break-even trades (profit === 0) for streak analysis
+    const nonZeroTrades = trades.filter(t => t.profit !== 0);
+    if (nonZeroTrades.length < 10) {
+      // Not enough non-zero trades for streak analysis — skip pattern
+    } else {
+    let isWinStreak = nonZeroTrades[0].profit > 0;
     const streaks: { length: number; isWin: boolean }[] = [];
-    for (const t of trades) {
+    for (const t of nonZeroTrades) {
       const isWin = t.profit > 0;
       if (isWin === isWinStreak) {
         currentStreak++;
@@ -2097,6 +2108,7 @@ export function generateSuggestions(
         category: lang === "ja" ? "メンタル管理" : "Mental Management",
       });
     }
+    } // end nonZeroTrades.length check
   }
 
   // ========== Pattern 35: Profit Factor Breakdown (Win Rate vs RR Contribution) ==========

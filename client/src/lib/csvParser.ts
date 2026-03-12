@@ -191,7 +191,12 @@ function preprocessCSV(csvText: string): string {
 
   // Remove empty/invalid trailing columns from header (e.g., ", , _1" from Excel export)
   const rawHeaderLine = lines[headerLineIndex];
-  const headerCols = rawHeaderLine.split(",");
+  // Use PapaParse for header splitting to correctly handle quoted fields with commas
+  const headerParsed = Papa.parse(rawHeaderLine, { header: false });
+  const headerCols: string[] =
+    headerParsed.data.length > 0
+      ? (headerParsed.data[0] as string[])
+      : rawHeaderLine.split(",");
   // Find the last meaningful column (non-empty, not just "_N")
   let lastMeaningfulIdx = headerCols.length - 1;
   while (lastMeaningfulIdx > 0) {

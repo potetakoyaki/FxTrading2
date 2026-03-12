@@ -5,6 +5,7 @@ interface BuyerAccount {
   note: string;
   createdAt: string;
   isActive: boolean;
+  expiresAt: string | null;
 }
 
 interface Env {
@@ -34,7 +35,12 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
 
 // POST /api/buyers — 購入者追加
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
-  let body: { username?: string; password?: string; note?: string };
+  let body: {
+    username?: string;
+    password?: string;
+    note?: string;
+    expiresAt?: string | null;
+  };
   try {
     body = await request.json();
   } catch {
@@ -71,6 +77,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     note: note?.trim() || "",
     createdAt: new Date().toISOString(),
     isActive: true,
+    expiresAt: body.expiresAt || null,
   };
 
   buyers.push(newBuyer);
@@ -89,6 +96,7 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, env }) => {
     password?: string;
     note?: string;
     isActive?: boolean;
+    expiresAt?: string | null;
   };
   try {
     body = await request.json();
@@ -117,10 +125,27 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, env }) => {
   }
 
   // 更新対象のフィールドのみ上書き
-  if (body.username?.trim()) buyers[index].username = body.username.trim();
+  if (body.username?.trim()) {
+    // Check for duplicate username
+    const duplicate = buyers.some(
+      (b, idx) => idx !== index && b.username === body.username!.trim()
+    );
+    if (duplicate) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: "Username already exists",
+        }),
+        { status: 409, headers }
+      );
+    }
+    buyers[index].username = body.username.trim();
+  }
   if (body.password?.trim()) buyers[index].password = body.password.trim();
   if (body.note !== undefined) buyers[index].note = body.note.trim();
   if (body.isActive !== undefined) buyers[index].isActive = body.isActive;
+  if (body.expiresAt !== undefined)
+    buyers[index].expiresAt = body.expiresAt || null;
 
   await saveBuyers(env.BUYERS_KV, buyers);
 

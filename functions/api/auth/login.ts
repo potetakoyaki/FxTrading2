@@ -5,6 +5,7 @@ interface BuyerAccount {
   note: string;
   createdAt: string;
   isActive: boolean;
+  expiresAt: string | null;
 }
 
 interface Env {
@@ -63,8 +64,27 @@ export const onRequestPost: PagesFunction<Env> = async context => {
         b => b.username === username && b.password === password && b.isActive
       );
       if (buyer) {
+        // Check expiration
+        if (buyer.expiresAt) {
+          const expiresDate = new Date(buyer.expiresAt);
+          if (!isNaN(expiresDate.getTime()) && expiresDate < new Date()) {
+            return new Response(
+              JSON.stringify({
+                success: false,
+                message: "Account expired",
+                expired: true,
+              }),
+              { status: 200, headers }
+            );
+          }
+        }
         return new Response(
-          JSON.stringify({ success: true, isAdmin: false, username }),
+          JSON.stringify({
+            success: true,
+            isAdmin: false,
+            username,
+            expiresAt: buyer.expiresAt || null,
+          }),
           { status: 200, headers }
         );
       }
@@ -75,6 +95,6 @@ export const onRequestPost: PagesFunction<Env> = async context => {
 
   return new Response(
     JSON.stringify({ success: false, message: "Invalid credentials" }),
-    { status: 200, headers }
+    { status: 401, headers }
   );
 };

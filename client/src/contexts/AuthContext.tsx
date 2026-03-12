@@ -131,11 +131,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         }),
       });
 
+      const data = await response.json();
+      if (data.expired) {
+        return { success: false, expired: true };
+      }
       if (response.ok) {
-        const data = await response.json();
-        if (data.expired) {
-          return { success: false, expired: true };
-        }
         if (data.success) {
           setUsername(inputUsername);
           setIsAuthenticated(true);

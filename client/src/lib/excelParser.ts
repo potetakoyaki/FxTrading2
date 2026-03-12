@@ -149,6 +149,7 @@ function tryExtractMT5DealsSection(data: unknown[][]): string | null {
   const csvRows: string[] = [trimmedHeaders.join(",")];
 
   const symbolIdx = findColIndex(headers, ["銘柄", "symbol", "item"]);
+  const timeIdx = findColIndex(headers, ["時間", "time", "date"]);
 
   for (let i = dealsHeaderRowIndex + 2; i < data.length; i++) {
     const row = data[i];
@@ -172,7 +173,8 @@ function tryExtractMT5DealsSection(data: unknown[][]): string | null {
     }
 
     // Format cells and trim to header column count
-    const cells = row.slice(0, numCols).map(v => formatExcelCell(v));
+    // Pass isDateColumn=true only for the time column to avoid misinterpreting profits as dates
+    const cells = row.slice(0, numCols).map((v, colIdx) => formatExcelCell(v, colIdx === timeIdx));
 
     // Skip rows with no symbol (balance/deposit rows)
     if (symbolIdx >= 0 && !cells[symbolIdx]) continue;
@@ -208,6 +210,17 @@ const SECTION_BREAK_KEYWORDS = [
 function extractFromHeaderRow(data: unknown[][]): string {
   const headerRowIndex = findHeaderRow(data);
 
+  // Identify time columns in the header row to pass isDateColumn flag
+  const headerRow = data[headerRowIndex] || [];
+  const timeColIndices = new Set<number>();
+  const timeKeywords = ["time", "date", "datetime", "時間", "open time", "close time"];
+  headerRow.forEach((cell, idx) => {
+    const cellStr = String(cell ?? "").trim().toLowerCase();
+    if (timeKeywords.some(kw => cellStr.includes(kw))) {
+      timeColIndices.add(idx);
+    }
+  });
+
   const csvLines: string[] = [];
   for (let i = headerRowIndex; i < data.length; i++) {
     const row = data[i];
@@ -228,8 +241,8 @@ function extractFromHeaderRow(data: unknown[][]): string {
     }
 
     const line = row
-      .map(cell => {
-        const v = formatExcelCell(cell);
+      .map((cell, colIdx) => {
+        const v = formatExcelCell(cell, timeColIndices.has(colIdx));
         if (v.includes(",") || v.includes('"') || v.includes("\n")) {
           return `"${v.replace(/"/g, '""')}"`;
         }
@@ -246,32 +259,24 @@ function extractFromHeaderRow(data: unknown[][]): string {
  * Format an Excel cell value to a string suitable for CSV.
  * Handles numbers (including Excel serial date numbers), strings, etc.
  */
-function formatExcelCell(value: unknown): string {
+/**
+ * Format an Excel cell value to a string suitable for CSV.
+ * @param value - The raw cell value
+ * @param isDateColumn - Whether this column is known to contain dates (e.g., Time column)
+ */
+function formatExcelCell(value: unknown, isDateColumn: boolean = false): string {
   if (value === null || value === undefined) return "";
 
   if (typeof value === "number") {
-    // Check if it looks like an Excel date serial number
-    // Excel dates are typically between 1 (Jan 1, 1900) and ~50000 (year ~2036)
-    // But trade IDs can also be large numbers, so we use a heuristic:
-    // If the number is between 25569 (Jan 1, 1970) and 50000 (year ~2036)
-    // AND the context suggests it's a date, we convert it.
-    // For safety, we just return the raw number for large integers (deal IDs, order IDs)
-    // and let the csvParser handle date strings.
-
     // If it's a very large integer, it's likely a deal/order ID
     if (Number.isInteger(value) && value > 100000000) {
       return String(value);
     }
 
-    // Check if it could be an Excel date serial number.
-    // Non-integer values include a time component (e.g., 45678.75 = date + 18:00).
-    // We restrict to >= 25569 (1970-01-01) to avoid false positives on small floats
-    // like lot sizes (1.5) or FX prices (1.12345).
-    // Integer dates (midnight) are in the 25569-73050 range (~1970-2099).
-    // Values < 25569 are unlikely trade dates. Values like lot sizes (0.01-100)
-    // and FX prices (0.5-2000) are safely below this threshold.
-    if (value >= 25569 && value <= 73050) {
-      // Convert Excel serial date to string
+    // Only convert to date if this column is explicitly a date column.
+    // This prevents profit/monetary values (e.g., 45000) from being
+    // misinterpreted as Excel serial date numbers.
+    if (isDateColumn && value >= 25569 && value <= 73050) {
       const date = XLSX.SSF.parse_date_code(value);
       if (date) {
         const y = date.y;

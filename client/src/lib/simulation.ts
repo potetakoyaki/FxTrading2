@@ -72,7 +72,7 @@ export function runMonteCarloSimulation(
   numSimulations: number = 1000,
   initialCapital: number = 0
 ): MonteCarloResult {
-  if (trades.length === 0) return emptyMonteCarloResult;
+  if (trades.length === 0) return { ...emptyMonteCarloResult, paths: [] };
 
   const profits = trades.map(t => t.profit);
   const seed = deriveSeed(profits);
