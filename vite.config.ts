@@ -4,6 +4,11 @@ import path from "node:path";
 import { defineConfig } from "vite";
 
 export default defineConfig({
+  test: {
+    globals: true,
+    environment: "jsdom",
+    include: ["src/**/*.test.ts"],
+  },
   plugins: [
     react(),
     tailwindcss(),

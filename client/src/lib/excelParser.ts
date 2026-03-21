@@ -266,15 +266,22 @@ function formatExcelCell(value: unknown): string {
       (value >= 25569 && value <= 73050 && !Number.isInteger(value)) ||
       (value >= 40000 && value <= 50000 && Number.isInteger(value))
     ) {
-      // Convert Excel serial date to string
-      const date = XLSX.SSF.parse_date_code(value);
-      if (date) {
-        const y = date.y;
-        const m = String(date.m).padStart(2, "0");
-        const d = String(date.d).padStart(2, "0");
-        const H = String(date.H).padStart(2, "0");
-        const M = String(date.M).padStart(2, "0");
-        const S = String(date.S).padStart(2, "0");
+      // Convert Excel serial date to string.
+      // Excel epoch: Jan 0, 1900 (serial 1 = Jan 1, 1900).
+      // But Excel incorrectly treats 1900 as a leap year (Lotus 1-2-3 bug),
+      // so for dates after Feb 28 1900 (serial > 59), subtract 1 day.
+      const adjustedSerial = value > 59 ? value - 1 : value;
+      // Convert to JS Date: Excel serial 0 = Dec 30, 1899
+      const msPerDay = 86400000;
+      const excelEpoch = new Date(1899, 11, 30).getTime();
+      const jsDate = new Date(excelEpoch + adjustedSerial * msPerDay);
+      if (!isNaN(jsDate.getTime())) {
+        const y = jsDate.getFullYear();
+        const m = String(jsDate.getMonth() + 1).padStart(2, "0");
+        const d = String(jsDate.getDate()).padStart(2, "0");
+        const H = String(jsDate.getHours()).padStart(2, "0");
+        const M = String(jsDate.getMinutes()).padStart(2, "0");
+        const S = String(jsDate.getSeconds()).padStart(2, "0");
         return `${y}.${m}.${d} ${H}:${M}:${S}`;
       }
     }
