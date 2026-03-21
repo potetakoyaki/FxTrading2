@@ -3,7 +3,7 @@
  * File upload zone supporting CSV, Excel (.xlsx/.xls/.xml), and HTML (.htm/.html)
  * with glowing border, drag-drop support, and sample data button
  */
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import { useAnalysis } from "@/contexts/AnalysisContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -25,7 +25,15 @@ export default function CsvUploader() {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState("");
+  const [isReading, setIsReading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Reset isReading when analysis completes or errors
+  useEffect(() => {
+    if (state === "done" || state === "error" || state === "idle") {
+      setIsReading(false);
+    }
+  }, [state]);
 
   const handleFile = useCallback(
     (file: File) => {
@@ -43,11 +51,13 @@ export default function CsvUploader() {
     [t]
   );
 
+  const isDisabled = isReading || state === "loading";
+
   const handleAnalyze = useCallback(() => {
-    if (!selectedFile || state === "loading") return;
+    if (!selectedFile || isDisabled) return;
+    setIsReading(true);
 
     if (isExcelFile(selectedFile.name)) {
-      // Read as ArrayBuffer for Excel files
       const reader = new FileReader();
       reader.onload = e => {
         try {
@@ -60,12 +70,15 @@ export default function CsvUploader() {
               ? err.message
               : t("upload.excelReadError")
           );
+          setIsReading(false);
         }
       };
-      reader.onerror = () => setFileError(t("upload.fileReadError"));
+      reader.onerror = () => {
+        setFileError(t("upload.fileReadError"));
+        setIsReading(false);
+      };
       reader.readAsArrayBuffer(selectedFile);
     } else if (isHtmlFile(selectedFile.name)) {
-      // Read as ArrayBuffer for HTML files (handles UTF-16 encoding)
       const reader = new FileReader();
       reader.onload = async e => {
         try {
@@ -78,12 +91,15 @@ export default function CsvUploader() {
               ? err.message
               : t("upload.htmlReadError")
           );
+          setIsReading(false);
         }
       };
-      reader.onerror = () => setFileError(t("upload.fileReadError"));
+      reader.onerror = () => {
+        setFileError(t("upload.fileReadError"));
+        setIsReading(false);
+      };
       reader.readAsArrayBuffer(selectedFile);
     } else {
-      // Read as text for CSV files
       const reader = new FileReader();
       reader.onload = e => {
         try {
@@ -95,12 +111,16 @@ export default function CsvUploader() {
               ? err.message
               : t("upload.csvReadError")
           );
+          setIsReading(false);
         }
       };
-      reader.onerror = () => setFileError(t("upload.fileReadError"));
+      reader.onerror = () => {
+        setFileError(t("upload.fileReadError"));
+        setIsReading(false);
+      };
       reader.readAsText(selectedFile);
     }
-  }, [selectedFile, analyzeCSV, state, t]);
+  }, [selectedFile, analyzeCSV, isDisabled, t]);
 
   const handleSampleData = useCallback(() => {
     const csv = generateSampleCSV();
@@ -273,10 +293,10 @@ export default function CsvUploader() {
                   e.stopPropagation();
                   handleAnalyze();
                 }}
-                disabled={state === "loading"}
+                disabled={isDisabled}
                 className="bg-[oklch(0.82_0.18_165)] hover:bg-[oklch(0.75_0.18_165)] text-[oklch(0.13_0.02_260)] font-semibold px-6"
               >
-                {state === "loading" ? (
+                {isDisabled ? (
                   <span className="flex items-center gap-2">
                     <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                     {t("upload.analyzing")}
