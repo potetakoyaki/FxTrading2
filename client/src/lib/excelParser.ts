@@ -266,8 +266,8 @@ function formatExcelCell(value: unknown): string {
       (value >= 25569 && value <= 73050 && !Number.isInteger(value)) ||
       (value >= 40000 && value <= 50000 && Number.isInteger(value))
     ) {
-      // Convert Excel serial date to string
-      const date = XLSX.SSF.parse_date_code(value);
+      // Convert Excel serial date to string using XLSX.SSF.parse_date_code.
+      const date = XLSX.SSF?.parse_date_code?.(value);
       if (date) {
         const y = date.y;
         const m = String(date.m).padStart(2, "0");

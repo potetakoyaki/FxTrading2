@@ -841,7 +841,7 @@ export function analyzeBySymbol(trades: TradeRecord[]): SymbolAnalysis[] {
         profitFactor:
           totalLoss > 0 ? totalProfit / totalLoss : totalProfit > 0 ? 999 : 0,
         riskReward:
-          losses.length > 0 && wins.length > 0
+          losses.length > 0 && wins.length > 0 && totalLoss > 0
             ? totalProfit / wins.length / (totalLoss / losses.length)
             : 0,
         netProfit,

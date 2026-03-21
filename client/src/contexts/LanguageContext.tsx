@@ -96,6 +96,22 @@ const translations = {
     en: "File is too large (max 50MB).",
   },
   "upload.sample": { ja: "サンプルデータで試す", en: "Try Sample Data" },
+  "upload.excelReadError": {
+    ja: "Excelファイルの読み込みに失敗しました。",
+    en: "Failed to read Excel file.",
+  },
+  "upload.htmlReadError": {
+    ja: "HTMLファイルの読み込みに失敗しました。",
+    en: "Failed to read HTML file.",
+  },
+  "upload.csvReadError": {
+    ja: "CSVファイルの読み込みに失敗しました。",
+    en: "Failed to read CSV file.",
+  },
+  "upload.fileReadError": {
+    ja: "ファイルの読み込みに失敗しました。",
+    en: "Failed to read file.",
+  },
 
   // Dashboard
   "dash.title": { ja: "分析レポート", en: "Analysis Report" },
