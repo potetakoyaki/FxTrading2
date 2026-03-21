@@ -44,7 +44,7 @@ export default function CsvUploader() {
   );
 
   const handleAnalyze = useCallback(() => {
-    if (!selectedFile) return;
+    if (!selectedFile || state === "loading") return;
 
     if (isExcelFile(selectedFile.name)) {
       // Read as ArrayBuffer for Excel files
@@ -58,11 +58,11 @@ export default function CsvUploader() {
           setFileError(
             err instanceof Error
               ? err.message
-              : "Excelファイルの読み込みに失敗しました。"
+              : t("upload.excelReadError")
           );
         }
       };
-      reader.onerror = () => setFileError("ファイルの読み込みに失敗しました。");
+      reader.onerror = () => setFileError(t("upload.fileReadError"));
       reader.readAsArrayBuffer(selectedFile);
     } else if (isHtmlFile(selectedFile.name)) {
       // Read as ArrayBuffer for HTML files (handles UTF-16 encoding)
@@ -76,11 +76,11 @@ export default function CsvUploader() {
           setFileError(
             err instanceof Error
               ? err.message
-              : "HTMLファイルの読み込みに失敗しました。"
+              : t("upload.htmlReadError")
           );
         }
       };
-      reader.onerror = () => setFileError("ファイルの読み込みに失敗しました。");
+      reader.onerror = () => setFileError(t("upload.fileReadError"));
       reader.readAsArrayBuffer(selectedFile);
     } else {
       // Read as text for CSV files
@@ -93,14 +93,14 @@ export default function CsvUploader() {
           setFileError(
             err instanceof Error
               ? err.message
-              : "CSVファイルの読み込みに失敗しました。"
+              : t("upload.csvReadError")
           );
         }
       };
-      reader.onerror = () => setFileError("ファイルの読み込みに失敗しました。");
+      reader.onerror = () => setFileError(t("upload.fileReadError"));
       reader.readAsText(selectedFile);
     }
-  }, [selectedFile, analyzeCSV]);
+  }, [selectedFile, analyzeCSV, state, t]);
 
   const handleSampleData = useCallback(() => {
     const csv = generateSampleCSV();
