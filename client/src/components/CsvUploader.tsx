@@ -86,8 +86,16 @@ export default function CsvUploader() {
       // Read as text for CSV files
       const reader = new FileReader();
       reader.onload = e => {
-        const text = e.target?.result as string;
-        analyzeCSV(text, selectedFile.name);
+        try {
+          const text = e.target?.result as string;
+          analyzeCSV(text, selectedFile.name);
+        } catch (err) {
+          setFileError(
+            err instanceof Error
+              ? err.message
+              : "CSVファイルの読み込みに失敗しました。"
+          );
+        }
       };
       reader.onerror = () => setFileError("ファイルの読み込みに失敗しました。");
       reader.readAsText(selectedFile);
