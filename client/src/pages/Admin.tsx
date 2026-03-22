@@ -538,7 +538,9 @@ export default function Admin() {
                       {/* 登録日・期限 */}
                       <div className="flex-shrink-0 hidden sm:flex flex-col items-end gap-0.5">
                         <span className="text-xs text-slate-600">
-                          {new Date(buyer.createdAt).toLocaleDateString("ja-JP")}
+                          {new Date(buyer.createdAt).toLocaleDateString(
+                            "ja-JP"
+                          )}
                         </span>
                         {buyer.expiresAt ? (
                           <span

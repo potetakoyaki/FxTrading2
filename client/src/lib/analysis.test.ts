@@ -46,9 +46,7 @@ function makeTrades(profits: number[], symbol = "EURUSD"): TradeRecord[] {
     makeTrade({
       ticket: String(1000 + i),
       time: new Date(`2024-01-${String(15 + i).padStart(2, "0")}T14:00:00`),
-      openTime: new Date(
-        `2024-01-${String(15 + i).padStart(2, "0")}T10:00:00`
-      ),
+      openTime: new Date(`2024-01-${String(15 + i).padStart(2, "0")}T10:00:00`),
       profit,
       symbol,
     })
@@ -421,10 +419,7 @@ describe("analyzeTradeQuality", () => {
 
   it("should detect late stop-loss", () => {
     // avgLoss > 2 * avgProfit
-    const trades = [
-      ...makeTrades([50, 60, 40]),
-      ...makeTrades([-200, -180]),
-    ];
+    const trades = [...makeTrades([50, 60, 40]), ...makeTrades([-200, -180])];
     const result = analyzeTradeQuality(trades);
     expect(result.hasLateSL).toBe(true);
   });
@@ -718,9 +713,7 @@ describe("diagnoseRisk", () => {
     const m = calculateMetrics(trades);
     expect(m.maxConsecutiveLosses).toBe(8);
     const d = diagnoseRisk(m, "en");
-    const clFactor = d.factors.find(f =>
-      f.label.includes("Consecutive")
-    );
+    const clFactor = d.factors.find(f => f.label.includes("Consecutive"));
     expect(clFactor?.status).toBe("danger");
   });
 

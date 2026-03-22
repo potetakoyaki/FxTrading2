@@ -31,12 +31,10 @@ async function startServer() {
     const { username, password } = _req.body;
 
     if (!username || !password) {
-      res
-        .status(400)
-        .json({
-          success: false,
-          message: "Username and password are required",
-        });
+      res.status(400).json({
+        success: false,
+        message: "Username and password are required",
+      });
       return;
     }
 
@@ -72,7 +70,11 @@ async function startServer() {
       return;
     }
 
-    res.json({ success: false, isAdmin: false, message: "Invalid credentials" });
+    res.json({
+      success: false,
+      isAdmin: false,
+      message: "Invalid credentials",
+    });
   });
 
   // --- Static Files ---

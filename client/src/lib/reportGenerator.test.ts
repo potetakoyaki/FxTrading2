@@ -82,10 +82,38 @@ const mockSymbolAnalysis: SymbolAnalysis[] = [
 ];
 
 const mockTimeSlotAnalysis: TimeSlotAnalysis[] = [
-  { slot: "09:00-12:00", hour: 9, trades: 35, winRate: 60, profitFactor: 2.0, netProfit: 1800 },
-  { slot: "12:00-15:00", hour: 12, trades: 30, winRate: 50, profitFactor: 1.3, netProfit: 600 },
-  { slot: "15:00-18:00", hour: 15, trades: 25, winRate: 52, profitFactor: 1.5, netProfit: 900 },
-  { slot: "18:00-21:00", hour: 18, trades: 10, winRate: 40, profitFactor: 0.8, netProfit: -150 },
+  {
+    slot: "09:00-12:00",
+    hour: 9,
+    trades: 35,
+    winRate: 60,
+    profitFactor: 2.0,
+    netProfit: 1800,
+  },
+  {
+    slot: "12:00-15:00",
+    hour: 12,
+    trades: 30,
+    winRate: 50,
+    profitFactor: 1.3,
+    netProfit: 600,
+  },
+  {
+    slot: "15:00-18:00",
+    hour: 15,
+    trades: 25,
+    winRate: 52,
+    profitFactor: 1.5,
+    netProfit: 900,
+  },
+  {
+    slot: "18:00-21:00",
+    hour: 18,
+    trades: 10,
+    winRate: 40,
+    profitFactor: 0.8,
+    netProfit: -150,
+  },
 ];
 
 const mockWeaknesses: WeaknessItem[] = [
@@ -116,14 +144,18 @@ const mockSuggestions: ImprovementSuggestion[] = [
   },
   {
     title: "時間帯の絞り込み",
-    description: "夜間セッションの勝率が低いため、トレード時間を限定しましょう。",
+    description:
+      "夜間セッションの勝率が低いため、トレード時間を限定しましょう。",
     priority: "medium",
     category: "時間管理",
   },
 ];
 
 const mockMonteCarloResult: MonteCarloResult = {
-  paths: [[0, 100, 200], [0, -50, 80]],
+  paths: [
+    [0, 100, 200],
+    [0, -50, 80],
+  ],
   avgFinalEquity: 5200,
   worstFinalEquity: -800,
   bestFinalEquity: 12000,
@@ -287,16 +319,27 @@ describe("generateHTMLReport", () => {
         avgProfit: 500,
       },
     ];
-    const html = generateHTMLReport(buildReportData({ symbolAnalysis: symbolWith999 }));
+    const html = generateHTMLReport(
+      buildReportData({ symbolAnalysis: symbolWith999 })
+    );
     expect(html).toContain("999+");
     expect(html).not.toContain(">999.00<");
   });
 
   it("handles PF=999 in time slot analysis (displays '999+')", () => {
     const timeWith999: TimeSlotAnalysis[] = [
-      { slot: "09:00-12:00", hour: 9, trades: 5, winRate: 100, profitFactor: 999, netProfit: 1000 },
+      {
+        slot: "09:00-12:00",
+        hour: 9,
+        trades: 5,
+        winRate: 100,
+        profitFactor: 999,
+        netProfit: 1000,
+      },
     ];
-    const html = generateHTMLReport(buildReportData({ timeSlotAnalysis: timeWith999 }));
+    const html = generateHTMLReport(
+      buildReportData({ timeSlotAnalysis: timeWith999 })
+    );
     expect(html).toContain("999+");
   });
 
@@ -327,7 +370,7 @@ describe("generateHTMLReport", () => {
     expect(html).toContain("&lt;script&gt;");
     expect(html).toContain("&amp;");
     expect(html).toContain("&quot;");
-    expect(html).not.toContain('<img onerror=');
+    expect(html).not.toContain("<img onerror=");
   });
 });
 
@@ -430,10 +473,14 @@ describe("generateSummaryCSV", () => {
   it("symbol rows have correct column count (6 columns)", () => {
     const lines = csv.split("\n");
     // Find symbol data rows — they come after the Symbol header row
-    const symbolHeaderIndex = lines.findIndex(l => l.startsWith("Symbol,Trades"));
+    const symbolHeaderIndex = lines.findIndex(l =>
+      l.startsWith("Symbol,Trades")
+    );
     expect(symbolHeaderIndex).toBeGreaterThan(-1);
 
-    const symbolRows = lines.slice(symbolHeaderIndex + 1).filter(l => l.trim() !== "");
+    const symbolRows = lines
+      .slice(symbolHeaderIndex + 1)
+      .filter(l => l.trim() !== "");
     expect(symbolRows.length).toBe(3); // USDJPY, EURUSD, GBPUSD
 
     symbolRows.forEach(row => {

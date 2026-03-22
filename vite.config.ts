@@ -9,10 +9,7 @@ export default defineConfig({
     environment: "jsdom",
     include: ["src/**/*.test.ts"],
   },
-  plugins: [
-    react(),
-    tailwindcss(),
-  ],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),
@@ -30,10 +27,7 @@ export default defineConfig({
     port: 3000,
     strictPort: false,
     host: true,
-    allowedHosts: [
-      "localhost",
-      "127.0.0.1",
-    ],
+    allowedHosts: ["localhost", "127.0.0.1"],
     proxy: {
       "/api": {
         target: "http://localhost:3001",

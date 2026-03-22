@@ -122,9 +122,7 @@ async function waitForDashboard(page: Page, timeoutMs = 30_000) {
   await page.waitForFunction(
     () => {
       const body = document.body.innerText;
-      return (
-        body.includes("Analysis Report") || body.includes("分析レポート")
-      );
+      return body.includes("Analysis Report") || body.includes("分析レポート");
     },
     { timeout: timeoutMs }
   );
@@ -170,7 +168,11 @@ describe("E2E: Upload & Analysis", () => {
   it("should upload and analyze MT5 Excel file", async () => {
     const page = await loginAndGoHome();
 
-    const excelPath = path.resolve(__dirname, "..", "ReportHistory-10009822126.xlsx");
+    const excelPath = path.resolve(
+      __dirname,
+      "..",
+      "ReportHistory-10009822126.xlsx"
+    );
     expect(fs.existsSync(excelPath)).toBe(true);
 
     // Get the hidden file input and upload the Excel file
@@ -194,7 +196,9 @@ describe("E2E: Upload & Analysis", () => {
       );
     });
     expect(analyzeBtn).toBeTruthy();
-    await (analyzeBtn as unknown as puppeteer.ElementHandle<HTMLButtonElement>).click();
+    await (
+      analyzeBtn as unknown as puppeteer.ElementHandle<HTMLButtonElement>
+    ).click();
 
     // Wait for dashboard
     await waitForDashboard(page, 30_000);
@@ -255,7 +259,9 @@ describe("E2E: Upload & Analysis", () => {
             b.textContent?.includes("Analyze")
         );
       });
-      await (analyzeBtn as unknown as puppeteer.ElementHandle<HTMLButtonElement>).click();
+      await (
+        analyzeBtn as unknown as puppeteer.ElementHandle<HTMLButtonElement>
+      ).click();
 
       // Wait for dashboard
       await waitForDashboard(page, 30_000);

@@ -66,9 +66,7 @@ export default function CsvUploader() {
           analyzeCSV(csvText, selectedFile.name);
         } catch (err) {
           setFileError(
-            err instanceof Error
-              ? err.message
-              : t("upload.excelReadError")
+            err instanceof Error ? err.message : t("upload.excelReadError")
           );
           setIsReading(false);
         }
@@ -87,9 +85,7 @@ export default function CsvUploader() {
           analyzeCSV(csvText, selectedFile.name);
         } catch (err) {
           setFileError(
-            err instanceof Error
-              ? err.message
-              : t("upload.htmlReadError")
+            err instanceof Error ? err.message : t("upload.htmlReadError")
           );
           setIsReading(false);
         }
@@ -107,9 +103,7 @@ export default function CsvUploader() {
           analyzeCSV(text, selectedFile.name);
         } catch (err) {
           setFileError(
-            err instanceof Error
-              ? err.message
-              : t("upload.csvReadError")
+            err instanceof Error ? err.message : t("upload.csvReadError")
           );
           setIsReading(false);
         }
@@ -183,9 +177,10 @@ export default function CsvUploader() {
           className={`
             relative rounded-lg border-2 border-dashed p-10 text-center cursor-pointer
             transition-all duration-300 group
-            ${isDragging
-              ? "border-[oklch(0.82_0.18_165)] bg-[oklch(0.82_0.18_165_/_0.08)]"
-              : "border-[oklch(0.3_0.02_260)] hover:border-[oklch(0.65_0.18_250_/_0.5)] bg-[oklch(0.14_0.02_260)]"
+            ${
+              isDragging
+                ? "border-[oklch(0.82_0.18_165)] bg-[oklch(0.82_0.18_165_/_0.08)]"
+                : "border-[oklch(0.3_0.02_260)] hover:border-[oklch(0.65_0.18_250_/_0.5)] bg-[oklch(0.14_0.02_260)]"
             }
           `}
         >
@@ -205,10 +200,11 @@ export default function CsvUploader() {
             <div
               className={`
               w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300
-              ${isDragging
+              ${
+                isDragging
                   ? "bg-[oklch(0.82_0.18_165_/_0.2)]"
                   : "bg-[oklch(0.2_0.02_260)] group-hover:bg-[oklch(0.65_0.18_250_/_0.15)]"
-                }
+              }
             `}
             >
               <Upload
