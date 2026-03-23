@@ -1,709 +1,1008 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FX Strategy Doctor - 操作マニュアル</title>
-<style>
-  @page {
-    size: A4;
-    margin: 20mm 15mm;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
-    color: #1a1a2e;
-    line-height: 1.8;
-    padding: 40px;
-    max-width: 800px;
-    margin: 0 auto;
-    background: #fff;
-  }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FX Strategy Doctor - 操作マニュアル</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 20mm 15mm;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+        color: #1a1a2e;
+        line-height: 1.8;
+        padding: 40px;
+        max-width: 800px;
+        margin: 0 auto;
+        background: #fff;
+      }
 
-  /* Cover page */
-  .cover {
-    text-align: center;
-    padding: 120px 0 80px;
-    page-break-after: always;
-  }
-  .cover h1 {
-    font-size: 2.4rem;
-    color: #0A0E1A;
-    margin-bottom: 0.5rem;
-    letter-spacing: 0.05em;
-  }
-  .cover .subtitle {
-    font-size: 1.1rem;
-    color: #64748B;
-    margin-bottom: 3rem;
-  }
-  .cover .version {
-    font-size: 0.9rem;
-    color: #94A3B8;
-    margin-top: 4rem;
-  }
-  .cover .logo-box {
-    display: inline-block;
-    width: 100px;
-    height: 100px;
-    background: linear-gradient(135deg, #0A0E1A, #1E293B);
-    border-radius: 20px;
-    margin-bottom: 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 2rem;
-  }
-  .cover .logo-box span {
-    font-size: 2.5rem;
-    color: #00D4AA;
-    font-weight: 700;
-  }
+      /* Cover page */
+      .cover {
+        text-align: center;
+        padding: 120px 0 80px;
+        page-break-after: always;
+      }
+      .cover h1 {
+        font-size: 2.4rem;
+        color: #0a0e1a;
+        margin-bottom: 0.5rem;
+        letter-spacing: 0.05em;
+      }
+      .cover .subtitle {
+        font-size: 1.1rem;
+        color: #64748b;
+        margin-bottom: 3rem;
+      }
+      .cover .version {
+        font-size: 0.9rem;
+        color: #94a3b8;
+        margin-top: 4rem;
+      }
+      .cover .logo-box {
+        display: inline-block;
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, #0a0e1a, #1e293b);
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+      }
+      .cover .logo-box span {
+        font-size: 2.5rem;
+        color: #00d4aa;
+        font-weight: 700;
+      }
 
-  /* TOC */
-  .toc {
-    page-break-after: always;
-  }
-  .toc h2 {
-    font-size: 1.5rem;
-    border-bottom: 2px solid #0A0E1A;
-    padding-bottom: 0.5rem;
-    margin-bottom: 1.5rem;
-  }
-  .toc ol {
-    list-style: none;
-    counter-reset: toc-counter;
-  }
-  .toc > ol > li {
-    counter-increment: toc-counter;
-    padding: 0.4rem 0;
-    border-bottom: 1px dotted #CBD5E1;
-    font-size: 1rem;
-  }
-  .toc > ol > li::before {
-    content: counter(toc-counter) ". ";
-    font-weight: 700;
-    color: #00D4AA;
-  }
+      /* TOC */
+      .toc {
+        page-break-after: always;
+      }
+      .toc h2 {
+        font-size: 1.5rem;
+        border-bottom: 2px solid #0a0e1a;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+      }
+      .toc ol {
+        list-style: none;
+        counter-reset: toc-counter;
+      }
+      .toc > ol > li {
+        counter-increment: toc-counter;
+        padding: 0.4rem 0;
+        border-bottom: 1px dotted #cbd5e1;
+        font-size: 1rem;
+      }
+      .toc > ol > li::before {
+        content: counter(toc-counter) ". ";
+        font-weight: 700;
+        color: #00d4aa;
+      }
 
-  /* Section headings */
-  h2 {
-    font-size: 1.4rem;
-    color: #0A0E1A;
-    border-left: 4px solid #00D4AA;
-    padding-left: 12px;
-    margin: 2.5rem 0 1rem;
-    page-break-after: avoid;
-  }
-  h3 {
-    font-size: 1.1rem;
-    color: #334155;
-    margin: 1.5rem 0 0.5rem;
-    page-break-after: avoid;
-  }
-  h4 {
-    font-size: 1rem;
-    color: #475569;
-    margin: 1rem 0 0.3rem;
-  }
+      /* Section headings */
+      h2 {
+        font-size: 1.4rem;
+        color: #0a0e1a;
+        border-left: 4px solid #00d4aa;
+        padding-left: 12px;
+        margin: 2.5rem 0 1rem;
+        page-break-after: avoid;
+      }
+      h3 {
+        font-size: 1.1rem;
+        color: #334155;
+        margin: 1.5rem 0 0.5rem;
+        page-break-after: avoid;
+      }
+      h4 {
+        font-size: 1rem;
+        color: #475569;
+        margin: 1rem 0 0.3rem;
+      }
 
-  p {
-    margin-bottom: 0.8rem;
-    text-align: justify;
-  }
+      p {
+        margin-bottom: 0.8rem;
+        text-align: justify;
+      }
 
-  /* Steps */
-  .steps {
-    counter-reset: step-counter;
-    list-style: none;
-    padding: 0;
-  }
-  .steps li {
-    counter-increment: step-counter;
-    padding: 0.8rem 0 0.8rem 3rem;
-    position: relative;
-    border-bottom: 1px solid #F1F5F9;
-  }
-  .steps li::before {
-    content: "STEP " counter(step-counter);
-    position: absolute;
-    left: 0;
-    top: 0.8rem;
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: #fff;
-    background: #00D4AA;
-    padding: 0.1rem 0.4rem;
-    border-radius: 3px;
-    letter-spacing: 0.05em;
-  }
+      /* Steps */
+      .steps {
+        counter-reset: step-counter;
+        list-style: none;
+        padding: 0;
+      }
+      .steps li {
+        counter-increment: step-counter;
+        padding: 0.8rem 0 0.8rem 3rem;
+        position: relative;
+        border-bottom: 1px solid #f1f5f9;
+      }
+      .steps li::before {
+        content: "STEP " counter(step-counter);
+        position: absolute;
+        left: 0;
+        top: 0.8rem;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #fff;
+        background: #00d4aa;
+        padding: 0.1rem 0.4rem;
+        border-radius: 3px;
+        letter-spacing: 0.05em;
+      }
 
-  /* Tables */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 1rem 0 1.5rem;
-    font-size: 0.9rem;
-  }
-  th {
-    background: #0A0E1A;
-    color: #fff;
-    padding: 0.6rem 0.8rem;
-    text-align: left;
-    font-weight: 600;
-    font-size: 0.8rem;
-    letter-spacing: 0.03em;
-  }
-  td {
-    padding: 0.5rem 0.8rem;
-    border-bottom: 1px solid #E2E8F0;
-    vertical-align: top;
-  }
-  tr:nth-child(even) td {
-    background: #F8FAFC;
-  }
+      /* Tables */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0 1.5rem;
+        font-size: 0.9rem;
+      }
+      th {
+        background: #0a0e1a;
+        color: #fff;
+        padding: 0.6rem 0.8rem;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.8rem;
+        letter-spacing: 0.03em;
+      }
+      td {
+        padding: 0.5rem 0.8rem;
+        border-bottom: 1px solid #e2e8f0;
+        vertical-align: top;
+      }
+      tr:nth-child(even) td {
+        background: #f8fafc;
+      }
 
-  /* Info boxes */
-  .info-box {
-    background: #F0FDF4;
-    border: 1px solid #BBF7D0;
-    border-left: 4px solid #00D4AA;
-    padding: 1rem 1.2rem;
-    margin: 1rem 0;
-    border-radius: 0 6px 6px 0;
-    font-size: 0.9rem;
-  }
-  .info-box.warning {
-    background: #FFFBEB;
-    border-color: #FDE68A;
-    border-left-color: #F59E0B;
-  }
-  .info-box.danger {
-    background: #FEF2F2;
-    border-color: #FECACA;
-    border-left-color: #EF4444;
-  }
-  .info-box strong {
-    display: block;
-    margin-bottom: 0.3rem;
-  }
+      /* Info boxes */
+      .info-box {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-left: 4px solid #00d4aa;
+        padding: 1rem 1.2rem;
+        margin: 1rem 0;
+        border-radius: 0 6px 6px 0;
+        font-size: 0.9rem;
+      }
+      .info-box.warning {
+        background: #fffbeb;
+        border-color: #fde68a;
+        border-left-color: #f59e0b;
+      }
+      .info-box.danger {
+        background: #fef2f2;
+        border-color: #fecaca;
+        border-left-color: #ef4444;
+      }
+      .info-box strong {
+        display: block;
+        margin-bottom: 0.3rem;
+      }
 
-  /* Code */
-  code {
-    background: #F1F5F9;
-    padding: 0.1rem 0.4rem;
-    border-radius: 3px;
-    font-size: 0.85rem;
-    font-family: "Consolas", "Monaco", monospace;
-  }
+      /* Code */
+      code {
+        background: #f1f5f9;
+        padding: 0.1rem 0.4rem;
+        border-radius: 3px;
+        font-size: 0.85rem;
+        font-family: "Consolas", "Monaco", monospace;
+      }
 
-  /* Screenshots */
-  .screenshot-block {
-    margin: 1rem 0 1.4rem;
-    page-break-inside: avoid;
-  }
-  .screenshot-block img {
-    width: 100%;
-    height: auto;
-    border: 1px solid #E2E8F0;
-    border-radius: 8px;
-    display: block;
-  }
-  .screenshot-block figcaption {
-    margin-top: 0.5rem;
-    color: #64748B;
-    font-size: 0.8rem;
-    text-align: center;
-  }
+      /* Screenshots */
+      .screenshot-block {
+        margin: 1rem 0 1.4rem;
+        page-break-inside: avoid;
+      }
+      .screenshot-block img {
+        width: 100%;
+        height: auto;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        display: block;
+      }
+      .screenshot-block figcaption {
+        margin-top: 0.5rem;
+        color: #64748b;
+        font-size: 0.8rem;
+        text-align: center;
+      }
 
-  /* Footer */
-  .page-footer {
-    text-align: center;
-    color: #94A3B8;
-    font-size: 0.75rem;
-    margin-top: 4rem;
-    padding-top: 1rem;
-    border-top: 1px solid #E2E8F0;
-  }
+      /* Footer */
+      .page-footer {
+        text-align: center;
+        color: #94a3b8;
+        font-size: 0.75rem;
+        margin-top: 4rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e2e8f0;
+      }
 
-  /* Print */
-  @media print {
-    body { padding: 0; }
-    .no-print { display: none; }
-    h2 { page-break-before: auto; }
-    .cover { padding: 180px 0 100px; }
-  }
+      /* Print */
+      @media print {
+        body {
+          padding: 0;
+        }
+        .no-print {
+          display: none;
+        }
+        h2 {
+          page-break-before: auto;
+        }
+        .cover {
+          padding: 180px 0 100px;
+        }
+      }
 
-  /* Metric explanation list */
-  .metric-list {
-    list-style: none;
-    padding: 0;
-  }
-  .metric-list li {
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #F1F5F9;
-  }
-  .metric-list li strong {
-    color: #0A0E1A;
-    display: inline;
-  }
-  .metric-list li .desc {
-    color: #64748B;
-    font-size: 0.85rem;
-  }
-</style>
-</head>
-<body>
+      /* Metric explanation list */
+      .metric-list {
+        list-style: none;
+        padding: 0;
+      }
+      .metric-list li {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f1f5f9;
+      }
+      .metric-list li strong {
+        color: #0a0e1a;
+        display: inline;
+      }
+      .metric-list li .desc {
+        color: #64748b;
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ========== 表紙 ========== -->
+    <div class="cover">
+      <div class="logo-box">
+        <span>FX</span>
+      </div>
+      <h1>FX Strategy Doctor</h1>
+      <div class="subtitle">FX戦略分析ツール 操作マニュアル</div>
+      <p style="color: #64748b; font-size: 0.95rem">
+        MT4 / MT5 のトレード履歴を解析し、<br />
+        戦略の強み・弱みを可視化する診断レポートツール
+      </p>
+      <div class="version">
+        Version 1.1<br />
+        最終更新: 2026年3月
+      </div>
+    </div>
 
-<!-- ========== 表紙 ========== -->
-<div class="cover">
-  <div class="logo-box">
-    <span>FX</span>
-  </div>
-  <h1>FX Strategy Doctor</h1>
-  <div class="subtitle">FX戦略分析ツール 操作マニュアル</div>
-  <p style="color:#64748B; font-size: 0.95rem;">
-    MT4 / MT5 のトレード履歴を解析し、<br>
-    戦略の強み・弱みを可視化する診断レポートツール
-  </p>
-  <div class="version">
-    Version 1.1<br>
-    最終更新: 2026年3月
-  </div>
-</div>
-
-<!-- ========== 目次 ========== -->
-<div class="toc">
-  <h2>目次</h2>
-  <ol>
-    <li>FX Strategy Doctor とは</li>
-    <li>対応ファイル形式</li>
-    <li>基本操作 — ファイルのアップロードと分析</li>
-    <li>分析結果の見方
-      <ol style="margin-top:0.3rem; padding-left:1.5rem; list-style:none;">
-        <li>4-1. 戦略スコア</li>
-        <li>4-2. パフォーマンス指標</li>
-        <li>4-3. リスク診断</li>
-        <li>4-4. 弱点ランキング</li>
-        <li>4-5. 改善提案</li>
+    <!-- ========== 目次 ========== -->
+    <div class="toc">
+      <h2>目次</h2>
+      <ol>
+        <li>FX Strategy Doctor とは</li>
+        <li>対応ファイル形式</li>
+        <li>基本操作 — ファイルのアップロードと分析</li>
+        <li>
+          分析結果の見方
+          <ol
+            style="margin-top: 0.3rem; padding-left: 1.5rem; list-style: none"
+          >
+            <li>4-1. 戦略スコア</li>
+            <li>4-2. パフォーマンス指標</li>
+            <li>4-3. リスク診断</li>
+            <li>4-4. 弱点ランキング</li>
+            <li>4-5. 改善提案</li>
+          </ol>
+        </li>
+        <li>
+          詳細分析パネル
+          <ol
+            style="margin-top: 0.3rem; padding-left: 1.5rem; list-style: none"
+          >
+            <li>5-1. 曜日別分析</li>
+            <li>5-2. ロットサイズ相関</li>
+            <li>5-3. トレード品質分析</li>
+            <li>5-4. 損益分布</li>
+            <li>5-5. 低品質トレード影響度</li>
+          </ol>
+        </li>
+        <li>モンテカルロシミュレーション</li>
+        <li>レポートの出力・ダウンロード</li>
+        <li>MT4からの履歴エクスポート方法</li>
+        <li>MT5からの履歴エクスポート方法</li>
+        <li>よくある質問（FAQ）</li>
+        <li>トラブルシューティング</li>
       </ol>
-    </li>
-    <li>詳細分析パネル
-      <ol style="margin-top:0.3rem; padding-left:1.5rem; list-style:none;">
-        <li>5-1. 曜日別分析</li>
-        <li>5-2. ロットサイズ相関</li>
-        <li>5-3. トレード品質分析</li>
-        <li>5-4. 損益分布</li>
-        <li>5-5. 低品質トレード影響度</li>
-      </ol>
-    </li>
-    <li>モンテカルロシミュレーション</li>
-    <li>レポートの出力・ダウンロード</li>
-    <li>MT4からの履歴エクスポート方法</li>
-    <li>MT5からの履歴エクスポート方法</li>
-    <li>よくある質問（FAQ）</li>
-    <li>トラブルシューティング</li>
-  </ol>
-</div>
+    </div>
 
-<!-- ========== 1. 概要 ========== -->
-<h2>1. FX Strategy Doctor とは</h2>
+    <!-- ========== 1. 概要 ========== -->
+    <h2>1. FX Strategy Doctor とは</h2>
 
-<p>FX Strategy Doctorは、MT4/MT5のトレード履歴を読み込み、<strong>35種類の分析パターン</strong>で戦略を多角的に評価するWebアプリケーションです。</p>
+    <p>
+      FX Strategy
+      Doctorは、MT4/MT5のトレード履歴を読み込み、<strong>35種類の分析パターン</strong>で戦略を多角的に評価するWebアプリケーションです。
+    </p>
 
-<p>主な機能:</p>
-<ul style="padding-left:1.5rem; margin-bottom:1rem;">
-  <li><strong>100点満点の戦略スコア</strong> — PF・RR・期待値・DDの4指標を重み付けして総合評価</li>
-  <li><strong>35種類の分析パターン</strong> — リスク管理・エントリー・メンタル・通貨ペア・時間帯・戦略全体の6カテゴリで多角的に診断</li>
-  <li><strong>5項目のリスク診断</strong> — DD・PF・連敗・期待値・勝率を各3段階（安全/注意/危険）で評価</li>
-  <li><strong>通貨ペア別・時間帯別・曜日別分析</strong> — 弱い通貨ペアや時間帯を特定</li>
-  <li><strong>モンテカルロシミュレーション</strong> — 1,000回の統計シミュレーションで破綻確率を算出</li>
-  <li><strong>改善提案</strong> — 具体的なフィルター条件付きの改善アドバイス</li>
-  <li><strong>レポート出力</strong> — HTML/CSVでのレポートダウンロード</li>
-</ul>
-
-<div class="info-box">
-  <strong>プライバシーについて</strong>
-  アップロードされたファイルはサーバーに送信されません。すべての分析処理はお使いのブラウザ内で完結します。
-</div>
-
-<div class="info-box">
-  <strong>買い切り型ライセンスについて</strong>
-  FX Strategy Doctorは買い切り型です。一度ご購入いただければ、追加料金なくずっとご利用いただけます。
-</div>
-
-<div class="info-box warning">
-  <strong>お試しアカウントについて</strong>
-  7日間のお試しアカウントをお持ちの場合、画面上部にオレンジ色のカウントダウンバナーが表示されます（残り2日未満になると赤色に変わります）。期限が切れると自動的にログアウトされ、以降はログインできなくなります。継続利用をご希望の場合は製品版をご購入ください。
-</div>
-
-<!-- ========== 2. 対応形式 ========== -->
-<h2>2. 対応ファイル形式</h2>
-
-<table>
-  <thead>
-    <tr><th>形式</th><th>拡張子</th><th>説明</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>CSV</td><td>.csv</td><td>MT4/MT5の口座履歴をCSVエクスポートしたもの</td></tr>
-    <tr><td>Excel</td><td>.xlsx / .xls / .xml</td><td>MT5のExcelレポート、またはCSVをExcelで保存したもの</td></tr>
-    <tr><td>HTML</td><td>.htm / .html</td><td>MT4/MT5の「詳細レポート」HTMLファイル</td></tr>
-  </tbody>
-</table>
-
-<div class="info-box">
-  <strong>ファイルサイズ上限</strong>
-  最大50MBまでのファイルに対応しています。通常のトレード履歴であれば十分なサイズです。
-</div>
-
-<div class="info-box warning">
-  <strong>注意: 文字エンコーディング</strong>
-  MT5のHTMLレポートはUTF-16 LEエンコーディング（BOM付き）で出力されます。本ツールは自動的にエンコーディングを検出して処理するため、変換は不要です。
-</div>
-
-<!-- ========== 3. 基本操作 ========== -->
-<h2>3. 基本操作 — ファイルのアップロードと分析</h2>
-
-<ol class="steps">
-  <li>
-    <strong>ログイン</strong><br>
-    発行されたユーザーIDとパスワードでログインします。お試しアカウントの場合、ログイン後に画面上部に残り日数が表示されます。
-  </li>
-  <li>
-    <strong>ファイルを選択</strong><br>
-    画面中央のアップロードエリアをクリックするか、ファイルをドラッグ＆ドロップします。対応形式（CSV / Excel / HTML）のファイルを選択してください。同じファイルを再度選択することも可能です。
-  </li>
-  <li>
-    <strong>ファイルを確認</strong><br>
-    選択したファイル名とサイズが表示されます。正しいファイルであることを確認してください。
-  </li>
-  <li>
-    <strong>「分析する」ボタンをクリック</strong><br>
-    分析処理が開始されます。通常数秒で完了します。
-  </li>
-  <li>
-    <strong>分析結果を確認</strong><br>
-    分析完了後、自動的に結果画面に遷移します。各セクションを確認してください。
-  </li>
-</ol>
-
-<div class="info-box">
-  <strong>サンプルデータで試す</strong>
-  アップロードエリア下の「サンプルデータで試す」ボタンをクリックすると、デモ用のトレード履歴で分析を体験できます。
-</div>
-
-<figure class="screenshot-block">
-  <img src="./images/1_top.png" alt="ログイン後のアップロード画面">
-  <figcaption>画面例: ログイン後のアップロード画面（ファイル投入前）</figcaption>
-</figure>
-
-<!-- ========== 4. 分析結果の見方 ========== -->
-<h2>4. 分析結果の見方</h2>
-
-<h3>4-1. 戦略スコア（Strategy Score）</h3>
-
-<p>100点満点で戦略の総合力を評価します。以下の4項目を重み付けして算出します。</p>
-
-<table>
-  <thead>
-    <tr><th>項目</th><th>配点</th><th>評価基準</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>Profit Factor（PF）</td><td>25点</td><td>総利益 &divide; 総損失。1.5以上で高評価</td></tr>
-    <tr><td>Risk Reward（RR）</td><td>25点</td><td>平均利益 &divide; 平均損失。1.0以上で高評価</td></tr>
-    <tr><td>期待値</td><td>25点</td><td>1トレードあたりの期待利益。正の値で高評価</td></tr>
-    <tr><td>最大DD</td><td>25点</td><td>最大ドローダウン率。低いほど高評価</td></tr>
-  </tbody>
-</table>
-
-<figure class="screenshot-block">
-  <img src="./images/2_score_kpi.png" alt="戦略スコアとKPIの分析結果画面">
-  <figcaption>分析結果画面: 戦略スコア・主要KPI</figcaption>
-</figure>
-
-<table>
-  <thead>
-    <tr><th>グレード</th><th>スコア範囲</th><th>評価</th></tr>
-  </thead>
-  <tbody>
-    <tr><td style="color:#FFD700; font-weight:700;">S</td><td>85〜100</td><td>非常に優秀な戦略</td></tr>
-    <tr><td style="color:#00D4AA; font-weight:700;">A</td><td>70〜84</td><td>優秀な戦略</td></tr>
-    <tr><td style="color:#3B82F6; font-weight:700;">B</td><td>55〜69</td><td>改善の余地あり</td></tr>
-    <tr><td style="color:#F59E0B; font-weight:700;">C</td><td>40〜54</td><td>要改善</td></tr>
-    <tr><td style="color:#EF4444; font-weight:700;">D</td><td>25〜39</td><td>戦略の見直しが必要</td></tr>
-    <tr><td style="color:#DC2626; font-weight:700;">F</td><td>0〜24</td><td>根本的な戦略変更が必要</td></tr>
-  </tbody>
-</table>
-
-<h3>4-2. パフォーマンス指標</h3>
-
-<ul class="metric-list">
-  <li><strong>トレード回数</strong> <span class="desc">— 分析対象の総トレード数</span></li>
-  <li><strong>勝率</strong> <span class="desc">— 勝ちトレードの割合（%）</span></li>
-  <li><strong>Profit Factor</strong> <span class="desc">— 総利益 &divide; 総損失。1.0以上で利益が出ている状態</span></li>
-  <li><strong>Risk Reward</strong> <span class="desc">— 平均利益額 &divide; 平均損失額</span></li>
-  <li><strong>期待値</strong> <span class="desc">— 1トレードあたりの期待利益（円またはドル）</span></li>
-  <li><strong>純損益</strong> <span class="desc">— 手数料・スワップ込みの合計損益</span></li>
-  <li><strong>最大DD</strong> <span class="desc">— 資金ピークからの最大下落額と下落率</span></li>
-  <li><strong>最大勝ち / 最大負け</strong> <span class="desc">— 1トレードでの最大利益と最大損失</span></li>
-</ul>
-
-<h3>4-3. リスク診断</h3>
-
-<p>5つのリスク項目それぞれを3段階（安全 / 注意 / 危険）で評価します。</p>
-
-<table>
-  <thead>
-    <tr><th>診断項目</th><th style="color:#00D4AA;">安全</th><th style="color:#F59E0B;">注意</th><th style="color:#EF4444;">危険</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>最大ドローダウン</td><td>15%以下</td><td>15〜30%</td><td>30%超</td></tr>
-    <tr><td>Profit Factor</td><td>1.2以上</td><td>1.0〜1.2</td><td>1.0未満</td></tr>
-    <tr><td>最大連敗数</td><td>5回未満</td><td>5〜7回</td><td>8回以上</td></tr>
-    <tr><td>期待値</td><td>十分にプラス</td><td>平均損失の10%未満</td><td>マイナス</td></tr>
-    <tr><td>勝率</td><td>45%以上</td><td>30〜45%</td><td>30%未満</td></tr>
-  </tbody>
-</table>
-
-<figure class="screenshot-block">
-  <img src="./images/3_risk_weakness.png" alt="リスク診断と弱点ランキング画面">
-  <figcaption>分析結果画面: リスク診断と弱点ランキング</figcaption>
-</figure>
-
-<h3>4-4. 弱点ランキング</h3>
-<p>通貨ペア別・時間帯別の分析結果から、パフォーマンスが低い項目を自動検出し、重要度順にランキング表示します。「HIGH」は即座の対応が必要、「MEDIUM」は改善推奨を意味します。</p>
-
-<h3>4-5. 改善提案</h3>
-<p>35種類の分析パターンに基づき、具体的な改善アドバイスを提供します。各提案には優先度（高/中/低）とカテゴリ（リスク管理/エントリー/メンタル等）が表示されます。提案内容にはフィルター条件（例: 「金曜16時以降のトレードを避ける」）など、実行可能な具体策が含まれます。</p>
-
-<figure class="screenshot-block">
-  <img src="./images/4_proposals.png" alt="改善提案の分析結果画面">
-  <figcaption>分析結果画面: 優先度付きの改善提案</figcaption>
-</figure>
-
-<!-- ========== 5. 詳細分析パネル ========== -->
-<h2>5. 詳細分析パネル</h2>
-
-<p>各パネルはデフォルトで閉じた状態で表示されます。パネルヘッダーをクリックすると展開されます。</p>
-
-<h3>5-1. 曜日別分析</h3>
-<p>月曜〜金曜の各曜日ごとの勝率・PF・損益を集計します。特定の曜日にパフォーマンスが悪い場合、その曜日のトレードを避けることで全体成績が改善する可能性があります。</p>
-
-<h3>5-2. ロットサイズ相関</h3>
-<p>ロットサイズ別にトレード成績を分析します。ロットが大きいときに損失が増える傾向がないかを確認できます。</p>
-
-<h3>5-3. トレード品質分析</h3>
-<ul class="metric-list">
-  <li><strong>利益集中率</strong> <span class="desc">— 上位20%のトレードが総利益の何%を占めるか。高いほど少数のトレードに依存</span></li>
-  <li><strong>損失集中率</strong> <span class="desc">— 上位20%の損失トレードが総損失の何%を占めるか。高いほど大きな損失が集中</span></li>
-  <li><strong>一貫性スコア</strong> <span class="desc">— 集中率が低いほどトレード結果にバラつきが少なく、スコアが高くなります</span></li>
-</ul>
-
-<h3>5-4. 損益分布</h3>
-<p>全トレードの損益額をヒストグラムで表示します。利益と損失の分布形状から、戦略の特性（コツコツドカン型、スイング型など）を視覚的に把握できます。</p>
-
-<h3>5-5. 低品質トレード影響度</h3>
-<p>最も損失の大きいトレード（最悪トレード）を除外した場合の成績改善シミュレーションです。除外対象トレードの共通パターン（通貨ペア・曜日・時間帯）も分析され、具体的なフィルター提案に繋がります。</p>
-
-<figure class="screenshot-block">
-  <img src="./images/5_advanced.png" alt="詳細分析パネルの画面">
-  <figcaption>分析結果画面: 詳細分析パネル（曜日別・品質分析など）</figcaption>
-</figure>
-
-<!-- ========== 6. モンテカルロ ========== -->
-<h2>6. モンテカルロシミュレーション</h2>
-
-<p>過去のトレード結果をランダムに並べ替えて1,000回シミュレーションすることで、将来の資金推移の統計的な分布を予測します。</p>
-
-<div class="info-box">
-  <strong>決定論的シミュレーション</strong>
-  同じトレードデータに対しては常に同じ結果が得られます（シード付き疑似乱数を使用）。読み込みのたびに結果が変わることはありません。
-</div>
-
-<table>
-  <thead>
-    <tr><th>指標</th><th>説明</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>利益確率</td><td>1,000回のシミュレーション中、最終的にプラスになった割合</td></tr>
-    <tr><td>破綻確率</td><td>資金がゼロ以下に到達した割合。シミュレーション長はトレード数の2倍（最低200回）</td></tr>
-    <tr><td>中央値リターン</td><td>シミュレーション結果の50パーセンタイル</td></tr>
-    <tr><td>最大ドローダウン</td><td>全シミュレーションの95パーセンタイルDD</td></tr>
-  </tbody>
-</table>
-
-<h4>エクイティカーブの読み方</h4>
-<p>チャートには複数のシミュレーションパスが表示されます。緑色の線は利益で終わったパス、赤色は損失で終わったパスを示します。パスの広がりが大きいほど、結果のバラつき（リスク）が大きいことを意味します。</p>
-
-<figure class="screenshot-block">
-  <img src="./images/6_monte_carlo.png" alt="モンテカルロシミュレーション画面">
-  <figcaption>分析結果画面: モンテカルロシミュレーション</figcaption>
-</figure>
-
-<!-- ========== 7. レポート出力 ========== -->
-<h2>7. レポートの出力・ダウンロード</h2>
-
-<p>分析結果画面のダウンロードボタンから、以下の形式でレポートを出力できます。</p>
-
-<table>
-  <thead>
-    <tr><th>形式</th><th>内容</th><th>用途</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>HTMLレポート</td><td>スコア・指標・通貨ペア/時間帯分析・モンテカルロ結果・改善提案</td><td>ブラウザで閲覧、PDF保存</td></tr>
-    <tr><td>指標CSV</td><td>全パフォーマンス指標の数値データ</td><td>Excelでの二次分析</td></tr>
-    <tr><td>サマリーCSV</td><td>スコア・主要指標・通貨ペア別分析の一覧</td><td>記録・比較用</td></tr>
-  </tbody>
-</table>
-
-<!-- ========== 8. MT4エクスポート ========== -->
-<h2>8. MT4からの履歴エクスポート方法</h2>
-
-<ol class="steps">
-  <li>
-    <strong>MT4を起動し、「ターミナル」ウィンドウを開く</strong><br>
-    メニューバーの「表示」→「ターミナル」、またはキーボードの <code>Ctrl + T</code> を押します。
-  </li>
-  <li>
-    <strong>「口座履歴」タブを選択</strong><br>
-    ターミナルウィンドウ下部の「口座履歴」タブをクリックします。
-  </li>
-  <li>
-    <strong>期間を設定</strong><br>
-    口座履歴エリア内で右クリック → 「全履歴」を選択すると、全期間のトレード履歴が表示されます。特定期間を指定する場合は「期間のカスタム設定」を選択してください。
-  </li>
-  <li>
-    <strong>レポートを保存</strong><br>
-    口座履歴エリア内で右クリック → 以下のいずれかを選択:
-    <ul style="margin-top:0.3rem; padding-left:1.5rem;">
-      <li><strong>「レポートの保存」</strong> → HTMLファイル（.htm）で保存</li>
-      <li><strong>「詳細レポートの保存」</strong> → より詳細なHTMLファイルで保存（推奨）</li>
+    <p>主な機能:</p>
+    <ul style="padding-left: 1.5rem; margin-bottom: 1rem">
+      <li>
+        <strong>100点満点の戦略スコア</strong> —
+        PF・RR・期待値・DDの4指標を重み付けして総合評価
+      </li>
+      <li>
+        <strong>35種類の分析パターン</strong> —
+        リスク管理・エントリー・メンタル・通貨ペア・時間帯・戦略全体の6カテゴリで多角的に診断
+      </li>
+      <li>
+        <strong>5項目のリスク診断</strong> —
+        DD・PF・連敗・期待値・勝率を各3段階（安全/注意/危険）で評価
+      </li>
+      <li>
+        <strong>通貨ペア別・時間帯別・曜日別分析</strong> —
+        弱い通貨ペアや時間帯を特定
+      </li>
+      <li>
+        <strong>モンテカルロシミュレーション</strong> —
+        1,000回の統計シミュレーションで破綻確率を算出
+      </li>
+      <li>
+        <strong>改善提案</strong> — 具体的なフィルター条件付きの改善アドバイス
+      </li>
+      <li><strong>レポート出力</strong> — HTML/CSVでのレポートダウンロード</li>
     </ul>
-  </li>
-  <li>
-    <strong>保存したファイルをアップロード</strong><br>
-    保存した .htm ファイルをFX Strategy Doctorにアップロードしてください。
-  </li>
-</ol>
 
-<div class="info-box warning">
-  <strong>注意: 「全履歴」の選択を忘れずに</strong>
-  デフォルトでは直近の履歴のみ表示される場合があります。分析の精度を高めるために、必ず「全履歴」を選択してからレポートを保存してください。
-</div>
+    <div class="info-box">
+      <strong>プライバシーについて</strong>
+      アップロードされたファイルはサーバーに送信されません。すべての分析処理はお使いのブラウザ内で完結します。
+    </div>
 
-<!-- ========== 9. MT5エクスポート ========== -->
-<h2>9. MT5からの履歴エクスポート方法</h2>
+    <div class="info-box">
+      <strong>買い切り型ライセンスについて</strong>
+      FX Strategy
+      Doctorは買い切り型です。一度ご購入いただければ、追加料金なくずっとご利用いただけます。
+    </div>
 
-<ol class="steps">
-  <li>
-    <strong>MT5を起動し、「ツールボックス」ウィンドウを開く</strong><br>
-    メニューバーの「表示」→「ツールボックス」、またはキーボードの <code>Ctrl + T</code> を押します。
-  </li>
-  <li>
-    <strong>「口座履歴」タブを選択</strong><br>
-    ツールボックスの「口座履歴」タブをクリックします。
-  </li>
-  <li>
-    <strong>期間を設定</strong><br>
-    口座履歴エリア内で右クリック → 「期間」→「全履歴」を選択します。
-  </li>
-  <li>
-    <strong>レポートを保存</strong><br>
-    口座履歴エリア内で右クリック → 以下のいずれかを選択:
-    <ul style="margin-top:0.3rem; padding-left:1.5rem;">
-      <li><strong>「レポート」→「HTML」</strong> → HTMLファイルで保存</li>
-      <li><strong>「レポート」→「Excel (xlsx)」</strong> → Excelファイルで保存</li>
+    <div class="info-box warning">
+      <strong>お試しアカウントについて</strong>
+      7日間のお試しアカウントをお持ちの場合、画面上部にオレンジ色のカウントダウンバナーが表示されます（残り2日未満になると赤色に変わります）。期限が切れると自動的にログアウトされ、以降はログインできなくなります。継続利用をご希望の場合は製品版をご購入ください。
+    </div>
+
+    <!-- ========== 2. 対応形式 ========== -->
+    <h2>2. 対応ファイル形式</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>形式</th>
+          <th>拡張子</th>
+          <th>説明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>CSV</td>
+          <td>.csv</td>
+          <td>MT4/MT5の口座履歴をCSVエクスポートしたもの</td>
+        </tr>
+        <tr>
+          <td>Excel</td>
+          <td>.xlsx / .xls / .xml</td>
+          <td>MT5のExcelレポート、またはCSVをExcelで保存したもの</td>
+        </tr>
+        <tr>
+          <td>HTML</td>
+          <td>.htm / .html</td>
+          <td>MT4/MT5の「詳細レポート」HTMLファイル</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="info-box">
+      <strong>ファイルサイズ上限</strong>
+      最大50MBまでのファイルに対応しています。通常のトレード履歴であれば十分なサイズです。
+    </div>
+
+    <div class="info-box warning">
+      <strong>注意: 文字エンコーディング</strong>
+      MT5のHTMLレポートはUTF-16
+      LEエンコーディング（BOM付き）で出力されます。本ツールは自動的にエンコーディングを検出して処理するため、変換は不要です。
+    </div>
+
+    <!-- ========== 3. 基本操作 ========== -->
+    <h2>3. 基本操作 — ファイルのアップロードと分析</h2>
+
+    <ol class="steps">
+      <li>
+        <strong>ログイン</strong><br />
+        発行されたユーザーIDとパスワードでログインします。お試しアカウントの場合、ログイン後に画面上部に残り日数が表示されます。
+      </li>
+      <li>
+        <strong>ファイルを選択</strong><br />
+        画面中央のアップロードエリアをクリックするか、ファイルをドラッグ＆ドロップします。対応形式（CSV
+        / Excel /
+        HTML）のファイルを選択してください。同じファイルを再度選択することも可能です。
+      </li>
+      <li>
+        <strong>ファイルを確認</strong><br />
+        選択したファイル名とサイズが表示されます。正しいファイルであることを確認してください。
+      </li>
+      <li>
+        <strong>「分析する」ボタンをクリック</strong><br />
+        分析処理が開始されます。通常数秒で完了します。
+      </li>
+      <li>
+        <strong>分析結果を確認</strong><br />
+        分析完了後、自動的に結果画面に遷移します。各セクションを確認してください。
+      </li>
+    </ol>
+
+    <div class="info-box">
+      <strong>サンプルデータで試す</strong>
+      アップロードエリア下の「サンプルデータで試す」ボタンをクリックすると、デモ用のトレード履歴で分析を体験できます。
+    </div>
+
+    <figure class="screenshot-block">
+      <img src="./images/1_top.png" alt="ログイン後のアップロード画面" />
+      <figcaption>
+        画面例: ログイン後のアップロード画面（ファイル投入前）
+      </figcaption>
+    </figure>
+
+    <!-- ========== 4. 分析結果の見方 ========== -->
+    <h2>4. 分析結果の見方</h2>
+
+    <h3>4-1. 戦略スコア（Strategy Score）</h3>
+
+    <p>
+      100点満点で戦略の総合力を評価します。以下の4項目を重み付けして算出します。
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>項目</th>
+          <th>配点</th>
+          <th>評価基準</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Profit Factor（PF）</td>
+          <td>25点</td>
+          <td>総利益 &divide; 総損失。1.5以上で高評価</td>
+        </tr>
+        <tr>
+          <td>Risk Reward（RR）</td>
+          <td>25点</td>
+          <td>平均利益 &divide; 平均損失。1.0以上で高評価</td>
+        </tr>
+        <tr>
+          <td>期待値</td>
+          <td>25点</td>
+          <td>1トレードあたりの期待利益。正の値で高評価</td>
+        </tr>
+        <tr>
+          <td>最大DD</td>
+          <td>25点</td>
+          <td>最大ドローダウン率。低いほど高評価</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <figure class="screenshot-block">
+      <img src="./images/2_score_kpi.png" alt="戦略スコアとKPIの分析結果画面" />
+      <figcaption>分析結果画面: 戦略スコア・主要KPI</figcaption>
+    </figure>
+
+    <table>
+      <thead>
+        <tr>
+          <th>グレード</th>
+          <th>スコア範囲</th>
+          <th>評価</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color: #ffd700; font-weight: 700">S</td>
+          <td>85〜100</td>
+          <td>非常に優秀な戦略</td>
+        </tr>
+        <tr>
+          <td style="color: #00d4aa; font-weight: 700">A</td>
+          <td>70〜84</td>
+          <td>優秀な戦略</td>
+        </tr>
+        <tr>
+          <td style="color: #3b82f6; font-weight: 700">B</td>
+          <td>55〜69</td>
+          <td>改善の余地あり</td>
+        </tr>
+        <tr>
+          <td style="color: #f59e0b; font-weight: 700">C</td>
+          <td>40〜54</td>
+          <td>要改善</td>
+        </tr>
+        <tr>
+          <td style="color: #ef4444; font-weight: 700">D</td>
+          <td>25〜39</td>
+          <td>戦略の見直しが必要</td>
+        </tr>
+        <tr>
+          <td style="color: #dc2626; font-weight: 700">F</td>
+          <td>0〜24</td>
+          <td>根本的な戦略変更が必要</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>4-2. パフォーマンス指標</h3>
+
+    <ul class="metric-list">
+      <li>
+        <strong>トレード回数</strong>
+        <span class="desc">— 分析対象の総トレード数</span>
+      </li>
+      <li>
+        <strong>勝率</strong>
+        <span class="desc">— 勝ちトレードの割合（%）</span>
+      </li>
+      <li>
+        <strong>Profit Factor</strong>
+        <span class="desc"
+          >— 総利益 &divide; 総損失。1.0以上で利益が出ている状態</span
+        >
+      </li>
+      <li>
+        <strong>Risk Reward</strong>
+        <span class="desc">— 平均利益額 &divide; 平均損失額</span>
+      </li>
+      <li>
+        <strong>期待値</strong>
+        <span class="desc">— 1トレードあたりの期待利益（円またはドル）</span>
+      </li>
+      <li>
+        <strong>純損益</strong>
+        <span class="desc">— 手数料・スワップ込みの合計損益</span>
+      </li>
+      <li>
+        <strong>最大DD</strong>
+        <span class="desc">— 資金ピークからの最大下落額と下落率</span>
+      </li>
+      <li>
+        <strong>最大勝ち / 最大負け</strong>
+        <span class="desc">— 1トレードでの最大利益と最大損失</span>
+      </li>
     </ul>
-    いずれの形式でも本ツールで読み込み可能です。
-  </li>
-</ol>
 
-<!-- ========== 10. FAQ ========== -->
-<h2>10. よくある質問（FAQ）</h2>
+    <h3>4-3. リスク診断</h3>
 
-<h4>Q: データは外部に送信されますか？</h4>
-<p>いいえ。すべての分析処理はブラウザ内で行われます。トレードデータがサーバーに送信されることはありません。</p>
+    <p>5つのリスク項目それぞれを3段階（安全 / 注意 / 危険）で評価します。</p>
 
-<h4>Q: 同じファイルなのに結果が変わることはありますか？</h4>
-<p>いいえ。モンテカルロシミュレーションを含むすべての計算は決定論的（シード付き疑似乱数使用）です。同じデータであれば常に同じ結果が出ます。</p>
+    <table>
+      <thead>
+        <tr>
+          <th>診断項目</th>
+          <th style="color: #00d4aa">安全</th>
+          <th style="color: #f59e0b">注意</th>
+          <th style="color: #ef4444">危険</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>最大ドローダウン</td>
+          <td>15%以下</td>
+          <td>15〜30%</td>
+          <td>30%超</td>
+        </tr>
+        <tr>
+          <td>Profit Factor</td>
+          <td>1.2以上</td>
+          <td>1.0〜1.2</td>
+          <td>1.0未満</td>
+        </tr>
+        <tr>
+          <td>最大連敗数</td>
+          <td>5回未満</td>
+          <td>5〜7回</td>
+          <td>8回以上</td>
+        </tr>
+        <tr>
+          <td>期待値</td>
+          <td>十分にプラス</td>
+          <td>平均損失の10%未満</td>
+          <td>マイナス</td>
+        </tr>
+        <tr>
+          <td>勝率</td>
+          <td>45%以上</td>
+          <td>30〜45%</td>
+          <td>30%未満</td>
+        </tr>
+      </tbody>
+    </table>
 
-<h4>Q: スマートフォンで使えますか？</h4>
-<p>はい。レスポンシブデザインに対応しており、スマートフォンやタブレットのブラウザからもご利用いただけます。ただし、PC環境での利用を推奨します。</p>
+    <figure class="screenshot-block">
+      <img
+        src="./images/3_risk_weakness.png"
+        alt="リスク診断と弱点ランキング画面"
+      />
+      <figcaption>分析結果画面: リスク診断と弱点ランキング</figcaption>
+    </figure>
 
-<h4>Q: 対応しているブローカーは？</h4>
-<p>MT4/MT5の標準フォーマットに対応しているため、MT4/MT5を採用しているすべてのブローカーに対応しています。ヘッダー名のマッピングにより、各ブローカー固有の列名にも柔軟に対応します。</p>
+    <h3>4-4. 弱点ランキング</h3>
+    <p>
+      通貨ペア別・時間帯別の分析結果から、パフォーマンスが低い項目を自動検出し、重要度順にランキング表示します。「HIGH」は即座の対応が必要、「MEDIUM」は改善推奨を意味します。
+    </p>
 
-<h4>Q: EA（自動売買）の履歴も分析できますか？</h4>
-<p>はい。裁量トレード、EA、いずれの履歴も同じ形式で出力されるため、問題なく分析できます。</p>
+    <h3>4-5. 改善提案</h3>
+    <p>
+      35種類の分析パターンに基づき、具体的な改善アドバイスを提供します。各提案には優先度（高/中/低）とカテゴリ（リスク管理/エントリー/メンタル等）が表示されます。提案内容にはフィルター条件（例:
+      「金曜16時以降のトレードを避ける」）など、実行可能な具体策が含まれます。
+    </p>
 
-<h4>Q: 買い切りですか？サブスクですか？</h4>
-<p>買い切り型です。一度ご購入いただければ追加料金なくずっとご利用いただけます。お試し版（7日間）の場合は、期限が切れると自動的にログインできなくなります。</p>
+    <figure class="screenshot-block">
+      <img src="./images/4_proposals.png" alt="改善提案の分析結果画面" />
+      <figcaption>分析結果画面: 優先度付きの改善提案</figcaption>
+    </figure>
 
-<h4>Q: お試し期間が終わったらどうなりますか？</h4>
-<p>お試し期間終了後はログインできなくなります。分析データはサーバーに保存されていないため、再度購入後に改めてファイルをアップロードしてください。</p>
+    <!-- ========== 5. 詳細分析パネル ========== -->
+    <h2>5. 詳細分析パネル</h2>
 
-<h4>Q: 日本語と英語を切り替えられますか？</h4>
-<p>はい。画面右上の言語切替ボタンで日本語と英語を切り替えることができます。分析結果やアドバイスもすべて切り替わります。</p>
+    <p>
+      各パネルはデフォルトで閉じた状態で表示されます。パネルヘッダーをクリックすると展開されます。
+    </p>
 
-<h4>Q: 手数料やスワップは計算に含まれますか？</h4>
-<p>はい。トレード履歴にCommission（手数料）、Swap、Taxes（税金）、Fee（費用）の列がある場合、自動的に損益に加算して計算します。</p>
+    <h3>5-1. 曜日別分析</h3>
+    <p>
+      月曜〜金曜の各曜日ごとの勝率・PF・損益を集計します。特定の曜日にパフォーマンスが悪い場合、その曜日のトレードを避けることで全体成績が改善する可能性があります。
+    </p>
 
-<!-- ========== 11. トラブルシューティング ========== -->
-<h2>11. トラブルシューティング</h2>
+    <h3>5-2. ロットサイズ相関</h3>
+    <p>
+      ロットサイズ別にトレード成績を分析します。ロットが大きいときに損失が増える傾向がないかを確認できます。
+    </p>
 
-<table>
-  <thead>
-    <tr><th style="width:35%;">症状</th><th>原因と対処法</th></tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>「必須列が見つかりません」と表示される</td>
-      <td>CSVのヘッダー行に <code>Time</code>、<code>Symbol</code>、<code>Profit</code> に相当する列名がありません。MT4/MT5の口座履歴からエクスポートしたファイルであることを確認してください。手動で作成したCSVの場合、ヘッダー名が正しいか確認してください。</td>
-    </tr>
-    <tr>
-      <td>「N行のデータをスキップしました」と表示される</td>
-      <td>一部の行が解析できませんでした。入出金履歴やバランス調整行は自動スキップされるため、通常は問題ありません。スキップ数がトレード数に比べて多い場合は、ファイル形式を確認してください。</td>
-    </tr>
-    <tr>
-      <td>ファイルを選択できない</td>
-      <td>対応形式（.csv / .xlsx / .xls / .xml / .htm / .html）であることを確認してください。ファイルサイズが50MBを超えている場合はエラーになります。</td>
-    </tr>
-    <tr>
-      <td>分析結果が実態と異なる</td>
-      <td>MT4の場合「全履歴」を選択せずに一部の期間のみエクスポートした可能性があります。口座履歴で右クリック →「全履歴」を選択してから再度エクスポートしてください。</td>
-    </tr>
-    <tr>
-      <td>文字化けする</td>
-      <td>本ツールはUTF-8、UTF-16 LE/BEエンコーディングに自動対応しています。それでも文字化けする場合は、ファイルをメモ帳で開き「UTF-8（BOM付き）」で保存し直してからアップロードしてください。</td>
-    </tr>
-    <tr>
-      <td>HTMLレポートが読み込めない</td>
-      <td>MT4/MT5以外のツールで生成されたHTMLの場合、テーブル構造が異なる可能性があります。MT4/MT5の標準エクスポート機能を使用してください。</td>
-    </tr>
-    <tr>
-      <td>「ご利用期限が終了しています」と表示される</td>
-      <td>お試しアカウントの期限が切れています。継続利用するには、販売ページのメッセージ機能より製品版の購入をお申し込みください。</td>
-    </tr>
-    <tr>
-      <td>分析中に突然ログアウトされた</td>
-      <td>お試しアカウントの期限がちょうど到来したため、自動ログアウトされました。ブラウザ内の分析データは保存されていないため、製品版ご購入後に再度ファイルをアップロードしてください。</td>
-    </tr>
-  </tbody>
-</table>
+    <h3>5-3. トレード品質分析</h3>
+    <ul class="metric-list">
+      <li>
+        <strong>利益集中率</strong>
+        <span class="desc"
+          >—
+          上位20%のトレードが総利益の何%を占めるか。高いほど少数のトレードに依存</span
+        >
+      </li>
+      <li>
+        <strong>損失集中率</strong>
+        <span class="desc"
+          >—
+          上位20%の損失トレードが総損失の何%を占めるか。高いほど大きな損失が集中</span
+        >
+      </li>
+      <li>
+        <strong>一貫性スコア</strong>
+        <span class="desc"
+          >—
+          集中率が低いほどトレード結果にバラつきが少なく、スコアが高くなります</span
+        >
+      </li>
+    </ul>
 
-<div class="info-box danger">
-  <strong>重要: 未決済ポジションについて</strong>
-  MT4のHTMLレポートに「Open Trades」（未決済ポジション）セクションが含まれている場合、本ツールは自動的にこれを除外し、決済済みトレードのみを分析対象とします。含み損益は分析に含まれません。
-</div>
+    <h3>5-4. 損益分布</h3>
+    <p>
+      全トレードの損益額をヒストグラムで表示します。利益と損失の分布形状から、戦略の特性（コツコツドカン型、スイング型など）を視覚的に把握できます。
+    </p>
 
-<!-- ========== Footer ========== -->
-<div class="page-footer">
-  <p>FX Strategy Doctor 操作マニュアル v1.1</p>
-  <p>&copy; 2026 FX Strategy Doctor. All rights reserved.</p>
-  <p style="margin-top:0.5rem; font-size:0.7rem; color:#CBD5E1;">
-    本ツールは投資助言を目的とするものではありません。トレードの最終判断はご自身の責任で行ってください。
-  </p>
-</div>
+    <h3>5-5. 低品質トレード影響度</h3>
+    <p>
+      最も損失の大きいトレード（最悪トレード）を除外した場合の成績改善シミュレーションです。除外対象トレードの共通パターン（通貨ペア・曜日・時間帯）も分析され、具体的なフィルター提案に繋がります。
+    </p>
 
-</body>
+    <figure class="screenshot-block">
+      <img src="./images/5_advanced.png" alt="詳細分析パネルの画面" />
+      <figcaption>
+        分析結果画面: 詳細分析パネル（曜日別・品質分析など）
+      </figcaption>
+    </figure>
+
+    <!-- ========== 6. モンテカルロ ========== -->
+    <h2>6. モンテカルロシミュレーション</h2>
+
+    <p>
+      過去のトレード結果をランダムに並べ替えて1,000回シミュレーションすることで、将来の資金推移の統計的な分布を予測します。
+    </p>
+
+    <div class="info-box">
+      <strong>決定論的シミュレーション</strong>
+      同じトレードデータに対しては常に同じ結果が得られます（シード付き疑似乱数を使用）。読み込みのたびに結果が変わることはありません。
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>指標</th>
+          <th>説明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>利益確率</td>
+          <td>1,000回のシミュレーション中、最終的にプラスになった割合</td>
+        </tr>
+        <tr>
+          <td>破綻確率</td>
+          <td>
+            資金がゼロ以下に到達した割合。シミュレーション長はトレード数の2倍（最低200回）
+          </td>
+        </tr>
+        <tr>
+          <td>中央値リターン</td>
+          <td>シミュレーション結果の50パーセンタイル</td>
+        </tr>
+        <tr>
+          <td>最大ドローダウン</td>
+          <td>全シミュレーションの95パーセンタイルDD</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h4>エクイティカーブの読み方</h4>
+    <p>
+      チャートには複数のシミュレーションパスが表示されます。緑色の線は利益で終わったパス、赤色は損失で終わったパスを示します。パスの広がりが大きいほど、結果のバラつき（リスク）が大きいことを意味します。
+    </p>
+
+    <figure class="screenshot-block">
+      <img
+        src="./images/6_monte_carlo.png"
+        alt="モンテカルロシミュレーション画面"
+      />
+      <figcaption>分析結果画面: モンテカルロシミュレーション</figcaption>
+    </figure>
+
+    <!-- ========== 7. レポート出力 ========== -->
+    <h2>7. レポートの出力・ダウンロード</h2>
+
+    <p>
+      分析結果画面のダウンロードボタンから、以下の形式でレポートを出力できます。
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>形式</th>
+          <th>内容</th>
+          <th>用途</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>HTMLレポート</td>
+          <td>スコア・指標・通貨ペア/時間帯分析・モンテカルロ結果・改善提案</td>
+          <td>ブラウザで閲覧、PDF保存</td>
+        </tr>
+        <tr>
+          <td>指標CSV</td>
+          <td>全パフォーマンス指標の数値データ</td>
+          <td>Excelでの二次分析</td>
+        </tr>
+        <tr>
+          <td>サマリーCSV</td>
+          <td>スコア・主要指標・通貨ペア別分析の一覧</td>
+          <td>記録・比較用</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ========== 8. MT4エクスポート ========== -->
+    <h2>8. MT4からの履歴エクスポート方法</h2>
+
+    <ol class="steps">
+      <li>
+        <strong>MT4を起動し、「ターミナル」ウィンドウを開く</strong><br />
+        メニューバーの「表示」→「ターミナル」、またはキーボードの
+        <code>Ctrl + T</code> を押します。
+      </li>
+      <li>
+        <strong>「口座履歴」タブを選択</strong><br />
+        ターミナルウィンドウ下部の「口座履歴」タブをクリックします。
+      </li>
+      <li>
+        <strong>期間を設定</strong><br />
+        口座履歴エリア内で右クリック →
+        「全履歴」を選択すると、全期間のトレード履歴が表示されます。特定期間を指定する場合は「期間のカスタム設定」を選択してください。
+      </li>
+      <li>
+        <strong>レポートを保存</strong><br />
+        口座履歴エリア内で右クリック → 以下のいずれかを選択:
+        <ul style="margin-top: 0.3rem; padding-left: 1.5rem">
+          <li>
+            <strong>「レポートの保存」</strong> → HTMLファイル（.htm）で保存
+          </li>
+          <li>
+            <strong>「詳細レポートの保存」</strong> →
+            より詳細なHTMLファイルで保存（推奨）
+          </li>
+        </ul>
+      </li>
+      <li>
+        <strong>保存したファイルをアップロード</strong><br />
+        保存した .htm ファイルをFX Strategy Doctorにアップロードしてください。
+      </li>
+    </ol>
+
+    <div class="info-box warning">
+      <strong>注意: 「全履歴」の選択を忘れずに</strong>
+      デフォルトでは直近の履歴のみ表示される場合があります。分析の精度を高めるために、必ず「全履歴」を選択してからレポートを保存してください。
+    </div>
+
+    <!-- ========== 9. MT5エクスポート ========== -->
+    <h2>9. MT5からの履歴エクスポート方法</h2>
+
+    <ol class="steps">
+      <li>
+        <strong>MT5を起動し、「ツールボックス」ウィンドウを開く</strong><br />
+        メニューバーの「表示」→「ツールボックス」、またはキーボードの
+        <code>Ctrl + T</code> を押します。
+      </li>
+      <li>
+        <strong>「口座履歴」タブを選択</strong><br />
+        ツールボックスの「口座履歴」タブをクリックします。
+      </li>
+      <li>
+        <strong>期間を設定</strong><br />
+        口座履歴エリア内で右クリック → 「期間」→「全履歴」を選択します。
+      </li>
+      <li>
+        <strong>レポートを保存</strong><br />
+        口座履歴エリア内で右クリック → 以下のいずれかを選択:
+        <ul style="margin-top: 0.3rem; padding-left: 1.5rem">
+          <li><strong>「レポート」→「HTML」</strong> → HTMLファイルで保存</li>
+          <li>
+            <strong>「レポート」→「Excel (xlsx)」</strong> → Excelファイルで保存
+          </li>
+        </ul>
+        いずれの形式でも本ツールで読み込み可能です。
+      </li>
+    </ol>
+
+    <!-- ========== 10. FAQ ========== -->
+    <h2>10. よくある質問（FAQ）</h2>
+
+    <h4>Q: データは外部に送信されますか？</h4>
+    <p>
+      いいえ。すべての分析処理はブラウザ内で行われます。トレードデータがサーバーに送信されることはありません。
+    </p>
+
+    <h4>Q: 同じファイルなのに結果が変わることはありますか？</h4>
+    <p>
+      いいえ。モンテカルロシミュレーションを含むすべての計算は決定論的（シード付き疑似乱数使用）です。同じデータであれば常に同じ結果が出ます。
+    </p>
+
+    <h4>Q: スマートフォンで使えますか？</h4>
+    <p>
+      はい。レスポンシブデザインに対応しており、スマートフォンやタブレットのブラウザからもご利用いただけます。ただし、PC環境での利用を推奨します。
+    </p>
+
+    <h4>Q: 対応しているブローカーは？</h4>
+    <p>
+      MT4/MT5の標準フォーマットに対応しているため、MT4/MT5を採用しているすべてのブローカーに対応しています。ヘッダー名のマッピングにより、各ブローカー固有の列名にも柔軟に対応します。
+    </p>
+
+    <h4>Q: EA（自動売買）の履歴も分析できますか？</h4>
+    <p>
+      はい。裁量トレード、EA、いずれの履歴も同じ形式で出力されるため、問題なく分析できます。
+    </p>
+
+    <h4>Q: 買い切りですか？サブスクですか？</h4>
+    <p>
+      買い切り型です。一度ご購入いただければ追加料金なくずっとご利用いただけます。お試し版（7日間）の場合は、期限が切れると自動的にログインできなくなります。
+    </p>
+
+    <h4>Q: お試し期間が終わったらどうなりますか？</h4>
+    <p>
+      お試し期間終了後はログインできなくなります。分析データはサーバーに保存されていないため、再度購入後に改めてファイルをアップロードしてください。
+    </p>
+
+    <h4>Q: 日本語と英語を切り替えられますか？</h4>
+    <p>
+      はい。画面右上の言語切替ボタンで日本語と英語を切り替えることができます。分析結果やアドバイスもすべて切り替わります。
+    </p>
+
+    <h4>Q: 手数料やスワップは計算に含まれますか？</h4>
+    <p>
+      はい。トレード履歴にCommission（手数料）、Swap、Taxes（税金）、Fee（費用）の列がある場合、自動的に損益に加算して計算します。
+    </p>
+
+    <!-- ========== 11. トラブルシューティング ========== -->
+    <h2>11. トラブルシューティング</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 35%">症状</th>
+          <th>原因と対処法</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>「必須列が見つかりません」と表示される</td>
+          <td>
+            CSVのヘッダー行に <code>Time</code>、<code>Symbol</code>、<code
+              >Profit</code
+            >
+            に相当する列名がありません。MT4/MT5の口座履歴からエクスポートしたファイルであることを確認してください。手動で作成したCSVの場合、ヘッダー名が正しいか確認してください。
+          </td>
+        </tr>
+        <tr>
+          <td>「N行のデータをスキップしました」と表示される</td>
+          <td>
+            一部の行が解析できませんでした。入出金履歴やバランス調整行は自動スキップされるため、通常は問題ありません。スキップ数がトレード数に比べて多い場合は、ファイル形式を確認してください。
+          </td>
+        </tr>
+        <tr>
+          <td>ファイルを選択できない</td>
+          <td>
+            対応形式（.csv / .xlsx / .xls / .xml / .htm /
+            .html）であることを確認してください。ファイルサイズが50MBを超えている場合はエラーになります。
+          </td>
+        </tr>
+        <tr>
+          <td>分析結果が実態と異なる</td>
+          <td>
+            MT4の場合「全履歴」を選択せずに一部の期間のみエクスポートした可能性があります。口座履歴で右クリック
+            →「全履歴」を選択してから再度エクスポートしてください。
+          </td>
+        </tr>
+        <tr>
+          <td>文字化けする</td>
+          <td>
+            本ツールはUTF-8、UTF-16
+            LE/BEエンコーディングに自動対応しています。それでも文字化けする場合は、ファイルをメモ帳で開き「UTF-8（BOM付き）」で保存し直してからアップロードしてください。
+          </td>
+        </tr>
+        <tr>
+          <td>HTMLレポートが読み込めない</td>
+          <td>
+            MT4/MT5以外のツールで生成されたHTMLの場合、テーブル構造が異なる可能性があります。MT4/MT5の標準エクスポート機能を使用してください。
+          </td>
+        </tr>
+        <tr>
+          <td>「ご利用期限が終了しています」と表示される</td>
+          <td>
+            お試しアカウントの期限が切れています。継続利用するには、販売ページのメッセージ機能より製品版の購入をお申し込みください。
+          </td>
+        </tr>
+        <tr>
+          <td>分析中に突然ログアウトされた</td>
+          <td>
+            お試しアカウントの期限がちょうど到来したため、自動ログアウトされました。ブラウザ内の分析データは保存されていないため、製品版ご購入後に再度ファイルをアップロードしてください。
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="info-box danger">
+      <strong>重要: 未決済ポジションについて</strong>
+      MT4のHTMLレポートに「Open
+      Trades」（未決済ポジション）セクションが含まれている場合、本ツールは自動的にこれを除外し、決済済みトレードのみを分析対象とします。含み損益は分析に含まれません。
+    </div>
+
+    <!-- ========== Footer ========== -->
+    <div class="page-footer">
+      <p>FX Strategy Doctor 操作マニュアル v1.1</p>
+      <p>&copy; 2026 FX Strategy Doctor. All rights reserved.</p>
+      <p style="margin-top: 0.5rem; font-size: 0.7rem; color: #cbd5e1">
+        本ツールは投資助言を目的とするものではありません。トレードの最終判断はご自身の責任で行ってください。
+      </p>
+    </div>
+  </body>
 </html>

@@ -710,9 +710,14 @@ export function calculateMetrics(
     }
   }
 
-  const largestWin = wins.length > 0 ? wins.reduce((m, t) => Math.max(m, t.profit), wins[0].profit) : 0;
+  const largestWin =
+    wins.length > 0
+      ? wins.reduce((m, t) => Math.max(m, t.profit), wins[0].profit)
+      : 0;
   const largestLoss =
-    losses.length > 0 ? losses.reduce((m, t) => Math.min(m, t.profit), losses[0].profit) : 0;
+    losses.length > 0
+      ? losses.reduce((m, t) => Math.min(m, t.profit), losses[0].profit)
+      : 0;
 
   return {
     totalTrades: trades.length,
@@ -2081,7 +2086,9 @@ export function generateSuggestions(
         ? winStreaks.reduce((s, st) => s + st.length, 0) / winStreaks.length
         : 0;
     const maxLossStreak =
-      lossStreaks.length > 0 ? lossStreaks.reduce((m, s) => Math.max(m, s.length), 0) : 0;
+      lossStreaks.length > 0
+        ? lossStreaks.reduce((m, s) => Math.max(m, s.length), 0)
+        : 0;
 
     if (avgLossStreak > avgWinStreak * 1.5 && avgLossStreak > 2) {
       suggestions.push({

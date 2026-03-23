@@ -321,7 +321,7 @@ describe("CSV Parser — Large Dataset", () => {
     const rows: string[] = [];
     for (let i = 0; i < 1000; i++) {
       const day = String(1 + (i % 28)).padStart(2, "0");
-      const month = String(1 + Math.floor(i / 28) % 12).padStart(2, "0");
+      const month = String(1 + (Math.floor(i / 28) % 12)).padStart(2, "0");
       const profit = (Math.random() * 2000 - 1000).toFixed(2);
       rows.push(
         `${10000000 + i},2025.${month}.${day} 10:00,buy,0.10,USDJPY,150.000,149.000,151.000,2025.${month}.${day} 15:00,150.500,0.00,0.00,${profit}`
